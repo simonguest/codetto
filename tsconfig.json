@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@celltypes/*": ["./src/celltypes/*"],
+      "@components/*": ["./src/components/*"],
+      "@composables/*": ["./src/composables/*"],
+      "@fonts/*": ["./src/fonts/*"],
+      "@pyodide/*": ["./src/pyodide/*"],
+      "@router/*": ["./src/router/*"],
+      "@schemas/*": ["./src/schemas/*"],
+      "@storage/*": ["./src/storage/*"],
+      "@store/*": ["./src/store/*"],
+      "@views/*": ["./src/views/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.d.ts", "**/*.vue"],
+}

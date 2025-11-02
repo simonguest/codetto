@@ -1,0 +1,35 @@
+{
+  "name": "jupyter-k12",
+  "version": "0.1.0",
+  "description": "Jupyter K-12",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "clean": "rm -rf ./dist",
+    "preview": "vite preview"
+  },
+  "author": "Simon Guest",
+  "license": "MIT",
+  "dependencies": {
+    "@codemirror/commands": "^6.10.0",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.6",
+    "@videojs-player/vue": "^1.0.0",
+    "codemirror": "^6.0.2",
+    "marked": "^16.4.1",
+    "uuid": "^13.0.0",
+    "vue": "^3.5.22",
+    "vue-router": "^4.6.3",
+    "vuetify": "^3.10.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.2",
+    "vite-plugin-vuetify": "^2.1.2"
+  }
+}

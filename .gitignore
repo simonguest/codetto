@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Node modules
+node_modules
+
+# Mac finder
+.DS_Store
+
+# Dist output folders
+dist
+
+# Package lock files to prevent errors with GH Actions
+package-lock.json
