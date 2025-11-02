@@ -18,12 +18,12 @@ const route = useRoute();
 // Map routes to tab indices
 const routeToTab = {
   '/notebooks': 0,
-  '/settings': 2
+  '/settings': 1
 };
 
 const tabToRoute = {
   0: '/notebooks',
-  2: '/settings'
+  1: '/settings'
 };
 
 // Compute active tab based on current route
@@ -96,7 +96,7 @@ onUnmounted(() => {
         <span>{{ navLabels.notebooks }}</span>
       </v-btn>
 
-      <v-btn value="2">
+      <v-btn value="1">
         <v-icon>mdi-cog</v-icon>
         <span>{{ navLabels.settings }}</span>
       </v-btn>
