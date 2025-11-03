@@ -27,12 +27,12 @@ const settingsLabels = computed(() => SETTINGS_LABELS[settingsStore.locale]);
 
 // Initialize theme on component mount
 onMounted(() => {
-  theme.global.name.value = settingsStore.theme;
+  theme.change(settingsStore.theme);
 });
 
 // Watch for theme changes and update Vuetify
 watch(currentTheme, (newTheme) => {
-  theme.global.name.value = newTheme;
+  theme.change(newTheme);
 });
 
 const updateTheme = (newTheme: Theme) => {

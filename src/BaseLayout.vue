@@ -62,7 +62,7 @@ watch(
 
 onMounted(() => {
   // Set the initial theme from the store
-  theme.global.name.value = settingsStore.theme;
+  theme.change(settingsStore.theme);
   // Set initial direction and locale
   document.documentElement.dir = currentDirection.value;
   document.documentElement.lang = currentLocale.value;
