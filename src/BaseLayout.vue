@@ -5,11 +5,12 @@ import { useTheme } from "vuetify";
 
 import { settingsStore } from "@store/settingsStore";
 import { NAV_LABELS, LOCALE_METADATA } from "@/i18n";
+import PyodideProvider from "@pyodide/PyodideProvider.vue";
 
 // Handle viewport height for mobile browsers
 const setViewportHeight = () => {
   const vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  document.documentElement.style.setProperty("--vh", `${vh}px`);
 };
 
 const router = useRouter();
@@ -17,13 +18,13 @@ const route = useRoute();
 
 // Map routes to tab indices
 const routeToTab = {
-  '/notebooks': 0,
-  '/settings': 1
+  "/notebooks": 0,
+  "/settings": 1,
 };
 
 const tabToRoute = {
-  0: '/notebooks',
-  1: '/settings'
+  0: "/notebooks",
+  1: "/settings",
 };
 
 // Compute active tab based on current route
@@ -34,7 +35,7 @@ const activeTab = computed({
     if (targetRoute && route.path !== targetRoute) {
       router.push(targetRoute);
     }
-  }
+  },
 });
 
 // Initialize theme
@@ -50,10 +51,14 @@ const currentDirection = computed(() => LOCALE_METADATA[settingsStore.locale].di
 const currentLocale = computed(() => settingsStore.locale);
 
 // Watch for direction and locale changes
-watch([currentDirection, currentLocale], ([direction, locale]) => {
-  document.documentElement.dir = direction;
-  document.documentElement.lang = locale;
-}, { immediate: true });
+watch(
+  [currentDirection, currentLocale],
+  ([direction, locale]) => {
+    document.documentElement.dir = direction;
+    document.documentElement.lang = locale;
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
   // Set the initial theme from the store
@@ -61,30 +66,30 @@ onMounted(() => {
   // Set initial direction and locale
   document.documentElement.dir = currentDirection.value;
   document.documentElement.lang = currentLocale.value;
-  
+
   // Set initial viewport height and listen for changes
   setViewportHeight();
-  window.addEventListener('resize', setViewportHeight);
-  window.addEventListener('orientationchange', setViewportHeight);
+  window.addEventListener("resize", setViewportHeight);
+  window.addEventListener("orientationchange", setViewportHeight);
 });
 
 onUnmounted(() => {
   // Clean up event listeners
-  window.removeEventListener('resize', setViewportHeight);
-  window.removeEventListener('orientationchange', setViewportHeight);
+  window.removeEventListener("resize", setViewportHeight);
+  window.removeEventListener("orientationchange", setViewportHeight);
 });
 </script>
 
 <template>
   <v-app>
     <v-main>
-      <!-- Main content area with router view -->
-      <div class="content-container">
-        <router-view />
-      </div>
+      <PyodideProvider :locale="settingsStore.locale">
+        <div class="content-container">
+          <router-view />
+        </div>
+      </PyodideProvider>
     </v-main>
 
-    <!-- Bottom Navigation -->
     <v-bottom-navigation
       v-model="activeTab"
       color="primary"

@@ -28,7 +28,7 @@ def _set_parents(node, parent=None):
     for child in ast.iter_child_nodes(node):
         _set_parents(child, node)
 
-def transform_code(code_str):
+def _transform_code(code_str):
     try:
         # Parse the code into an AST
         tree = ast.parse(code_str)

@@ -1,6 +1,6 @@
 import { reactive } from "vue";
 
-export type ExecutionStatus = "idle" | "queued" | "running";
+export type ExecutionStatus = "idle" | "queued" | "running" | "reset";
 export type InputStatus = "idle" | "waiting" | "submitted";
 export type WorkerStatus = "initializing" | "ready" | "error" | "interrupted" | "terminating";
 
@@ -47,10 +47,19 @@ export const pyodideStore = reactive({
   requestUserInput(prompt: string) {
     this.inputStatus = "waiting";
     this.userInput = null,
-    this.inputPrompt = prompt;
+      this.inputPrompt = prompt;
   },
   submitUserInput(input: string | null) {
     this.inputStatus = "submitted";
     this.userInput = input;
+  },
+  resetGlobals() {
+    if (this.executionStatus === "idle" && this.workerStatus === "ready") {
+      this.executionStatus = "reset";
+    }
+  },
+  resetCompleted() {
+    this.runningCellId = null;
+    this.executionStatus = "idle";
   }
 });

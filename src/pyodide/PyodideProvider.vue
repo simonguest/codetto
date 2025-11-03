@@ -5,11 +5,11 @@ import { notebookStore } from "@store/notebookStore";
 import { pyodideStore } from "@store/pyodideStore";
 import { Locale } from "@/i18n";
 
-const props = defineProps<{ notebookId: string; locale: Locale | null }>();
+const props = defineProps<{ locale: Locale | null }>();
 let worker: Worker;
 
 onMounted(async () => {
-  console.log("PyodideProvider: Starting new worker for " + props.notebookId);
+  console.log("PyodideProvider: Starting new worker.");
   pyodideStore.setWorkerStatus("initializing");
   worker = new Worker(new URL("./PyodideWorker.ts", import.meta.url), {
     type: "module",
@@ -29,6 +29,9 @@ onMounted(async () => {
           pyodideStore.setInterruptBuffer(new Int32Array(interruptBuffer));
           console.log("PyodideProvider: Set Interrupt Buffer");
         }
+        break;
+      case "reset_completed":
+        pyodideStore.resetCompleted();
         break;
       case "stdout":
         if (pyodideStore.runningCellId) {
@@ -82,6 +85,11 @@ watch(
         cellId: pyodideStore.runningCellId,
         code: code?.join(""),
       });
+    }
+    if (newExecutionStatus === "reset") {
+      worker.postMessage({
+        type: "reset"
+      })
     }
   }
 );

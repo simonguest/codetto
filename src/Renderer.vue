@@ -2,10 +2,9 @@
 import { onMounted, watch, computed } from "vue";
 
 import { Locale, RENDERER_LABELS } from "@/i18n";
-import { Theme } from "@/theme"
+import { Theme } from "@/theme";
 import { notebookStore } from "@store/notebookStore";
 import type { Notebook } from "@schemas/notebook";
-import PyodideProvider from "@pyodide/PyodideProvider.vue";
 import { pyodideStore } from "@store/pyodideStore";
 import MarkdownCell from "@celltypes/markdown";
 import CodeCell from "@celltypes/code";
@@ -23,6 +22,8 @@ const props = defineProps<{
 onMounted(() => {
   // Load the initial notebook
   notebookStore.loadNotebook(props.initialNotebook);
+  // New notebook opened, so reset the globals from Pyodide
+  pyodideStore.resetGlobals();
 });
 
 watch(
@@ -37,55 +38,53 @@ const rendererLabels = computed(() => RENDERER_LABELS[props.locale]);
 </script>
 
 <template>
-  <PyodideProvider :notebookId="id" :locale="locale">
-    <div class="viewer-container">
-      <v-expand-transition>
-        <v-alert
-          v-if="pyodideStore.workerStatus == 'initializing'"
-          :text="rendererLabels.notebookStarting"
-          type="info"
-          variant="tonal"
-          density="compact"
-        ></v-alert>
-      </v-expand-transition>
-      <v-expand-transition>
-        <v-alert
-          v-if="pyodideStore.workerStatus == 'error'"
-          :text="`${rendererLabels.notebookStartError} ${pyodideStore.fatalErrorTrace}`"
-          type="error"
-          variant="tonal"
-          density="compact"
-        ></v-alert>
-      </v-expand-transition>
+  <div class="viewer-container">
+    <v-expand-transition>
+      <v-alert
+        v-if="pyodideStore.workerStatus == 'initializing'"
+        :text="rendererLabels.notebookStarting"
+        type="info"
+        variant="tonal"
+        density="compact"
+      ></v-alert>
+    </v-expand-transition>
+    <v-expand-transition>
+      <v-alert
+        v-if="pyodideStore.workerStatus == 'error'"
+        :text="`${rendererLabels.notebookStartError} ${pyodideStore.fatalErrorTrace}`"
+        type="error"
+        variant="tonal"
+        density="compact"
+      ></v-alert>
+    </v-expand-transition>
 
-      <div v-for="cell in notebookStore.content.cells">
-        <MarkdownCell
-          v-if="cell.cell_type === 'markdown'"
-          :cell="cell"
-          :metadata="cell.metadata"
-          :locale="props.locale"
-        />
-        <CodeCell
-          v-if="cell.cell_type === 'code'"
-          :cell="cell"
-          :theme="props.theme"
-          :locale="props.locale"
-        />
-        <VideoCell
-          v-if="cell.cell_type === 'raw' && cell.metadata.tags?.includes('video')"
-          :cell="cell"
-          :locale="props.locale"
-        />
-        <ChatCell
-          v-if="cell.cell_type === 'raw' && cell.metadata.tags?.includes('chat')"
-          :cell="cell"
-          :locale="props.locale"
-        />
-      </div>
-
-      <InputDialog :locale="props.locale" />
+    <div v-for="cell in notebookStore.content.cells">
+      <MarkdownCell
+        v-if="cell.cell_type === 'markdown'"
+        :cell="cell"
+        :metadata="cell.metadata"
+        :locale="props.locale"
+      />
+      <CodeCell
+        v-if="cell.cell_type === 'code'"
+        :cell="cell"
+        :theme="props.theme"
+        :locale="props.locale"
+      />
+      <VideoCell
+        v-if="cell.cell_type === 'raw' && cell.metadata.tags?.includes('video')"
+        :cell="cell"
+        :locale="props.locale"
+      />
+      <ChatCell
+        v-if="cell.cell_type === 'raw' && cell.metadata.tags?.includes('chat')"
+        :cell="cell"
+        :locale="props.locale"
+      />
     </div>
-  </PyodideProvider>
+
+    <InputDialog :locale="props.locale" />
+  </div>
 </template>
 
 <style>

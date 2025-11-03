@@ -10,7 +10,7 @@ const hasSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
 async function runPythonFile(url: URL) {
   const response = await fetch(url);
   const code = await response.text();
-  await pyodide.runPythonAsync(code);
+  return await pyodide.runPythonAsync(code);
 }
 
 async function initialize() {
@@ -57,7 +57,7 @@ async function initialize() {
 
   // Override input
   console.log("PyodideWorker: Overriding input calls with async equivalent");
-  runPythonFile(new URL("./async_input.py", import.meta.url));
+  await runPythonFile(new URL("./async_input.py", import.meta.url));
 
   console.log("PyodideWorkder: Creating override for input");
   pyodide.globals.set("_override_input", (prompt?: string) => {
@@ -87,7 +87,7 @@ async function initialize() {
   });
 
   console.log("PyodideWorker: Initializing Python environment");
-  runPythonFile(new URL("./python_init.py", import.meta.url));
+  await runPythonFile(new URL("./python_init.py", import.meta.url));
 }
 
 self.onmessage = async event => {
@@ -106,6 +106,13 @@ self.onmessage = async event => {
         console.error("PyodideWorker: Failed to initialize Pyodide:", error);
         self.postMessage({ type: "fatal", error: String(error) });
       }
+      break;
+    case "reset":
+      console.log("Resetting Pyodide Globals");
+      await runPythonFile(new URL("./python_reset_globals.py", import.meta.url));
+      self.postMessage({
+        type: "reset_completed"
+      });
       break;
     case "run":
       const code = data.code;
@@ -129,7 +136,7 @@ self.onmessage = async event => {
           // Transform the code first
           console.log(`PyodideProvider: Transforming code to support async inputs`);
           const transformedCode = await pyodide.runPythonAsync(
-            `transform_code(${JSON.stringify(code)})`
+            `_transform_code(${JSON.stringify(code)})`
           );
 
           // Run the cell code
