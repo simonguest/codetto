@@ -205,11 +205,13 @@ const openVideoInNewTab = () => {
 
 onMounted(() => {
   parseVideoConfig();
-  
-  // For Vimeo videos on localhost, show fallback immediately
-  // as Vimeo typically blocks localhost embedding
-  if (processedSource.value?.provider === 'vimeo' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+
+  // For Vimeo videos on localhost or Tauri, show fallback immediately
+  // as Vimeo typically blocks localhost/tauri:// protocol embedding
+  const isTauriProtocol = window.location.protocol === 'tauri:';
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  if (processedSource.value?.provider === 'vimeo' && (isTauriProtocol || isLocalhost)) {
     setTimeout(() => {
       if (!iframeError.value) {
         iframeError.value = true;
