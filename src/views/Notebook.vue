@@ -22,9 +22,12 @@ const filename = computed(() => {
 
 const hasNotebook = computed(() => notebookStore.content?.cells?.length > 0);
 
-const { saveStatus, stopWatcher } = useNotebookAutoSave();
+const { saveStatus, saveNow, stopWatcher } = useNotebookAutoSave();
 
-const goBack = () => {
+const goBack = async () => {
+  if (notebookStore.content?.cells?.length > 0) {
+    await saveNow(notebookStore.content);
+  }
   router.push("/");
 };
 

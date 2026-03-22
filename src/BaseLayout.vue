@@ -91,13 +91,14 @@ onUnmounted(() => {
     </v-main>
 
     <v-bottom-navigation
+      v-if="route.path !== '/notebook'"
       v-model="activeTab"
       color="primary"
       grow
       :class="{ 'rtl-navigation': currentDirection === 'rtl' }"
     >
       <v-btn value="0">
-        <v-icon>mdi-notebook</v-icon>
+        <v-icon>mdi-home</v-icon>
         <span>{{ navLabels.notebooks }}</span>
       </v-btn>
 

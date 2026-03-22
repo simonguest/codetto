@@ -2,19 +2,19 @@ import type { Locale } from '../types';
 
 export const NAV_LABELS: Record<Locale, { notebooks: string; settings: string }> = {
   'en-US': {
-    notebooks: 'Notebooks',
+    notebooks: 'Home',
     settings: 'Settings'
   },
   'ja-JP': {
-    notebooks: 'ノートブック',
+    notebooks: 'ホーム',
     settings: '設定'
   },
   'hi-IN': {
-    notebooks: 'नोटबुक',
+    notebooks: 'होम',
     settings: 'सेटिंग्स'
   },
   'fa-IR': {
-    notebooks: 'دفترچه‌ها',
+    notebooks: 'خانه',
     settings: 'تنظیمات'
   }
 } as const;

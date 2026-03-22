@@ -16,38 +16,37 @@ export function useNotebookAutoSave() {
   // Debounced save function
   let saveTimeout: NodeJS.Timeout | null = null
 
-  const debouncedSave = async (content: Notebook) => {
+  const saveNow = async (content: Notebook) => {
+    if (!fileStore.filePath) {
+      console.warn('Auto-Save: No file path set, skipping save')
+      return
+    }
+
+    try {
+      console.log(`Auto-Save: Saving to ${fileStore.filePath}`)
+      saveStatus.value = 'saving'
+
+      const plainNotebook = JSON.parse(JSON.stringify(content))
+      await saveNotebookFile(fileStore.filePath, plainNotebook)
+
+      saveStatus.value = 'saved'
+      lastSaved.value = new Date()
+      console.log(`Auto-Save: Saved to ${fileStore.filePath}`)
+
+      setTimeout(() => {
+        if (saveStatus.value === 'saved') {
+          saveStatus.value = 'idle'
+        }
+      }, SAVE_STATUS_DISPLAY_MS)
+    } catch (error) {
+      console.error('Auto-Save: Failed:', error)
+      saveStatus.value = 'error'
+    }
+  }
+
+  const debouncedSave = (content: Notebook) => {
     if (saveTimeout) clearTimeout(saveTimeout)
-
-    saveTimeout = setTimeout(async () => {
-      if (!fileStore.filePath) {
-        console.warn('Auto-Save: No file path set, skipping save')
-        return
-      }
-
-      try {
-        console.log(`Auto-Save: Saving to ${fileStore.filePath}`)
-        saveStatus.value = 'saving'
-
-        // Convert reactive object to plain object before serializing
-        const plainNotebook = JSON.parse(JSON.stringify(content))
-        await saveNotebookFile(fileStore.filePath, plainNotebook)
-
-        saveStatus.value = 'saved'
-        lastSaved.value = new Date()
-        console.log(`Auto-Save: Saved to ${fileStore.filePath}`)
-
-        // Reset to idle after showing "saved" for a moment
-        setTimeout(() => {
-          if (saveStatus.value === 'saved') {
-            saveStatus.value = 'idle'
-          }
-        }, SAVE_STATUS_DISPLAY_MS)
-      } catch (error) {
-        console.error('Auto-Save: Failed:', error)
-        saveStatus.value = 'error'
-      }
-    }, AUTO_SAVE_DEBOUNCE_MS)
+    saveTimeout = setTimeout(() => saveNow(content), AUTO_SAVE_DEBOUNCE_MS)
   }
 
   // Watch for changes to the notebook content
@@ -66,6 +65,7 @@ export function useNotebookAutoSave() {
   return {
     saveStatus,
     lastSaved,
+    saveNow,
     stopWatcher
   }
 }
