@@ -31,8 +31,6 @@ const goBack = async () => {
   router.push("/");
 };
 
-const showResources = computed(() => false);
-
 onUnmounted(() => {
   notebookStore.clear();
   fileStore.filePath = null;
@@ -42,102 +40,103 @@ onUnmounted(() => {
 
 <template>
   <div class="notebook">
-    <v-container fluid class="pa-4">
-      <!-- Header with back button and save status -->
-      <div class="d-flex align-center mb-6 notebook-header">
-        <div class="d-flex align-center flex-grow-1">
-          <v-btn
-            :icon="isRTL ? 'mdi-arrow-right' : 'mdi-arrow-left'"
-            variant="text"
-            @click="goBack"
-            :class="isRTL ? 'ms-3' : 'me-3'"
-          ></v-btn>
-          <h1 class="text-h4 notebook-title">
-            {{ filename || notebookLabels.untitledNotebook }}
-          </h1>
-        </div>
+    <!-- Sticky header -->
+    <div class="notebook-header" :class="{ 'notebook-header-rtl': isRTL }">
+      <v-btn
+        :icon="isRTL ? 'mdi-arrow-right' : 'mdi-arrow-left'"
+        variant="text"
+        @click="goBack"
+      ></v-btn>
 
-        <!-- Save status indicator -->
-        <v-chip
-          v-if="saveStatus !== 'idle'"
-          :color="saveStatus === 'saved' ? 'success' : saveStatus === 'saving' ? 'info' : 'error'"
+      <h1 class="text-h6 notebook-title">
+        {{ filename || notebookLabels.untitledNotebook }}
+      </h1>
+
+      <!-- Save status indicator -->
+      <v-chip
+        v-if="saveStatus !== 'idle'"
+        :color="saveStatus === 'saved' ? 'success' : saveStatus === 'saving' ? 'info' : 'error'"
+        size="small"
+        variant="tonal"
+      >
+        <v-icon
+          :icon="
+            saveStatus === 'saved'
+              ? 'mdi-check'
+              : saveStatus === 'saving'
+              ? 'mdi-loading'
+              : 'mdi-alert'
+          "
+          :class="{ 'mdi-spin': saveStatus === 'saving' }"
           size="small"
-          variant="tonal"
-        >
-          <v-icon
-            :icon="
-              saveStatus === 'saved'
-                ? 'mdi-check'
-                : saveStatus === 'saving'
-                ? 'mdi-loading'
-                : 'mdi-alert'
-            "
-            :class="{ 'mdi-spin': saveStatus === 'saving' }"
-            size="small"
-            class="me-1"
-          ></v-icon>
-          {{
-            saveStatus === "saved"
-              ? notebookLabels.saved
-              : saveStatus === "saving"
-              ? notebookLabels.saving
-              : notebookLabels.saveError
-          }}
-        </v-chip>
-      </div>
+          class="me-1"
+        ></v-icon>
+        {{
+          saveStatus === "saved"
+            ? notebookLabels.saved
+            : saveStatus === "saving"
+            ? notebookLabels.saving
+            : notebookLabels.saveError
+        }}
+      </v-chip>
+    </div>
 
-      <!-- Notebook Renderer -->
-      <Renderer
-        v-if="hasNotebook"
-        :initial-notebook="notebookStore.content"
-        :id="fileStore.filePath || 'notebook'"
-        :theme="settingsStore.theme"
-        :locale="settingsStore.locale"
-      />
+    <!-- Scrollable content -->
+    <div class="notebook-content">
+      <v-container fluid class="pa-4">
+        <Renderer
+          v-if="hasNotebook"
+          :initial-notebook="notebookStore.content"
+          :id="fileStore.filePath || 'notebook'"
+          :theme="settingsStore.theme"
+          :locale="settingsStore.locale"
+        />
 
-      <!-- No notebook loaded -->
-      <v-card v-else class="pa-6">
-        <div class="text-center">
-          <v-icon icon="mdi-alert-circle" size="64" color="error" class="mb-4"></v-icon>
-          <h2 class="text-h5 mb-2">{{ notebookLabels.failedToLoad }}</h2>
-          <v-btn color="primary" @click="goBack">
-            {{ notebookLabels.backToNotebooks }}
-          </v-btn>
-        </div>
-      </v-card>
-    </v-container>
+        <v-card v-else class="pa-6">
+          <div class="text-center">
+            <v-icon icon="mdi-alert-circle" size="64" color="error" class="mb-4"></v-icon>
+            <h2 class="text-h5 mb-2">{{ notebookLabels.failedToLoad }}</h2>
+            <v-btn color="primary" @click="goBack">
+              {{ notebookLabels.backToNotebooks }}
+            </v-btn>
+          </div>
+        </v-card>
+      </v-container>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .notebook {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
 }
 
-.mdi-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* RTL-aware header layout */
 .notebook-header {
-  flex-direction: row;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgb(var(--v-theme-surface));
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
-html[dir="rtl"] .notebook-header {
+.notebook-header-rtl {
   flex-direction: row-reverse;
 }
 
-/* RTL-aware title alignment */
+.notebook-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 html[dir="rtl"] .notebook-title {
   text-align: right;
 }
@@ -146,14 +145,17 @@ html[dir="ltr"] .notebook-title {
   text-align: left;
 }
 
-/* RTL-aware back button positioning */
-html[dir="rtl"] .notebook .v-btn {
-  margin-left: 12px;
-  margin-right: 0;
+.notebook-content {
+  flex: 1;
+  overflow-y: auto;
 }
 
-html[dir="ltr"] .notebook .v-btn {
-  margin-right: 12px;
-  margin-left: 0;
+.mdi-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

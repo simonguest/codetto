@@ -112,8 +112,8 @@ onUnmounted(() => {
 
 <style scoped>
 .content-container {
-  padding-bottom: 56px; /* Space for bottom navigation */
-  height: calc(var(--vh, 1vh) * 100 - 56px); /* Full height minus bottom nav - mobile safe */
+  padding-bottom: v-bind("route.path === '/notebook' ? '0px' : '56px'");
+  height: v-bind("route.path === '/notebook' ? 'calc(var(--vh, 1vh) * 100)' : 'calc(var(--vh, 1vh) * 100 - 56px)'");
   overflow-y: auto;
 }
 
