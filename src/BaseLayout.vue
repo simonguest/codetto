@@ -18,12 +18,12 @@ const route = useRoute();
 
 // Map routes to tab indices
 const routeToTab = {
-  "/notebooks": 0,
+  "/": 0,
   "/settings": 1,
 };
 
 const tabToRoute = {
-  0: "/notebooks",
+  0: "/",
   1: "/settings",
 };
 

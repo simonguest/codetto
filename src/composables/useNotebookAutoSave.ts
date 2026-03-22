@@ -1,14 +1,15 @@
 import { watch, ref } from 'vue'
 
 import { notebookStore } from '@store/notebookStore'
-import { saveNotebook } from '@storage/notebookStorage'
+import { fileStore } from '@store/fileStore'
+import { saveNotebookFile } from '@/services/fileService'
 import { Notebook } from '@schemas/notebook'
 
 // Configuration constants
 const AUTO_SAVE_DEBOUNCE_MS = 2000 // Save 2 seconds after last change
 const SAVE_STATUS_DISPLAY_MS = 2000 // How long to show "saved" status
 
-export function useNotebookAutoSave(notebookId: string) {
+export function useNotebookAutoSave() {
   const saveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const lastSaved = ref<Date | null>(null)
 
@@ -19,16 +20,22 @@ export function useNotebookAutoSave(notebookId: string) {
     if (saveTimeout) clearTimeout(saveTimeout)
 
     saveTimeout = setTimeout(async () => {
+      if (!fileStore.filePath) {
+        console.warn('Auto-Save: No file path set, skipping save')
+        return
+      }
+
       try {
-        console.log(`Auto-Save: Saving Notebook ${notebookId}`);
+        console.log(`Auto-Save: Saving to ${fileStore.filePath}`)
         saveStatus.value = 'saving'
 
-        // Convert reactive object to plain object for IndexedDB
-        const plainNotebook = JSON.parse(JSON.stringify(content));
-        await saveNotebook(notebookId, plainNotebook)
+        // Convert reactive object to plain object before serializing
+        const plainNotebook = JSON.parse(JSON.stringify(content))
+        await saveNotebookFile(fileStore.filePath, plainNotebook)
+
         saveStatus.value = 'saved'
         lastSaved.value = new Date()
-        console.log(`Auto-Save: Saved Notebook ${notebookId}`);
+        console.log(`Auto-Save: Saved to ${fileStore.filePath}`)
 
         // Reset to idle after showing "saved" for a moment
         setTimeout(() => {

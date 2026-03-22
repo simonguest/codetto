@@ -2,6 +2,8 @@ import type { Locale } from '../types';
 
 export const NOTEBOOK_LABELS: Record<Locale, {
   title: string;
+  openFile: string;
+  openFileHint: string;
   addNotebook: string;
   fromTemplate: string;
   fromFile: string;
@@ -35,7 +37,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   urlDialogInvalidUrl: string;
 }> = {
   'en-US': {
-    title: 'Notebooks',
+    title: 'Jupyter K-12',
+    openFile: 'Open File',
+    openFileHint: 'Select a Jupyter notebook (.ipynb) to open',
     addNotebook: 'Add',
     fromTemplate: 'From template',
     fromFile: 'From File',
@@ -69,7 +73,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: 'Please enter a valid URL (must start with http:// or https://)'
   },
   'ja-JP': {
-    title: 'ノートブック',
+    title: 'Jupyter K-12',
+    openFile: 'ファイルを開く',
+    openFileHint: 'Jupyterノートブック（.ipynb）を選択して開いてください',
     addNotebook: '追加',
     fromTemplate: 'テンプレートから',
     fromFile: 'ファイルから',
@@ -103,7 +109,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: '有効なURLを入力してください（http://またはhttps://で始まる必要があります）'
   },
   'hi-IN': {
-    title: 'नोटबुक',
+    title: 'Jupyter K-12',
+    openFile: 'फ़ाइल खोलें',
+    openFileHint: 'खोलने के लिए Jupyter नोटबुक (.ipynb) चुनें',
     addNotebook: 'जोड़ें',
     fromTemplate: 'टेम्प्लेट से',
     fromFile: 'फ़ाइल से',
@@ -137,7 +145,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: 'कृपया एक वैध URL दर्ज करें (http:// या https:// से शुरू होना चाहिए)'
   },
   'fa-IR': {
-    title: 'دفترچه‌ها',
+    title: 'Jupyter K-12',
+    openFile: 'باز کردن فایل',
+    openFileHint: 'یک دفترچه Jupyter (.ipynb) برای باز کردن انتخاب کنید',
     addNotebook: 'افزودن',
     fromTemplate: 'از قالب',
     fromFile: 'از فایل',

@@ -1,48 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { useRoute } from "vue-router";
+import { computed } from "vue";
 
-import { getNotebook } from "@storage/notebookStorage";
-import type { Notebook } from "@schemas/notebook";
-
-const route = useRoute();
-
-const notebookId = computed(() => route.params.id as string);
-const notebook = ref<Notebook | null>(null);
-const loading = ref(true);
-const error = ref<string | null>(null);
-
-// Set the content type for JSON response
-onMounted(async () => {
-  try {
-    loading.value = true;
-    error.value = null;
-    notebook.value = await getNotebook(notebookId.value);
-  } catch (err) {
-    console.error("Failed to load notebook:", err);
-    error.value = err instanceof Error ? err.message : "Failed to load notebook";
-  } finally {
-    loading.value = false;
-  }
-});
+import { notebookStore } from "@store/notebookStore";
 
 const jsonOutput = computed(() => {
-  if (error.value) {
-    return JSON.stringify(
-      {
-        error: error.value,
-        message: "Notebook not found or could not be loaded"
-      },
-      null,
-      2
-    );
+  if (!notebookStore.content?.cells?.length) {
+    return JSON.stringify({ message: "No notebook loaded" }, null, 2);
   }
-  
-  if (notebook.value) {
-    return JSON.stringify(notebook.value, null, 2);
-  }
-  
-  return JSON.stringify({ message: "Loading..." }, null, 2);
+  return JSON.stringify(notebookStore.content, null, 2);
 });
 </script>
 
@@ -80,13 +45,12 @@ pre {
     background-color: #1e1e1e;
     border-color: #404040;
   }
-  
+
   pre {
     color: #e8e8e8;
   }
 }
 
-/* Light theme override for better readability */
 body {
   margin: 0;
   padding: 0;
