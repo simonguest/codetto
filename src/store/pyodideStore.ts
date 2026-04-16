@@ -13,6 +13,7 @@ export const pyodideStore = reactive({
   inputStatus: "idle" as InputStatus,
   inputPrompt: null as string | null,
   userInput: null as string | null,
+  pyodideVersion: null as string | null,
   setInterruptBuffer(buffer: Int32Array) {
     this.interruptBuffer = buffer;
   },

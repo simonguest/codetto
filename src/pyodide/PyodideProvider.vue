@@ -19,7 +19,7 @@ onMounted(async () => {
   });
 
   worker.onmessage = async (event: MessageEvent<any>) => {
-    const { type, text, result, message, error, interruptBuffer } = event.data;
+    const { type, text, result, message, error, interruptBuffer, pyodideVersion } = event.data;
 
     switch (type) {
       case "initialized":
@@ -28,6 +28,9 @@ onMounted(async () => {
         if (interruptBuffer) {
           pyodideStore.setInterruptBuffer(new Int32Array(interruptBuffer));
           console.log("PyodideProvider: Set Interrupt Buffer");
+        }
+        if (pyodideVersion) {
+          pyodideStore.pyodideVersion = pyodideVersion;
         }
         break;
       case "reset_completed":

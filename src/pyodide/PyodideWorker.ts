@@ -101,6 +101,7 @@ self.onmessage = async event => {
           type: "initialized",
           interruptBuffer: interruptBuffer ? interruptBuffer.buffer : null,
           hasInterrupt: hasSharedArrayBuffer,
+          pyodideVersion: pyodide.version,
         });
       } catch (error) {
         console.error("PyodideWorker: Failed to initialize Pyodide:", error);

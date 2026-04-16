@@ -8,6 +8,7 @@ export const SETTINGS_LABELS: Record<Locale, {
   theme: string;
   version: string;
   appName: string;
+  pyodideVersion: string;
   urlRequired: string;
   setDefault: string;
 }> = {
@@ -19,6 +20,7 @@ export const SETTINGS_LABELS: Record<Locale, {
     theme: 'Theme',
     version: 'Version',
     appName: 'K12 Notebook - Web Shell',
+    pyodideVersion: 'Pyodide Version',
     urlRequired: 'URL is required',
     setDefault: 'Set Default'
   },
@@ -30,6 +32,7 @@ export const SETTINGS_LABELS: Record<Locale, {
     theme: 'テーマ',
     version: 'バージョン',
     appName: 'K12ノートブック - ウェブシェル',
+    pyodideVersion: 'Pyodideバージョン',
     urlRequired: 'URLは必須です',
     setDefault: 'デフォルトに設定'
   },
@@ -41,6 +44,7 @@ export const SETTINGS_LABELS: Record<Locale, {
     theme: 'थीम',
     version: 'संस्करण',
     appName: 'K12 नोटबुक - वेब शेल',
+    pyodideVersion: 'Pyodide संस्करण',
     urlRequired: 'URL आवश्यक है',
     setDefault: 'डिफ़ॉल्ट सेट करें'
   },
@@ -52,6 +56,7 @@ export const SETTINGS_LABELS: Record<Locale, {
     theme: 'تم',
     version: 'نسخه',
     appName: 'دفترچه K12 - پوسته وب',
+    pyodideVersion: 'نسخه Pyodide',
     urlRequired: 'آدرس الزامی است',
     setDefault: 'تنظیم به عنوان پیش‌فرض'
   }

@@ -3,6 +3,7 @@ import { ref, watch, onMounted, computed } from "vue";
 import { useTheme } from "vuetify";
 
 import { settingsStore } from "@store/settingsStore";
+import { pyodideStore } from "@store/pyodideStore";
 import { THEME_LABELS, Locale, LOCALE_OPTIONS, LOCALE_METADATA, SETTINGS_LABELS } from "@/i18n";
 import { Theme, THEME_OPTIONS } from "@/theme";
 
@@ -89,6 +90,9 @@ const updateLocale = (locale: Locale) => {
               </p>
               <p class="text-body-2 text-medium-emphasis">
                 {{ settingsLabels.version }} 0.1.0
+              </p>
+              <p class="text-body-2 text-medium-emphasis">
+                {{ settingsLabels.pyodideVersion }}: {{ pyodideStore.pyodideVersion ?? '...' }}
               </p>
             </v-card-text>
           </v-card>
