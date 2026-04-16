@@ -59,7 +59,7 @@ async function initialize() {
   console.log("PyodideWorker: Overriding input calls with async equivalent");
   await runPythonFile(new URL("./async_input.py", import.meta.url));
 
-  console.log("PyodideWorkder: Creating override for input");
+  console.log("PyodideWorker: Creating override for input");
   pyodide.globals.set("_override_input", (prompt?: string) => {
     return new Promise(resolve => {
       self.postMessage({

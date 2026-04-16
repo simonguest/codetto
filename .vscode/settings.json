@@ -3,7 +3,9 @@
     "celltypes",
     "Embedder",
     "iconsets",
+    "peaceiris",
     "Pyodide",
+    "repr",
     "tauri",
     "videojs",
     "Vuetify"
