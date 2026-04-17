@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "gh-pages": "vite build --base=/jupyter-k12/",
+    "gh-pages": "vite build --base=/",
     "clean": "rm -rf ./dist",
     "preview": "vite preview"
   },
