@@ -45,12 +45,20 @@ This is a Jupyter notebook client for K-12 students. It runs as either a web app
 Each cell type is a self-contained directory with an `index.ts` export:
 - `code` — CodeMirror editor + execution controls + result/stdout/error display
 - `markdown` — rendered markdown via `marked`
-- `video` — video player via `video.js`
+- `video` — video player via `video.js`; triggered by `raw` cells tagged with `"video"` in `cell.metadata.tags`; cell source is a JSON payload `{ "url": "...", "controls": true }`
 - `chat` — LLM chat interface
+
+### Notebook metadata extensions
+
+**Title** — `notebook.metadata.title` sets a friendly display name; falls back to filename if absent.
+
+**Globals** — `notebook.metadata.globals` defines named values substituted at runtime using `{{VARIABLE}}` syntax in markdown and code cells. Each global can have a `"default"` and per-locale overrides (e.g. `"hi-IN"`, `"ja-JP"`).
+
+**Form fields** — Code cells support Google Colab-compatible `#@param` annotations for interactive widgets: plain values, sliders (`type:"slider"` with `min`/`max`/`step`), dropdowns (array of values), and booleans (`type:"boolean"`).
 
 ### i18n
 
-Locale strings live in `src/i18n/labels/`. The active locale is stored in `settingsStore.locale`. Cell source can have per-locale overrides stored in `cell.metadata.i18n[locale]`. Notebooks support Jinja-style `{{VARIABLE}}` globals in `notebook.metadata.globals` that are substituted at execution time based on locale.
+Locale strings live in `src/i18n/labels/`. The active locale is stored in `settingsStore.locale`. Cell source can have per-locale overrides in `cell.metadata.i18n[locale]` — when the locale matches, the renderer replaces the cell source with the localized content. This is recommended for markdown cells only; using it on code cells risks overwriting student-edited code on locale change. Global substitution (`{{VARIABLE}}`) also resolves per locale.
 
 ### Pyodide specifics
 
