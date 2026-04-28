@@ -52,6 +52,8 @@ Each cell type is a self-contained directory with an `index.ts` export:
 
 **Title** — `notebook.metadata.title` sets a friendly display name; falls back to filename if absent.
 
+**Folder** — `notebook.metadata.folder` places a notebook in a pseudo folder hierarchy (e.g. `"/lessons/123"`). The notebooks index builds the folder tree from these values at runtime; folders have no independent existence. Paths are normalised to always have a leading slash. See `docs/folders.md`.
+
 **Globals** — `notebook.metadata.globals` defines named values substituted at runtime using `{{VARIABLE}}` syntax in markdown and code cells. Each global can have a `"default"` and per-locale overrides (e.g. `"hi-IN"`, `"ja-JP"`).
 
 **Form fields** — Code cells support Google Colab-compatible `#@param` annotations for interactive widgets: plain values, sliders (`type:"slider"` with `min`/`max`/`step`), dropdowns (array of values), and booleans (`type:"boolean"`).

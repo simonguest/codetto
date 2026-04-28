@@ -32,7 +32,8 @@ const activeTab = computed({
   get: () => routeToTab[route.path as keyof typeof routeToTab] ?? 0,
   set: (value: number) => {
     const targetRoute = tabToRoute[value as keyof typeof tabToRoute];
-    if (targetRoute && route.path !== targetRoute) {
+    // Always push to clear any query params (e.g. folder navigation)
+    if (targetRoute && (route.path !== targetRoute || Object.keys(route.query).length > 0)) {
       router.push(targetRoute);
     }
   },

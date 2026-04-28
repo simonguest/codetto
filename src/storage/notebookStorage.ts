@@ -5,6 +5,7 @@ import type { Notebook, Cell } from "@schemas/notebook";
 export interface NotebookInfo {
   id: string;
   title: string;
+  folder?: string;
   lastModified?: Date;
   created: Date;
 }
@@ -214,6 +215,7 @@ export const listNotebooks = async (): Promise<NotebookInfo[]> => {
         const notebooks = records.map(record => ({
           id: record.id,
           title: record.notebook.metadata?.title || "Untitled Notebook",
+          folder: record.notebook.metadata?.folder as string | undefined,
           lastModified: new Date(record.lastModified),
           created: new Date(record.created),
         }));
@@ -278,7 +280,7 @@ export const loadSampleNotebook = async (samplePath: string): Promise<Notebook> 
   }
 };
 
-export const importNotebookFromFile = async (file: File): Promise<string> => {
+export const importNotebookFromFile = async (file: File, folder?: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -322,13 +324,18 @@ export const importNotebookFromFile = async (file: File): Promise<string> => {
         if (!notebook.metadata.title) {
           notebook.metadata.title = file.name.replace('.ipynb', '') || 'Imported Notebook';
         }
-        
+
+        // Assign to folder if provided
+        if (folder) {
+          notebook.metadata.folder = folder;
+        }
+
         // Save notebook to storage
         const id = uuidv4();
         await saveNotebook(id, notebook);
-        
+
         resolve(id);
-        
+
       } catch (parseError) {
         reject(new Error(`Failed to parse notebook file: ${parseError instanceof Error ? parseError.message : String(parseError)}`));
       }
@@ -351,7 +358,7 @@ const validateUrl = (url: string): boolean => {
   }
 };
 
-export const importNotebookFromUrl = async (url: string): Promise<string> => {
+export const importNotebookFromUrl = async (url: string, folder?: string): Promise<string> => {
   // Validate URL format
   if (!validateUrl(url)) {
     throw new Error('Please enter a valid URL (must start with http:// or https://)');
@@ -400,12 +407,16 @@ export const importNotebookFromUrl = async (url: string): Promise<string> => {
     
     // Set a default title if none exists
     if (!notebook.metadata.title) {
-      // Extract filename from URL or use default
       const urlPath = new URL(url).pathname;
       const filename = urlPath.split('/').pop() || 'imported-notebook.ipynb';
       notebook.metadata.title = filename.replace('.ipynb', '') || 'Imported Notebook';
     }
-    
+
+    // Assign to folder if provided
+    if (folder) {
+      notebook.metadata.folder = folder;
+    }
+
     // Save notebook to storage
     const id = uuidv4();
     await saveNotebook(id, notebook);

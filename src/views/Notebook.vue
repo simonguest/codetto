@@ -41,7 +41,9 @@ onMounted(async () => {
 });
 
 const goBack = () => {
-  router.push("/notebooks");
+  const raw = notebook.value?.metadata?.folder;
+  const folder = raw && !raw.startsWith('/') ? `/${raw}` : raw;
+  router.push(folder ? { name: 'notebooks', query: { folder } } : '/notebooks');
 };
 
 const toggleResources = () => {
