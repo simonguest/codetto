@@ -154,8 +154,10 @@ onUnmounted(() => {
 }
 
 .notebook-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -163,6 +165,7 @@ onUnmounted(() => {
   padding: 8px 12px;
   background: rgb(var(--v-theme-surface));
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  --header-height: 48px;
 }
 
 .notebook-header-rtl {
@@ -187,6 +190,7 @@ html[dir="ltr"] .notebook-title {
 .notebook-content {
   flex: 1;
   overflow-y: auto;
+  padding-top: var(--header-height, 48px);
 }
 
 .loading {
