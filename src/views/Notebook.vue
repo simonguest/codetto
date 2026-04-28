@@ -57,99 +57,136 @@ onUnmounted(() => {
 
 <template>
   <div class="notebook">
-    <v-container fluid class="pa-4">
-      <!-- Header with back button and save status -->
-      <div class="d-flex align-center mb-6 notebook-header">
-        <div class="d-flex align-center flex-grow-1">
-          <v-btn
-            :icon="isRTL ? 'mdi-arrow-right' : 'mdi-arrow-left'"
-            variant="text"
-            @click="goBack"
-            :class="isRTL ? 'ms-3' : 'me-3'"
-          ></v-btn>
-          <h1 class="text-h4 notebook-title">
-            {{ notebook?.metadata?.title || notebookLabels.untitledNotebook }}
-          </h1>
-        </div>
+    <!-- Sticky header -->
+    <div class="notebook-header" :class="{ 'notebook-header-rtl': isRTL }">
+      <v-btn
+        :icon="isRTL ? 'mdi-arrow-right' : 'mdi-arrow-left'"
+        variant="text"
+        @click="goBack"
+      ></v-btn>
 
-        <!-- Save status indicator -->
-        <v-chip
-          v-if="saveStatus !== 'idle'"
-          :color="saveStatus === 'saved' ? 'success' : saveStatus === 'saving' ? 'info' : 'error'"
+      <h1 class="text-h6 notebook-title">
+        {{ notebook?.metadata?.title || notebookLabels.untitledNotebook }}
+      </h1>
+
+      <!-- Save status indicator -->
+      <v-chip
+        v-if="saveStatus !== 'idle'"
+        :color="saveStatus === 'saved' ? 'success' : saveStatus === 'saving' ? 'info' : 'error'"
+        size="small"
+        variant="tonal"
+      >
+        <v-icon
+          :icon="
+            saveStatus === 'saved'
+              ? 'mdi-check'
+              : saveStatus === 'saving'
+              ? 'mdi-loading'
+              : 'mdi-alert'
+          "
+          :class="{ 'mdi-spin': saveStatus === 'saving' }"
           size="small"
-          variant="tonal"
-        >
-          <v-icon
-            :icon="
-              saveStatus === 'saved'
-                ? 'mdi-check'
-                : saveStatus === 'saving'
-                ? 'mdi-loading'
-                : 'mdi-alert'
-            "
-            :class="{ 'mdi-spin': saveStatus === 'saving' }"
-            size="small"
-            class="me-1"
-          ></v-icon>
-          {{
-            saveStatus === "saved"
-              ? notebookLabels.saved
-              : saveStatus === "saving"
-              ? notebookLabels.saving
-              : notebookLabels.saveError
-          }}
-        </v-chip>
+          class="me-1"
+        ></v-icon>
+        {{
+          saveStatus === "saved"
+            ? notebookLabels.saved
+            : saveStatus === "saving"
+            ? notebookLabels.saving
+            : notebookLabels.saveError
+        }}
+      </v-chip>
 
-        <div class="d-flex align-center" :class="isRTL ? 'ms-3' : 'me-3'">
-          <v-btn
-            icon="mdi-paperclip"
-            variant="text"
-            size="small"
-            :color="showResources ? 'primary' : 'default'"
-            @click="toggleResources"
-          >
-            <v-icon>mdi-paperclip</v-icon>
-            <v-tooltip activator="parent" location="bottom"> Resources </v-tooltip>
-          </v-btn>
+      <v-btn
+        icon="mdi-paperclip"
+        variant="text"
+        size="small"
+        :color="showResources ? 'primary' : 'default'"
+        @click="toggleResources"
+      >
+        <v-icon>mdi-paperclip</v-icon>
+        <v-tooltip activator="parent" location="bottom"> Resources </v-tooltip>
+      </v-btn>
+    </div>
+
+    <!-- Scrollable content -->
+    <div class="notebook-content">
+      <v-container fluid class="pa-4">
+        <!-- Notebook Renderer -->
+        <Renderer
+          v-if="notebook && !loading && !error"
+          :initial-notebook="notebook"
+          :id="notebookId"
+          :theme="settingsStore.theme"
+          :locale="settingsStore.locale"
+        />
+
+        <!-- Loading state -->
+        <div v-else-if="loading" class="loading">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          <p>{{ notebookLabels.loadingNotebook }}</p>
         </div>
-      </div>
 
-      <!-- Notebook Renderer -->
-      <Renderer
-        v-if="notebook && !loading && !error"
-        :initial-notebook="notebook"
-        :id="notebookId"
-        :theme="settingsStore.theme"
-        :locale="settingsStore.locale"
-      />
-
-      <!-- Loading state -->
-      <div v-else-if="loading" class="loading">
-        <v-progress-circular indeterminate color="primary"></v-progress-circular>
-        <p>{{ notebookLabels.loadingNotebook }}</p>
-      </div>
-
-      <!-- Error state -->
-      <v-card v-else-if="error" class="pa-6">
-        <div class="text-center">
-          <v-icon icon="mdi-alert-circle" size="64" color="error" class="mb-4"></v-icon>
-          <h2 class="text-h5 mb-2">{{ notebookLabels.failedToLoad }}</h2>
-          <p class="text-body-1 text-medium-emphasis mb-4">
-            {{ error }}
-          </p>
-          <v-btn color="primary" @click="goBack">
-            {{ notebookLabels.backToNotebooks }}
-          </v-btn>
-        </div>
-      </v-card>
-    </v-container>
+        <!-- Error state -->
+        <v-card v-else-if="error" class="pa-6">
+          <div class="text-center">
+            <v-icon icon="mdi-alert-circle" size="64" color="error" class="mb-4"></v-icon>
+            <h2 class="text-h5 mb-2">{{ notebookLabels.failedToLoad }}</h2>
+            <p class="text-body-1 text-medium-emphasis mb-4">
+              {{ error }}
+            </p>
+            <v-btn color="primary" @click="goBack">
+              {{ notebookLabels.backToNotebooks }}
+            </v-btn>
+          </div>
+        </v-card>
+      </v-container>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .notebook {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
+}
+
+.notebook-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgb(var(--v-theme-surface));
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.notebook-header-rtl {
+  flex-direction: row-reverse;
+}
+
+.notebook-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[dir="rtl"] .notebook-title {
+  text-align: right;
+}
+
+html[dir="ltr"] .notebook-title {
+  text-align: left;
+}
+
+.notebook-content {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .loading {
@@ -166,40 +203,7 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* RTL-aware header layout */
-.notebook-header {
-  flex-direction: row;
-}
-
-html[dir="rtl"] .notebook-header {
-  flex-direction: row-reverse;
-}
-
-/* RTL-aware title alignment */
-html[dir="rtl"] .notebook-title {
-  text-align: right;
-}
-
-html[dir="ltr"] .notebook-title {
-  text-align: left;
-}
-
-/* RTL-aware back button positioning */
-html[dir="rtl"] .notebook .v-btn {
-  margin-left: 12px;
-  margin-right: 0;
-}
-
-html[dir="ltr"] .notebook .v-btn {
-  margin-right: 12px;
-  margin-left: 0;
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>
