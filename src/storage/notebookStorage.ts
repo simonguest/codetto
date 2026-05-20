@@ -358,6 +358,26 @@ const validateUrl = (url: string): boolean => {
   }
 };
 
+// Rewrite github.com viewer/raw URLs to raw.githubusercontent.com, which has CORS enabled.
+// github.com/raw/* and github.com/blob/* URLs redirect through a CORS-opaque redirect,
+// so we bypass that by going directly to the raw content host.
+const transformUrl = (url: string): string => {
+  try {
+    const u = new URL(url);
+    if (u.hostname === 'github.com') {
+      // Match /{owner}/{repo}/raw/{ref}/{path} or /{owner}/{repo}/blob/{ref}/{path}
+      const match = u.pathname.match(/^\/([^/]+)\/([^/]+)\/(raw|blob)\/(.+)$/);
+      if (match) {
+        const [, owner, repo, , refAndPath] = match;
+        return `https://raw.githubusercontent.com/${owner}/${repo}/${refAndPath}`;
+      }
+    }
+  } catch {
+    // fall through and return original
+  }
+  return url;
+};
+
 export const importNotebookFromUrl = async (url: string, folder?: string): Promise<string> => {
   // Validate URL format
   if (!validateUrl(url)) {
@@ -365,7 +385,8 @@ export const importNotebookFromUrl = async (url: string, folder?: string): Promi
   }
 
   try {
-    const response = await fetch(url);
+    const fetchUrl = transformUrl(url);
+    const response = await fetch(fetchUrl);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch notebook: ${response.status} ${response.statusText}`);
