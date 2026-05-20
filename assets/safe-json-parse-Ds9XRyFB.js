@@ -1,0 +1,1 @@
+import{g as n}from"./global-BU635Vkw.js";var r,a;function l(){if(a)return r;a=1,r=u;function u(s,o){var e,t=null;try{e=JSON.parse(s,o)}catch(p){t=p}return[t,e]}return r}var f=l();const c=n(f);export{c as s};
