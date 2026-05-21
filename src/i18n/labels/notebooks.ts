@@ -7,6 +7,7 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   fromFile: string;
   fromUrl: string;
   delete: string;
+  download: string;
   lastEdited: string;
   back: string;
   notebookViewer: string;
@@ -41,6 +42,7 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'From File',
     fromUrl: 'From URL',
     delete: 'Delete',
+    download: 'Download',
     lastEdited: 'Last edited',
     back: 'Back',
     notebookViewer: 'Notebook Viewer',
@@ -75,6 +77,7 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'ファイルから',
     fromUrl: 'URLから',
     delete: '削除',
+    download: 'ダウンロード',
     lastEdited: '最終編集',
     back: '戻る',
     notebookViewer: 'ノートブックビューア',
@@ -109,6 +112,7 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'फ़ाइल से',
     fromUrl: 'URL से',
     delete: 'हटाएं',
+    download: 'डाउनलोड',
     lastEdited: 'अंतिम संपादन',
     back: 'वापस',
     notebookViewer: 'नोटबुक व्यूअर',
@@ -143,6 +147,7 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'از فایل',
     fromUrl: 'از URL',
     delete: 'حذف',
+    download: 'دانلود',
     lastEdited: 'آخرین ویرایش',
     back: 'بازگشت',
     notebookViewer: 'نمایشگر دفترچه',

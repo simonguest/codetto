@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 
 import { settingsStore } from "@store/settingsStore";
 import { NOTEBOOK_LABELS } from "@/i18n";
+import { getNotebook } from "@storage/notebookStorage";
 import type { NotebookInfo } from "@storage/notebookStorage";
 
 interface Props {
@@ -48,6 +49,19 @@ const openNotebook = () => {
 const deleteNotebook = () => {
   emit('delete', props.notebook.id);
 };
+
+// Download notebook as .ipynb file
+const downloadNotebook = async () => {
+  const notebook = await getNotebook(props.notebook.id);
+  const json = JSON.stringify(notebook, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${props.notebook.title}.ipynb`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 </script>
 
 <template>
@@ -70,6 +84,9 @@ const deleteNotebook = () => {
             ></v-btn>
           </template>
           <v-list>
+            <v-list-item @click="downloadNotebook">
+              <v-list-item-title>{{ notebookLabels.download }}</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="deleteNotebook">
               <v-list-item-title>{{ notebookLabels.delete }}</v-list-item-title>
             </v-list-item>
