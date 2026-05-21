@@ -112,7 +112,10 @@ export const notebookStore = reactive({
     const cell = this.findCell(cellId);
     if (cell) {
       if (
-        cell.outputs?.findIndex((output: Output) => output.output_type === "execute_result") !== -1
+        cell.outputs?.findIndex(
+          (output: Output) =>
+            output.output_type === "execute_result" || output.output_type === "display_data"
+        ) !== -1
       ) {
         result.push("result");
       }
@@ -195,7 +198,7 @@ export const notebookStore = reactive({
     const cell = this.findCell(cellId);
     if (cell) {
       cell.outputs?.forEach(output => {
-        if (output.output_type === "execute_result") {
+        if (output.output_type === "execute_result" || output.output_type === "display_data") {
           if (output.data) {
             result = output.data;
           }
