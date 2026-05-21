@@ -1,9 +1,51 @@
 <script setup lang="ts">
+import { onMounted, ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import BaseLayout from "./BaseLayout.vue";
+import { importNotebookFromUrl } from "@storage/notebookStorage";
+import { settingsStore } from "@store/settingsStore";
+import { NOTEBOOK_LABELS } from "@/i18n";
+
+const router = useRouter();
+const notebookLabels = computed(() => NOTEBOOK_LABELS[settingsStore.locale]);
+const errorDialog = ref({ show: false, title: '', message: '' });
+
+onMounted(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const githubParam = params.get('github');
+  if (!githubParam) return;
+
+  // Strip the query param before processing so a refresh doesn't retry
+  window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+
+  try {
+    const id = await importNotebookFromUrl(`https://github.com/${githubParam}`);
+    router.push({ name: 'notebook', params: { id } });
+  } catch (error) {
+    errorDialog.value = {
+      show: true,
+      title: notebookLabels.value.urlDialogError,
+      message: error instanceof Error ? error.message : notebookLabels.value.urlDialogErrorMessage
+    };
+  }
+});
 </script>
 
 <template>
   <BaseLayout />
+
+  <v-dialog v-model="errorDialog.show" max-width="400px">
+    <v-card>
+      <v-card-title>{{ errorDialog.title }}</v-card-title>
+      <v-card-text>
+        <p>{{ errorDialog.message }}</p>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="errorDialog.show = false">OK</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style>
