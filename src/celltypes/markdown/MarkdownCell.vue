@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { computed } from "vue";
 import { marked } from "marked";
 
 import { Locale } from "@/i18n";
@@ -36,6 +36,10 @@ const processedSource = computed(() => {
 </template>
 
 <style scoped>
+.markdown-content {
+  font-size: 1.0rem;
+}
+
 .markdown-content :deep(h1),
 .markdown-content :deep(h2),
 .markdown-content :deep(h3),

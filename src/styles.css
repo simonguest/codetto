@@ -1,7 +1,7 @@
 /* Font Face Declaration */
 @font-face {
-  font-family: "Fraunces";
-  src: url("./fonts/Fraunces.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("./fonts/InterVariable.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -9,9 +9,9 @@
 
 @font-face {
   font-family: "Inter";
-  src: url("./fonts/Inter-Regular.woff2") format("woff2");
+  src: url("./fonts/InterVariable-Italic.woff2") format("woff2");
   font-weight: normal;
-  font-style: normal;
+  font-style: italic;
   font-display: swap;
 }
 
@@ -129,9 +129,7 @@ textarea:not([rows]) {
 }
 
 /* Text fonts for Material layout */
-.text-h4 {
-  font-family: "Fraunces";
-}
+.text-h4,
 .text-h5,
 .text-h6,
 .text-caption {
