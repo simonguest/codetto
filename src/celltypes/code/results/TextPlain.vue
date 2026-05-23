@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch, onMounted, nextTick } from "vue";
 
 const props = defineProps<{
   value: any;
@@ -7,15 +7,22 @@ const props = defineProps<{
 
 const consoleRef = ref<HTMLTextAreaElement | null>(null);
 
-// Adjust height based on length of output
+// Adjust height based on actual rendered content, capped at 10 lines
 const adjustHeight = () => {
   if (!consoleRef.value) return;
-  const lineCount = props.value ? props.value.split('\n').length : 1;
-  const lineHeight = 1.2; // em
-  const padding = 1.5; // padding for bottom of text area control
-  const calculatedHeight = `${(lineCount * lineHeight) + padding}em`;
-  consoleRef.value.style.height = calculatedHeight;
+  consoleRef.value.style.height = 'auto';
+  const maxPx = 10 * 1.2 * 16 + 20;
+  consoleRef.value.style.height = Math.min(consoleRef.value.scrollHeight, maxPx) + 'px';
 };
+
+watch(() => props.value, () => {
+  adjustHeight();
+}, { immediate: true });
+
+onMounted(async () => {
+  await nextTick();
+  adjustHeight();
+});
 </script>
 
 <template>
