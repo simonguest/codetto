@@ -17,7 +17,7 @@ const adjustHeight = () => {
 
 // Watch for changes in stdout
 watch(() => props.stdout, () => {
-  adjustHeight();
+  nextTick(adjustHeight);
 }, { immediate: true });
 
 onMounted(async () => {
