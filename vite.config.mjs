@@ -6,6 +6,9 @@ import { resolve } from "path";
 export default defineConfig({
   base: "./",
   plugins: [vue(), vuetify({ autoImport: true })],
+  optimizeDeps: {
+    include: ["@codemirror/autocomplete"],
+  },
   publicDir: true,
   build: {
     rollupOptions: {
