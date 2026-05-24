@@ -4,6 +4,7 @@ import { useTheme } from "vuetify";
 
 import { settingsStore } from "@store/settingsStore";
 import { pyodideStore } from "@store/pyodideStore";
+import { jediStore } from "@store/jediStore";
 import { THEME_LABELS, Locale, LOCALE_OPTIONS, LOCALE_METADATA, SETTINGS_LABELS } from "@/i18n";
 import { Theme, THEME_OPTIONS } from "@/theme";
 
@@ -45,6 +46,16 @@ const updateLocale = (locale: Locale) => {
   settingsStore.setLocale(locale);
   currentLocale.value = locale;
 };
+
+const currentCodeCompletion = ref(settingsStore.codeCompletion);
+
+const updateCodeCompletion = (enabled: boolean) => {
+  settingsStore.setCodeCompletion(enabled);
+  currentCodeCompletion.value = enabled;
+  if (enabled && jediStore.status === "disabled") {
+    jediStore.initialize();
+  }
+};
 </script>
 
 <template>
@@ -79,6 +90,20 @@ const updateLocale = (locale: Locale) => {
                 item-value="value"
                 @update:model-value="updateLocale"
               ></v-select>
+            </v-card-text>
+          </v-card>
+
+          <v-card class="mb-4">
+            <v-card-title>{{ settingsLabels.editor }}</v-card-title>
+            <v-card-text>
+              <v-switch
+                v-model="currentCodeCompletion"
+                :label="settingsLabels.codeCompletion"
+                :hint="settingsLabels.codeCompletionHint"
+                persistent-hint
+                color="primary"
+                @update:model-value="updateCodeCompletion"
+              ></v-switch>
             </v-card-text>
           </v-card>
 

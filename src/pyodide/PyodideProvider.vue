@@ -3,6 +3,8 @@ import { onMounted, onUnmounted, watch } from "vue";
 
 import { notebookStore } from "@store/notebookStore";
 import { pyodideStore } from "@store/pyodideStore";
+import { jediStore } from "@store/jediStore";
+import { settingsStore } from "@store/settingsStore";
 import { Locale } from "@/i18n";
 
 const props = defineProps<{ locale: Locale | null }>();
@@ -17,6 +19,10 @@ onMounted(async () => {
   worker.postMessage({
     type: "initialize",
   });
+
+  if (settingsStore.codeCompletion) {
+    jediStore.initialize();
+  }
 
   worker.onmessage = async (event: MessageEvent<any>) => {
     const { type, text, result, message, error, interruptBuffer, pyodideVersion } = event.data;
@@ -83,11 +89,13 @@ watch(
         notebookStore.getLocalizedSource(pyodideStore.runningCellId, props.locale) || [],
         props.locale
       );
+      const codeStr = code?.join("") ?? "";
       worker.postMessage({
         type: "run",
         cellId: pyodideStore.runningCellId,
-        code: code?.join(""),
+        code: codeStr,
       });
+      jediStore.syncPackages(codeStr);
     }
     if (newExecutionStatus === "reset") {
       worker.postMessage({
