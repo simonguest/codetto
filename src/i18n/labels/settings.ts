@@ -27,8 +27,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     pyodideVersion: 'Pyodide Version',
     urlRequired: 'URL is required',
     setDefault: 'Set Default',
-    codeCompletion: 'Code Completion',
-    codeCompletionHint: 'Show suggestions when typing a dot (.)',
+    codeCompletion: 'Smart Code Completion',
+    codeCompletionHint: 'Library-aware suggestions when typing a dot (.) or pressing Ctrl+Space',
   },
   'ja-JP': {
     title: '設定',
@@ -42,8 +42,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     pyodideVersion: 'Pyodideバージョン',
     urlRequired: 'URLは必須です',
     setDefault: 'デフォルトに設定',
-    codeCompletion: 'コード補完',
-    codeCompletionHint: 'ドット(.)を入力したときに候補を表示する',
+    codeCompletion: 'スマートコード補完',
+    codeCompletionHint: 'ドット(.)入力またはCtrl+Spaceでライブラリの候補を表示する',
   },
   'hi-IN': {
     title: 'सेटिंग्स',
@@ -57,8 +57,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     pyodideVersion: 'Pyodide संस्करण',
     urlRequired: 'URL आवश्यक है',
     setDefault: 'डिफ़ॉल्ट सेट करें',
-    codeCompletion: 'कोड पूर्णता',
-    codeCompletionHint: 'डॉट (.) टाइप करने पर सुझाव दिखाएं',
+    codeCompletion: 'स्मार्ट कोड पूर्णता',
+    codeCompletionHint: 'डॉट (.) या Ctrl+Space दबाने पर लाइब्रेरी सुझाव दिखाएं',
   },
   'fa-IR': {
     title: 'تنظیمات',
@@ -72,7 +72,7 @@ export const SETTINGS_LABELS: Record<Locale, {
     pyodideVersion: 'نسخه Pyodide',
     urlRequired: 'آدرس الزامی است',
     setDefault: 'تنظیم به عنوان پیش‌فرض',
-    codeCompletion: 'تکمیل کد',
-    codeCompletionHint: 'نمایش پیشنهادات هنگام تایپ نقطه (.)',
+    codeCompletion: 'تکمیل هوشمند کد',
+    codeCompletionHint: 'نمایش پیشنهادات کتابخانه با تایپ نقطه (.) یا فشردن Ctrl+Space',
   }
 } as const;

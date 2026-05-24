@@ -21,7 +21,11 @@ onMounted(async () => {
   });
 
   if (settingsStore.codeCompletion) {
-    jediStore.initialize();
+    if (jediStore.status === "disabled") {
+      jediStore.initialize();
+    } else if (jediStore.status === "ready") {
+      syncNotebookPackages();
+    }
   }
 
   worker.onmessage = async (event: MessageEvent<any>) => {
@@ -41,6 +45,7 @@ onMounted(async () => {
         break;
       case "reset_completed":
         pyodideStore.resetCompleted();
+        syncNotebookPackages();
         break;
       case "stdout":
         if (pyodideStore.runningCellId) {
@@ -80,6 +85,25 @@ onUnmounted(async () => {
   worker.terminate();
 });
 
+function syncNotebookPackages() {
+  const cells = notebookStore.content.cells;
+  if (!cells?.length) return;
+  const allCode = cells
+    .filter(c => c.cell_type === "code")
+    .map(c => (c.source ?? []).join(""))
+    .join("\n");
+  if (allCode.trim()) {
+    jediStore.syncPackages(allCode);
+  }
+}
+
+watch(
+  () => jediStore.status,
+  status => {
+    if (status === "ready") syncNotebookPackages();
+  }
+);
+
 watch(
   () => pyodideStore.executionStatus,
   newExecutionStatus => {
@@ -100,7 +124,8 @@ watch(
     if (newExecutionStatus === "reset") {
       worker.postMessage({
         type: "reset"
-      })
+      });
+      syncNotebookPackages();
     }
   }
 );

@@ -6,6 +6,7 @@ export interface JediCompletion {
   name: string;
   type: string;
   prefixLen: number;
+  docstring: string;
 }
 
 export const jediStore = reactive({

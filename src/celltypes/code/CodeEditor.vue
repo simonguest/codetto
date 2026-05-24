@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, computed } from "vue";
+import { onMounted, watch, computed, ref } from "vue";
 import { EditorState } from "@codemirror/state";
 import { EditorView, basicSetup } from "codemirror";
-import { python, pythonLanguage } from "@codemirror/lang-python";
-import { CompletionContext, CompletionResult } from "@codemirror/autocomplete";
+import { python } from "@codemirror/lang-python";
+import { autocompletion, CompletionContext, CompletionResult, CompletionSource } from "@codemirror/autocomplete";
 
 import { notebookStore } from "@store/notebookStore";
 import { settingsStore } from "@store/settingsStore";
@@ -34,6 +34,7 @@ const props = defineProps<{
 
 let editorView: EditorView | null = null;
 let isUpdatingFromStore = false;
+const isCompletionLoading = ref(false);
 
 const source = computed<string[]>(() => {
   const rawSource = notebookStore.getSource(props.id) || [];
@@ -55,12 +56,22 @@ function buildPriorCode(): string {
     .join("");
 }
 
-async function jediCompletionSource(context: CompletionContext): Promise<CompletionResult | null> {
-  if (!settingsStore.codeCompletion) return null;
-  if (jediStore.status !== "ready") return null;
+async function delegateToBuiltins(context: CompletionContext): Promise<CompletionResult | null> {
+  const sources = context.state.languageDataAt<CompletionSource>("autocomplete", context.pos);
+  for (const source of sources) {
+    const result = await source(context);
+    if (result) return result;
+  }
+  return null;
+}
 
+async function jediCompletionSource(context: CompletionContext): Promise<CompletionResult | null> {
   const charBefore = context.state.sliceDoc(context.pos - 1, context.pos);
-  if (!context.explicit && charBefore !== ".") return null;
+  const useJedi = settingsStore.codeCompletion &&
+    jediStore.status === "ready" &&
+    (charBefore === "." || context.explicit);
+
+  if (!useJedi) return delegateToBuiltins(context);
 
   const word = context.matchBefore(/\w*/);
   const from = word?.from ?? context.pos;
@@ -74,15 +85,19 @@ async function jediCompletionSource(context: CompletionContext): Promise<Complet
   const fullLine = priorLineCount + cmLine.number;
   const fullCol = context.pos - cmLine.from;
 
+  isCompletionLoading.value = true;
   const completions = await jediStore.complete(fullScript, fullLine, fullCol);
+  isCompletionLoading.value = false;
   if (context.aborted) return null;
-  if (!completions.length) return null;
+  if (!completions.length) return delegateToBuiltins(context);
 
   return {
     from,
     options: completions.map(c => ({
       label: c.name,
       type: JEDI_TYPE_MAP[c.type] ?? "text",
+      detail: c.type,
+      info: c.docstring || undefined,
     })),
     validFor: /^\w*$/,
   };
@@ -103,7 +118,7 @@ onMounted(() => {
       python(),
       theme,
       EditorView.lineWrapping,
-      pythonLanguage.data.of({ autocomplete: jediCompletionSource }),
+      autocompletion({ override: [jediCompletionSource] }),
       EditorView.updateListener.of(update => {
         if (update.docChanged && !isUpdatingFromStore) {
           const newSource = update.state.doc.toString();
@@ -150,5 +165,31 @@ watch(
 </script>
 
 <template>
-  <div :id="`code-editor-${props.id}`" />
+  <div class="code-editor-container">
+    <div :id="`code-editor-${props.id}`" />
+    <div v-if="isCompletionLoading" class="completion-loading-indicator" />
+  </div>
 </template>
+
+<style scoped>
+.code-editor-container {
+  position: relative;
+}
+
+.completion-loading-indicator {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--v-theme-primary), 0.2);
+  border-top-color: rgb(var(--v-theme-primary));
+  animation: completion-spin 0.7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes completion-spin {
+  to { transform: rotate(360deg); }
+}
+</style>
