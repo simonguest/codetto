@@ -28,7 +28,7 @@ const invalid = base_red,
   highlightBackground = '#414b46',
   background = base00,
   tooltipBackground = base01,
-  selection = base01,
+  selection = '#264f78',
   cursor = base04
 
 /// The editor theme styles for Material Dark.
@@ -60,11 +60,7 @@ export const materialDarkTheme = EditorView.theme(
       backgroundColor: highlightBackground
     },
 
-    '.cm-activeLine': { backgroundColor: highlightBackground },
-    '.cm-selectionMatch': {
-      backgroundColor: darkBackground,
-      outline: `1px solid ${base_teal}`
-    },
+    '.cm-selectionMatch': { outline: `1px solid ${base_teal}` },
 
     '&.cm-focused .cm-matchingBracket': {
       color: base06,

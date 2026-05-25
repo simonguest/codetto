@@ -33,7 +33,7 @@ const invalid = '#d30102',
   highlightBackground = darkBackground,
   background = '#ffffff',
   tooltipBackground = base05,
-  selection = darkBackground,
+  selection = '#b3d7ff',
   cursor = base01
 
 /// The editor theme styles for Basic Light.
@@ -65,8 +65,7 @@ export const basicLightTheme = EditorView.theme(
       backgroundColor: base05
     },
 
-    '.cm-activeLine': { backgroundColor: highlightBackground },
-    '.cm-selectionMatch': { backgroundColor: base05 },
+    '.cm-selectionMatch': { outline: `1px solid ${base09}` },
 
     '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
       outline: `1px solid ${base03}`
