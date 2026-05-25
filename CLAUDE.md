@@ -47,6 +47,7 @@ Each cell type is a self-contained directory with an `index.ts` export:
 - `markdown` — rendered markdown via `marked`
 - `video` — video player via `video.js`; triggered by `raw` cells tagged with `"video"` in `cell.metadata.tags`; cell source is a JSON payload `{ "url": "...", "controls": true }`
 - `chat` — LLM chat interface
+- `journal` — student-editable note cell; triggered by `markdown` cells tagged with `"journal"` in `cell.metadata.tags`; double-click (or click the pencil icon) to enter edit mode, Close to save. See `docs/cell-types/journal.md`.
 
 ### Notebook metadata extensions
 

@@ -47,84 +47,159 @@ function closeEditMode() {
 <template>
   <v-card variant="text" max-width="800" class="pt-2 pb-2 ma-auto">
     <!-- Preview mode -->
-    <v-card
+    <div
       v-if="!editMode"
-      class="journal-preview-card"
-      variant="outlined"
+      class="journal-card journal-lined"
       @dblclick="enterEditMode"
     >
-      <v-card-text class="journal-preview-body">
-        <v-icon class="journal-icon" size="small">mdi-pencil-outline</v-icon>
+      <v-icon class="journal-icon" size="small" @click.stop="enterEditMode">mdi-pencil-outline</v-icon>
+      <div class="journal-body">
         <div
           v-if="hasContent"
-          class="markdown-content"
+          class="journal-text markdown-content"
           v-html="renderedContent"
         />
-        <div v-else class="journal-placeholder">
+        <div v-else class="journal-text journal-placeholder">
           Double-click to write your thoughts...
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </div>
 
     <!-- Edit mode -->
-    <v-card v-else class="journal-preview-card" variant="outlined">
-      <v-card-text class="pb-0">
-        <v-textarea
-          v-model="editContent"
-          auto-grow
-          variant="plain"
-          hide-details
-          rows="4"
-          autofocus
-          class="journal-textarea"
-        />
-      </v-card-text>
-      <v-card-actions class="justify-end pt-0">
-        <v-btn color="primary" variant="tonal" size="small" @click="closeEditMode">
+    <div v-else class="journal-card journal-lined">
+      <v-textarea
+        v-model="editContent"
+        auto-grow
+        variant="plain"
+        hide-details
+        rows="4"
+        autofocus
+        class="journal-textarea"
+      />
+      <div class="journal-actions">
+        <v-btn variant="tonal" size="small" class="journal-close-btn" @click="closeEditMode">
           {{ labels.close }}
         </v-btn>
-      </v-card-actions>
-    </v-card>
+      </div>
+    </div>
   </v-card>
 </template>
 
 <style scoped>
-.journal-preview-card {
-  border-left: 4px solid rgb(var(--v-theme-warning)) !important;
+.journal-card {
+  --line-h: 28px;
+  --note-bg: #fef9c3;
+  --note-shadow: 2px 4px 10px rgba(0, 0, 0, 0.18);
+  --note-border: #f0e060;
+
   position: relative;
+  background-color: var(--note-bg);
+  border: 1px solid var(--note-border);
+  border-radius: 2px;
+  box-shadow: var(--note-shadow);
+  font-family: "Inter", sans-serif;
+  font-style: italic;
+  color: #3a3010;
+  cursor: pointer;
 }
 
-.journal-preview-body {
-  cursor: pointer;
-  min-height: 48px;
-  padding-right: 36px !important;
+.journal-lined {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--line-h) - 1px),
+    var(--line-color) calc(var(--line-h) - 1px),
+    var(--line-color) var(--line-h)
+  );
+}
+
+.journal-body {
+  padding: 12px 36px 12px 16px;
+  min-height: 56px;
+}
+
+.journal-text {
+  line-height: var(--line-h);
+  font-size: 0.95rem;
+}
+
+.journal-placeholder {
+  color: rgba(58, 48, 16, 0.45);
 }
 
 .journal-icon {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  opacity: 0.35;
+  top: 8px;
+  right: 8px;
+  color: #9a8520;
+  opacity: 0.4;
   transition: opacity 0.15s;
 }
 
-.journal-preview-card:hover .journal-icon {
-  opacity: 0.8;
+.journal-card:hover .journal-icon {
+  opacity: 0.75;
 }
 
-.journal-placeholder {
-  color: rgba(var(--v-theme-on-surface), 0.4);
-  font-style: italic;
-  font-size: 0.9rem;
+/* textarea in edit mode */
+.journal-textarea :deep(.v-input__control),
+.journal-textarea :deep(.v-field),
+.journal-textarea :deep(.v-field__field) {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.markdown-content {
-  font-size: 1rem;
+.journal-textarea :deep(.v-field__input) {
+  font-family: "Inter", sans-serif !important;
+  font-style: italic !important;
+  font-size: 0.95rem !important;
+  line-height: var(--line-h) !important;
+  color: #3a3010 !important;
+  padding: 12px 16px !important;
+  min-height: calc(var(--line-h) * 4) !important;
+  background: transparent !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
 
-.markdown-content :deep(p:last-child),
-.markdown-content :deep(ul:last-child),
-.markdown-content :deep(ol:last-child) {
-  margin-block-end: 0;
+.journal-textarea :deep(.v-field__overlay),
+.journal-textarea :deep(.v-field__outline),
+.journal-textarea :deep(.v-field__underline),
+.journal-textarea :deep(.v-field__loader) {
+  display: none !important;
+}
+
+.journal-textarea :deep(textarea) {
+  background: transparent !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+.journal-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 12px 10px;
+}
+
+.journal-close-btn {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  color: #000 !important;
+}
+
+/* markdown inside journal */
+.markdown-content :deep(p),
+.markdown-content :deep(li) {
+  line-height: var(--line-h);
+  margin: 0;
+}
+
+.markdown-content :deep(p + p) {
+  margin-top: var(--line-h);
+}
+
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3) {
+  line-height: var(--line-h);
+  margin: 0 0 var(--line-h);
 }
 </style>
