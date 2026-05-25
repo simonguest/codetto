@@ -39,9 +39,13 @@ const toggleHideCode = () => {
           icon="mdi-play-outline"
           @click="runCode"
           :disabled="pyodideStore.executionStatus !== 'idle' || pyodideStore.workerStatus !== 'ready'"
-          :loading="pyodideStore.workerStatus !== 'ready'"
+          :loading="pyodideStore.workerStatus !== 'ready' || pyodideStore.runningCellId === id"
           aria-label="Run code"
-        />
+        >
+          <template #loader>
+            <v-icon class="mdi-spin">mdi-cog</v-icon>
+          </template>
+        </v-btn>
         <v-btn
           size="32"
           icon="mdi-stop"
