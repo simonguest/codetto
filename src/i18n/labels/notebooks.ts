@@ -174,5 +174,40 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogError: 'خطا',
     urlDialogErrorMessage: 'دریافت دفترچه از URL ناموفق بود',
     urlDialogInvalidUrl: 'لطفاً یک URL معتبر وارد کنید (باید با http:// یا https:// شروع شود)'
+  },
+  'mn-MN': {
+    title: 'Дэвтэрүүд',
+    addNotebook: 'Нэмэх',
+    fromTemplate: 'Загвараас',
+    fromFile: 'Файлаас',
+    fromUrl: 'URL-аас',
+    delete: 'Устгах',
+    download: 'Татаж авах',
+    lastEdited: 'Сүүлд засварласан',
+    back: 'Буцах',
+    notebookViewer: 'Дэвтэр үзэгч',
+    // Save status labels
+    saved: 'Хадгалагдсан',
+    saving: 'Хадгалж байна...',
+    saveError: 'Хадгалах алдаа',
+    // Loading and error states
+    loadingNotebook: 'Дэвтэр ачааллаж байна...',
+    failedToLoad: 'Дэвтэр ачааллахад алдаа гарлаа',
+    backToNotebooks: 'Дэвтэрүүд рүү буцах',
+    untitledNotebook: 'Гарчиггүй дэвтэр',
+    // Time formatting
+    justNow: 'Дөнгөж сая',
+    hoursAgo: 'цагийн өмнө',
+    hourAgo: 'цагийн өмнө',
+    daysAgo: 'өдрийн өмнө',
+    dayAgo: 'өдрийн өмнө',
+    // URL import labels
+    urlDialogTitle: 'URL-аас импортлох',
+    urlDialogLabel: 'Дэвтэрийн URL оруулах',
+    urlDialogOpen: 'Нээх',
+    urlDialogCancel: 'Хаах',
+    urlDialogError: 'Алдаа',
+    urlDialogErrorMessage: 'URL-аас дэвтэр авахад алдаа гарлаа',
+    urlDialogInvalidUrl: 'Зөв URL оруулна уу (http:// эсвэл https://-ээр эхэлсэн байх ёстой)'
   }
 } as const;

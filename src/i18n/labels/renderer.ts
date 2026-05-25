@@ -94,5 +94,24 @@ export const RENDERER_LABELS: Record<Locale, {
     close: 'بستن',
     languageOverride: 'بازنویسی زبان',
     noLanguageOverride: 'هیچ'
+  },
+  'mn-MN': {
+    notebookStarting: 'Дэвтэр эхэлж байна...',
+    notebookStartError: 'Алдааны улмаас дэвтэр эхэлж чадсангүй:',
+    inputDialogTitle: 'Оролт оруулах',
+    inputDialogLabel: 'Оролт',
+    inputDialogCancel: 'Цуцлах',
+    inputDialogSubmit: 'Илгээх',
+    globalsDialogTitle: 'Глобал хувьсагчид',
+    addVariable: 'Нэмэх',
+    variableName: 'Хувьсагчийн нэр',
+    defaultValue: 'Өгөгдмөл утга',
+    addLocale: 'Нутгийн тохиргоо нэмэх',
+    deleteVariable: 'Хувьсагч устгах',
+    save: 'Хадгалах',
+    cancel: 'Цуцлах',
+    close: 'Хаах',
+    languageOverride: 'Хэлний давхардал',
+    noLanguageOverride: 'Байхгүй'
   }
 } as const;

@@ -8,5 +8,6 @@ export const LOCALE_METADATA: Record<Locale, {
   'en-US': { direction: 'ltr', name: 'English (US)' },
   'ja-JP': { direction: 'ltr', name: '日本語' },
   'hi-IN': { direction: 'ltr', name: 'हिन्दी' },
-  'fa-IR': { direction: 'rtl', name: 'فارسی' }
+  'fa-IR': { direction: 'rtl', name: 'فارسی' },
+  'mn-MN': { direction: 'ltr', name: 'Монгол' }
 } as const;

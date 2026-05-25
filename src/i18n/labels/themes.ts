@@ -17,5 +17,9 @@ export const THEME_LABELS: Record<Locale, Record<Theme, string>> = {
   'fa-IR': {
     light: 'روشن',
     dark: 'تیره'
+  },
+  'mn-MN': {
+    light: 'Цайвар',
+    dark: 'Харанхуй'
   }
 } as const;

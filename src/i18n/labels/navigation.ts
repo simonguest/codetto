@@ -16,5 +16,9 @@ export const NAV_LABELS: Record<Locale, { notebooks: string; settings: string }>
   'fa-IR': {
     notebooks: 'دفترچه‌ها',
     settings: 'تنظیمات'
+  },
+  'mn-MN': {
+    notebooks: 'Дэвтэрүүд',
+    settings: 'Тохиргоо'
   }
 } as const;

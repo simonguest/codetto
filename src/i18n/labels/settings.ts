@@ -74,5 +74,20 @@ export const SETTINGS_LABELS: Record<Locale, {
     setDefault: 'تنظیم به عنوان پیش‌فرض',
     codeCompletion: 'تکمیل هوشمند کد',
     codeCompletionHint: 'نمایش پیشنهادات کتابخانه با تایپ نقطه (.) یا فشردن Ctrl+Space',
+  },
+  'mn-MN': {
+    title: 'Тохиргоо',
+    appearance: 'Харагдах байдал',
+    language: 'Хэл',
+    editor: 'Засварлагч',
+    about: 'Тухай',
+    theme: 'Загвар',
+    version: 'Хувилбар',
+    appName: 'K12 Дэвтэр - Вэб Бүрхүүл',
+    pyodideVersion: 'Pyodide Хувилбар',
+    urlRequired: 'URL шаардлагатай',
+    setDefault: 'Өгөгдмөлөөр тохируулах',
+    codeCompletion: 'Ухаалаг код дуусгах',
+    codeCompletionHint: 'Цэг (.) бичих эсвэл Ctrl+Space дарахад номын сангийн саналыг харуулна',
   }
 } as const;
