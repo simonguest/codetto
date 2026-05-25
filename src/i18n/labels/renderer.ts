@@ -15,6 +15,7 @@ export const RENDERER_LABELS: Record<Locale, {
   deleteVariable: string;
   save: string;
   cancel: string;
+  close: string;
   languageOverride: string;
   noLanguageOverride: string;
 }> = {
@@ -33,6 +34,7 @@ export const RENDERER_LABELS: Record<Locale, {
     deleteVariable: 'Delete Variable',
     save: 'Save',
     cancel: 'Cancel',
+    close: 'Close',
     languageOverride: 'Language Override',
     noLanguageOverride: 'None'
   },
@@ -51,6 +53,7 @@ export const RENDERER_LABELS: Record<Locale, {
     deleteVariable: '変数を削除',
     save: '保存',
     cancel: 'キャンセル',
+    close: '閉じる',
     languageOverride: '言語オーバーライド',
     noLanguageOverride: 'なし'
   },
@@ -69,6 +72,7 @@ export const RENDERER_LABELS: Record<Locale, {
     deleteVariable: 'वेरिएबल हटाएं',
     save: 'सेव करें',
     cancel: 'रद्द करें',
+    close: 'बंद करें',
     languageOverride: 'भाषा ओवरराइड',
     noLanguageOverride: 'कोई नहीं'
   },
@@ -87,6 +91,7 @@ export const RENDERER_LABELS: Record<Locale, {
     deleteVariable: 'حذف متغیر',
     save: 'ذخیره',
     cancel: 'لغو',
+    close: 'بستن',
     languageOverride: 'بازنویسی زبان',
     noLanguageOverride: 'هیچ'
   }

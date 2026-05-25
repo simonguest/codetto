@@ -122,7 +122,7 @@ const processedSource = computed(() => {
       <v-card-text v-show="props.cell.outputs? props.cell.outputs.length > 0 : false">
         <v-tabs-window v-model="outputTab" direction="vertical">
           <v-tabs-window-item value="result">
-            <Result :value="notebookStore.getResult(cell.id)" />
+            <Result :value="notebookStore.getResult(cell.id)" :locale="props.locale" />
           </v-tabs-window-item>
 
           <v-tabs-window-item value="stdout" direction="vertical">
