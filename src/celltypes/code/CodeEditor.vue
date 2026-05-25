@@ -2,12 +2,15 @@
 import { onMounted, watch, computed, ref } from "vue";
 import { EditorState } from "@codemirror/state";
 import { EditorView, basicSetup } from "codemirror";
+import { keymap } from "@codemirror/view";
+import { Prec } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
 import { autocompletion, CompletionContext, CompletionResult, CompletionSource } from "@codemirror/autocomplete";
 
 import { notebookStore } from "@store/notebookStore";
 import { settingsStore } from "@store/settingsStore";
 import { jediStore } from "@store/jediStore";
+import { pyodideStore } from "@store/pyodideStore";
 import { Theme } from "@/theme";
 import { Locale } from "@/i18n";
 
@@ -119,6 +122,16 @@ onMounted(() => {
       theme,
       EditorView.lineWrapping,
       autocompletion({ override: [jediCompletionSource] }),
+      Prec.highest(keymap.of([{
+        key: "Mod-Enter",
+        run: () => {
+          if (pyodideStore.executionStatus === "idle" && pyodideStore.workerStatus === "ready") {
+            notebookStore.clearOutputs(props.id);
+            pyodideStore.executeCell(props.id);
+          }
+          return true;
+        },
+      }])),
       EditorView.updateListener.of(update => {
         if (update.docChanged && !isUpdatingFromStore) {
           const newSource = update.state.doc.toString();
