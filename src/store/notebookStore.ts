@@ -26,8 +26,7 @@ export const notebookStore = reactive({
   setSource(cellId: string, source: string[]) {
     const cell = this.findCell(cellId);
     if (cell) {
-      // Add \n chars to the end of each source line
-      source = source.map(line => line + "\n");
+      source = source.map((line, i) => i < source.length - 1 ? line + "\n" : line);
       cell.source = source;
       this.updated = Date.now();
     }
@@ -56,9 +55,8 @@ export const notebookStore = reactive({
     if (locale === null) {
       this.setSource(cellId, source);
     } else {
-      // Add \n chars to the end of each source line
-      source = source.map(line => line + "\n");
-      
+      source = source.map((line, i) => i < source.length - 1 ? line + "\n" : line);
+
       if (!cell.metadata["i18n"]) {
         cell.metadata["i18n"] = {};
       }
