@@ -10,6 +10,7 @@ import MarkdownCell from "@celltypes/markdown";
 import CodeCell from "@celltypes/code";
 import VideoCell from "@celltypes/video";
 import ChatCell from "@celltypes/chat";
+import JournalCell from "@celltypes/journal";
 import InputDialog from "@components/InputDialog.vue";
 
 const props = defineProps<{
@@ -60,9 +61,14 @@ const rendererLabels = computed(() => RENDERER_LABELS[props.locale]);
 
     <div v-for="cell in notebookStore.content.cells">
       <MarkdownCell
-        v-if="cell.cell_type === 'markdown'"
+        v-if="cell.cell_type === 'markdown' && !cell.metadata.tags?.includes('journal')"
         :cell="cell"
         :metadata="cell.metadata"
+        :locale="props.locale"
+      />
+      <JournalCell
+        v-if="cell.cell_type === 'markdown' && cell.metadata.tags?.includes('journal')"
+        :cell="cell"
         :locale="props.locale"
       />
       <CodeCell
