@@ -4,6 +4,7 @@ import NotebookIndexView from '@views/NotebookIndex.vue'
 import NotebookView from '@views/Notebook.vue'
 import NotebookJSONView from '@views/NotebookJSON.vue'
 import SettingsView from '@views/Settings.vue'
+import TestNotebookView from '@views/TestNotebook.vue'
 
 const routes = [
   {
@@ -29,6 +30,11 @@ const routes = [
     path: '/settings',
     name: 'settings',
     component: SettingsView
+  },
+  {
+    path: '/test/:filename',
+    name: 'test-notebook',
+    component: TestNotebookView
   }
 ]
 

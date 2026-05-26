@@ -112,8 +112,8 @@ onUnmounted(() => {
 
 <style scoped>
 .content-container {
-  padding-bottom: v-bind("route.path.startsWith('/notebooks/') ? '0px' : '56px'");
-  height: v-bind("route.path.startsWith('/notebooks/') ? 'calc(var(--vh, 1vh) * 100)' : 'calc(var(--vh, 1vh) * 100 - 56px)'");
+  padding-bottom: v-bind("(route.path.startsWith('/notebooks/') || route.path.startsWith('/test/')) ? '0px' : '56px'");
+  height: v-bind("(route.path.startsWith('/notebooks/') || route.path.startsWith('/test/')) ? 'calc(var(--vh, 1vh) * 100)' : 'calc(var(--vh, 1vh) * 100 - 56px)'");
   overflow-y: auto;
 }
 

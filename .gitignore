@@ -17,5 +17,9 @@ node_modules
 # Dist output folders
 dist
 
+# Playwright
+test-results/
+playwright-report/
+
 # Package lock files to prevent errors with GH Actions
 package-lock.json
