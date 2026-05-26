@@ -83,7 +83,13 @@ async function initialize() {
   console.log("PyodideWorker: Creating override for js functions");
   pyodide.globals.set("js", {
     imageBase64: (image_base64: string) => {
-      self.postMessage({ type: "execute_result", result: { "image/png": [image_base64] } });
+      self.postMessage({ type: "execute_result", result: { "image/png": image_base64 } });
+    },
+    imageSvg: (svg: string) => {
+      self.postMessage({ type: "execute_result", result: { "image/svg+xml": svg } });
+    },
+    displayHtml: (html: string) => {
+      self.postMessage({ type: "execute_result", result: { "text/html": html } });
     },
   });
 
