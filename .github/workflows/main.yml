@@ -38,6 +38,10 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      # peaceiris/actions-gh-pages hasn't updated its runtime to Node 24 yet;
+      # remove this once a new release does so.
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     permissions:
       contents: write
     steps:
