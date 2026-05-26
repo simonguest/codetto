@@ -5,6 +5,7 @@ import { overrides, implementOverride } from "./overrides/implementOverride";
 
 let pyodide: any;
 let interruptBuffer: Int32Array | null = null;
+let appliedEnvVarNames = new Set<string>();
 const hasSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
 
 async function runPythonFile(url: URL) {
@@ -114,6 +115,27 @@ self.onmessage = async event => {
       self.postMessage({
         type: "reset_completed"
       });
+      break;
+    case "set_env_vars":
+      if (pyodide && data.envVars) {
+        try {
+          const current = data.envVars as Record<string, string>;
+          const currentNames = new Set(Object.keys(current));
+          const toRemove = [...appliedEnvVarNames].filter(k => !currentNames.has(k));
+          const lines = ["import os"];
+          for (const k of toRemove) {
+            lines.push(`os.environ.pop(${JSON.stringify(k)}, None)`);
+          }
+          for (const [k, v] of Object.entries(current)) {
+            lines.push(`os.environ[${JSON.stringify(k)}] = ${JSON.stringify(v)}`);
+          }
+          await pyodide.runPythonAsync(lines.join("\n"));
+          appliedEnvVarNames = currentNames;
+          console.log(`PyodideWorker: Applied ${currentNames.size} env var(s), removed ${toRemove.length}`);
+        } catch (e) {
+          console.error("PyodideWorker: Failed to set env vars:", e);
+        }
+      }
       break;
     case "run":
       const code = data.code;

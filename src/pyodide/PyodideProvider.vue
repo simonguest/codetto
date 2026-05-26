@@ -42,10 +42,12 @@ onMounted(async () => {
         if (pyodideVersion) {
           pyodideStore.pyodideVersion = pyodideVersion;
         }
+        sendEnvVars();
         break;
       case "reset_completed":
         pyodideStore.resetCompleted();
         syncNotebookPackages();
+        sendEnvVars();
         break;
       case "stdout":
         if (pyodideStore.runningCellId) {
@@ -84,6 +86,11 @@ onUnmounted(async () => {
   pyodideStore.setWorkerStatus("terminating");
   worker.terminate();
 });
+
+function sendEnvVars() {
+  // Spread into a plain object so structured clone works reliably with Vue reactive proxies
+  worker.postMessage({ type: "set_env_vars", envVars: { ...settingsStore.envVars } });
+}
 
 function syncNotebookPackages() {
   const cells = notebookStore.content.cells;
@@ -128,6 +135,16 @@ watch(
       syncNotebookPackages();
     }
   }
+);
+
+watch(
+  () => settingsStore.envVars,
+  () => {
+    if (pyodideStore.workerStatus === "ready") {
+      sendEnvVars();
+    }
+  },
+  { deep: true }
 );
 
 watch(

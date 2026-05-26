@@ -8,6 +8,39 @@ import { jediStore } from "@store/jediStore";
 import { THEME_LABELS, Locale, LOCALE_OPTIONS, LOCALE_METADATA, SETTINGS_LABELS } from "@/i18n";
 import { Theme, THEME_OPTIONS } from "@/theme";
 
+const showAddEnvVar = ref(false);
+const newEnvVarName = ref('');
+const newEnvVarValue = ref('');
+const envVarNameError = ref('');
+const envVarValueError = ref('');
+
+const envVarEntries = computed(() => Object.keys(settingsStore.envVars));
+
+function openAddEnvVar() {
+  newEnvVarName.value = '';
+  newEnvVarValue.value = '';
+  envVarNameError.value = '';
+  envVarValueError.value = '';
+  showAddEnvVar.value = true;
+}
+
+function cancelAddEnvVar() {
+  showAddEnvVar.value = false;
+}
+
+function confirmAddEnvVar() {
+  const labels = settingsLabels.value;
+  envVarNameError.value = newEnvVarName.value.trim() ? '' : labels.envVarNameRequired;
+  envVarValueError.value = newEnvVarValue.value ? '' : labels.envVarValueRequired;
+  if (envVarNameError.value || envVarValueError.value) return;
+  settingsStore.setEnvVar(newEnvVarName.value.trim(), newEnvVarValue.value);
+  showAddEnvVar.value = false;
+}
+
+function deleteEnvVar(name: string) {
+  settingsStore.deleteEnvVar(name);
+}
+
 // Get theme instance at setup level
 const theme = useTheme();
 
@@ -104,6 +137,55 @@ const updateCodeCompletion = (enabled: boolean) => {
                 color="primary"
                 @update:model-value="updateCodeCompletion"
               ></v-switch>
+            </v-card-text>
+          </v-card>
+
+          <v-card class="mb-4">
+            <v-card-title>{{ settingsLabels.environmentVariables }}</v-card-title>
+            <v-card-text>
+              <v-list v-if="envVarEntries.length > 0" density="compact" class="mb-2">
+                <v-list-item
+                  v-for="name in envVarEntries"
+                  :key="name"
+                  :title="name"
+                  subtitle="••••••••"
+                >
+                  <template #append>
+                    <v-btn
+                      variant="text"
+                      color="error"
+                      size="small"
+                      @click="deleteEnvVar(name)"
+                    >{{ settingsLabels.envVarDelete }}</v-btn>
+                  </template>
+                </v-list-item>
+              </v-list>
+              <p v-else class="text-body-2 text-medium-emphasis mb-2">{{ settingsLabels.envVarEmpty }}</p>
+
+              <div v-if="showAddEnvVar" class="d-flex align-start ga-2 mt-2">
+                <v-text-field
+                  v-model="newEnvVarName"
+                  :label="settingsLabels.envVarName"
+                  :error-messages="envVarNameError"
+                  density="compact"
+                  hide-details="auto"
+                  class="flex-grow-0"
+                  style="width: 180px"
+                ></v-text-field>
+                <v-text-field
+                  v-model="newEnvVarValue"
+                  :label="settingsLabels.envVarValue"
+                  :error-messages="envVarValueError"
+                  density="compact"
+                  hide-details="auto"
+                  class="flex-grow-1"
+                ></v-text-field>
+                <v-btn color="primary" variant="tonal" @click="confirmAddEnvVar">{{ settingsLabels.envVarAdd }}</v-btn>
+                <v-btn variant="text" @click="cancelAddEnvVar">{{ settingsLabels.envVarCancel }}</v-btn>
+              </div>
+              <v-btn v-else color="primary" variant="tonal" size="small" @click="openAddEnvVar">
+                {{ settingsLabels.envVarAdd }}
+              </v-btn>
             </v-card-text>
           </v-card>
 
