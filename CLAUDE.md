@@ -19,9 +19,46 @@ npx tauri build
 
 # Clean dist
 npm run clean
+
+# Run Playwright tests (headless)
+npm test
+
+# Run Playwright tests with interactive UI
+npm run test:ui
 ```
 
-There are no tests in this project.
+## Testing
+
+Tests use **Playwright** (`tests/`). The dev server must be running, or Playwright will start it automatically via the `webServer` config in `playwright.config.ts`.
+
+### Test notebooks
+
+Test fixtures live in `public/test/` as plain `.ipynb` files served statically by Vite. Each notebook tests a specific area of focus. To open one manually in the browser: `http://localhost:55000/#/test/<filename>.ipynb`.
+
+The `/test/:filename` route (`src/views/TestNotebook.vue`) fetches the notebook from `/test/<filename>` at runtime — no IndexedDB involvement, no auto-save. This keeps test runs isolated and leaves user storage untouched.
+
+### Writing a new test
+
+1. Add a notebook to `public/test/` (e.g. `public/test/matplotlib.ipynb`)
+2. Add a spec file to `tests/` (e.g. `tests/matplotlib.spec.ts`)
+3. Navigate to `/#/test/<filename>.ipynb` in the test
+4. Wait for Pyodide to be ready: `await expect(page.getByRole('button', { name: 'Run code' })).toBeEnabled({ timeout: 90_000 })`
+5. Click the run button, then assert on `textarea.output-console` (stdout) or other output selectors
+
+### Key selectors
+
+- **Run button** — `page.getByRole('button', { name: 'Run code' })`; disabled while Pyodide is initialising, enabled when ready
+- **stdout output** — `page.locator('textarea.output-console')`
+- **Pyodide ready** — inferred from the run button becoming enabled (no direct DOM indicator)
+
+### CI
+
+Two workflow files in `.github/workflows/`:
+
+- **`main.yml`** — triggers on push to `main`; runs tests first, then deploys to GitHub Pages only if tests pass (`needs: test`)
+- **`playwright.yml`** — triggers on pull requests to `main`; runs tests only (no deploy)
+
+Playwright and the Chromium browser are installed fresh each CI run via `npx playwright install --with-deps chromium`.
 
 ## Architecture
 
@@ -65,7 +102,7 @@ Locale strings live in `src/i18n/labels/`. The active locale is stored in `setti
 
 ### Pyodide specifics
 
-- Pyodide assets must be present at `public/pyodide/` (not committed; must be downloaded separately).
+- Pyodide assets live at `public/pyodide/` and are committed to the repo.
 - The worker requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers — these are set in `vite.config.mjs` for both dev and preview.
 - `SharedArrayBuffer` is used for interrupt support when available; the worker gracefully degrades without it.
 - `python_init.py` sets up stdout overrides and async `input()` transforms on worker startup. `python_reset_globals.py` clears Python globals between notebook loads.
