@@ -7,6 +7,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   fromFile: string;
   fromUrl: string;
   delete: string;
+  deleteConfirmTitle: string;
+  deleteConfirmMessage: string;
+  deleteConfirm: string;
+  deleteCancel: string;
   download: string;
   lastEdited: string;
   back: string;
@@ -42,6 +46,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'From File',
     fromUrl: 'From URL',
     delete: 'Delete',
+    deleteConfirmTitle: 'Delete Notebook',
+    deleteConfirmMessage: 'Are you sure you want to delete this notebook? This cannot be undone.',
+    deleteConfirm: 'Delete',
+    deleteCancel: 'Cancel',
     download: 'Download',
     lastEdited: 'Last edited',
     back: 'Back',
@@ -77,6 +85,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'ファイルから',
     fromUrl: 'URLから',
     delete: '削除',
+    deleteConfirmTitle: 'ノートブックを削除',
+    deleteConfirmMessage: 'このノートブックを削除してもよろしいですか？この操作は元に戻せません。',
+    deleteConfirm: '削除',
+    deleteCancel: 'キャンセル',
     download: 'ダウンロード',
     lastEdited: '最終編集',
     back: '戻る',
@@ -112,6 +124,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'फ़ाइल से',
     fromUrl: 'URL से',
     delete: 'हटाएं',
+    deleteConfirmTitle: 'नोटबुक हटाएं',
+    deleteConfirmMessage: 'क्या आप वाकई इस नोटबुक को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।',
+    deleteConfirm: 'हटाएं',
+    deleteCancel: 'रद्द करें',
     download: 'डाउनलोड',
     lastEdited: 'अंतिम संपादन',
     back: 'वापस',
@@ -147,6 +163,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'از فایل',
     fromUrl: 'از URL',
     delete: 'حذف',
+    deleteConfirmTitle: 'حذف دفترچه',
+    deleteConfirmMessage: 'آیا مطمئن هستید که می‌خواهید این دفترچه را حذف کنید؟ این عمل قابل بازگشت نیست.',
+    deleteConfirm: 'حذف',
+    deleteCancel: 'لغو',
     download: 'دانلود',
     lastEdited: 'آخرین ویرایش',
     back: 'بازگشت',
@@ -182,6 +202,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     fromFile: 'Файлаас',
     fromUrl: 'URL-аас',
     delete: 'Устгах',
+    deleteConfirmTitle: 'Дэвтэр устгах',
+    deleteConfirmMessage: 'Та энэ дэвтэрийг устгахдаа итгэлтэй байна уу? Энэ үйлдлийг буцаах боломжгүй.',
+    deleteConfirm: 'Устгах',
+    deleteCancel: 'Цуцлах',
     download: 'Татаж авах',
     lastEdited: 'Сүүлд засварласан',
     back: 'Буцах',

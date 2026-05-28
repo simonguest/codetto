@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { settingsStore } from "@store/settingsStore";
@@ -46,7 +46,10 @@ const openNotebook = () => {
 };
 
 // Delete notebook
-const deleteNotebook = () => {
+const showDeleteDialog = ref(false);
+
+const confirmDelete = () => {
+  showDeleteDialog.value = false;
   emit('delete', props.notebook.id);
 };
 
@@ -87,7 +90,7 @@ const downloadNotebook = async () => {
             <v-list-item @click="downloadNotebook">
               <v-list-item-title>{{ notebookLabels.download }}</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="deleteNotebook">
+            <v-list-item @click="showDeleteDialog = true">
               <v-list-item-title>{{ notebookLabels.delete }}</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -111,6 +114,18 @@ const downloadNotebook = async () => {
       </div>
     </v-card-text>
   </v-card>
+  <!-- Delete confirmation dialog -->
+  <v-dialog v-model="showDeleteDialog" max-width="400" @click:outside="showDeleteDialog = false">
+    <v-card>
+      <v-card-title>{{ notebookLabels.deleteConfirmTitle }}</v-card-title>
+      <v-card-text>{{ notebookLabels.deleteConfirmMessage }}</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="showDeleteDialog = false">{{ notebookLabels.deleteCancel }}</v-btn>
+        <v-btn color="error" @click="confirmDelete">{{ notebookLabels.deleteConfirm }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
