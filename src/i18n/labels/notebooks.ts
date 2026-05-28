@@ -11,6 +11,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   deleteConfirmMessage: string;
   deleteConfirm: string;
   deleteCancel: string;
+  rename: string;
+  renameDialogTitle: string;
+  renameDialogLabel: string;
+  renameSave: string;
   download: string;
   lastEdited: string;
   back: string;
@@ -50,6 +54,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     deleteConfirmMessage: 'Are you sure you want to delete this notebook? This cannot be undone.',
     deleteConfirm: 'Delete',
     deleteCancel: 'Cancel',
+    rename: 'Rename',
+    renameDialogTitle: 'Rename Notebook',
+    renameDialogLabel: 'Notebook title',
+    renameSave: 'Save',
     download: 'Download',
     lastEdited: 'Last edited',
     back: 'Back',
@@ -89,6 +97,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     deleteConfirmMessage: 'このノートブックを削除してもよろしいですか？この操作は元に戻せません。',
     deleteConfirm: '削除',
     deleteCancel: 'キャンセル',
+    rename: '名前を変更',
+    renameDialogTitle: 'ノートブックの名前を変更',
+    renameDialogLabel: 'ノートブックのタイトル',
+    renameSave: '保存',
     download: 'ダウンロード',
     lastEdited: '最終編集',
     back: '戻る',
@@ -128,6 +140,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     deleteConfirmMessage: 'क्या आप वाकई इस नोटबुक को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।',
     deleteConfirm: 'हटाएं',
     deleteCancel: 'रद्द करें',
+    rename: 'नाम बदलें',
+    renameDialogTitle: 'नोटबुक का नाम बदलें',
+    renameDialogLabel: 'नोटबुक शीर्षक',
+    renameSave: 'सहेजें',
     download: 'डाउनलोड',
     lastEdited: 'अंतिम संपादन',
     back: 'वापस',
@@ -167,6 +183,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     deleteConfirmMessage: 'آیا مطمئن هستید که می‌خواهید این دفترچه را حذف کنید؟ این عمل قابل بازگشت نیست.',
     deleteConfirm: 'حذف',
     deleteCancel: 'لغو',
+    rename: 'تغییر نام',
+    renameDialogTitle: 'تغییر نام دفترچه',
+    renameDialogLabel: 'عنوان دفترچه',
+    renameSave: 'ذخیره',
     download: 'دانلود',
     lastEdited: 'آخرین ویرایش',
     back: 'بازگشت',
@@ -206,6 +226,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     deleteConfirmMessage: 'Та энэ дэвтэрийг устгахдаа итгэлтэй байна уу? Энэ үйлдлийг буцаах боломжгүй.',
     deleteConfirm: 'Устгах',
     deleteCancel: 'Цуцлах',
+    rename: 'Нэрийг өөрчлөх',
+    renameDialogTitle: 'Дэвтэрийн нэр өөрчлөх',
+    renameDialogLabel: 'Дэвтэрийн гарчиг',
+    renameSave: 'Хадгалах',
     download: 'Татаж авах',
     lastEdited: 'Сүүлд засварласан',
     back: 'Буцах',

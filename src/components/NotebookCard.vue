@@ -13,6 +13,7 @@ interface Props {
 
 interface Emits {
   (e: 'delete', notebookId: string): void;
+  (e: 'rename', notebookId: string, newTitle: string): void;
 }
 
 const props = defineProps<Props>();
@@ -43,6 +44,23 @@ const formatDate = (date: Date) => {
 // Navigate to notebook viewer
 const openNotebook = () => {
   router.push(`/notebooks/${props.notebook.id}`);
+};
+
+// Rename notebook
+const showRenameDialog = ref(false);
+const renameTitle = ref('');
+
+const openRenameDialog = () => {
+  renameTitle.value = props.notebook.title;
+  showRenameDialog.value = true;
+};
+
+const confirmRename = () => {
+  const trimmed = renameTitle.value.trim();
+  if (trimmed) {
+    showRenameDialog.value = false;
+    emit('rename', props.notebook.id, trimmed);
+  }
 };
 
 // Delete notebook
@@ -87,6 +105,9 @@ const downloadNotebook = async () => {
             ></v-btn>
           </template>
           <v-list>
+            <v-list-item @click="openRenameDialog">
+              <v-list-item-title>{{ notebookLabels.rename }}</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="downloadNotebook">
               <v-list-item-title>{{ notebookLabels.download }}</v-list-item-title>
             </v-list-item>
@@ -114,6 +135,26 @@ const downloadNotebook = async () => {
       </div>
     </v-card-text>
   </v-card>
+  <!-- Rename dialog -->
+  <v-dialog v-model="showRenameDialog" max-width="400" @click:outside="showRenameDialog = false">
+    <v-card>
+      <v-card-title>{{ notebookLabels.renameDialogTitle }}</v-card-title>
+      <v-card-text>
+        <v-text-field
+          v-model="renameTitle"
+          :label="notebookLabels.renameDialogLabel"
+          autofocus
+          @keyup.enter="confirmRename"
+        ></v-text-field>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="showRenameDialog = false">{{ notebookLabels.deleteCancel }}</v-btn>
+        <v-btn color="primary" @click="confirmRename" :disabled="!renameTitle.trim()">{{ notebookLabels.renameSave }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <!-- Delete confirmation dialog -->
   <v-dialog v-model="showDeleteDialog" max-width="400" @click:outside="showDeleteDialog = false">
     <v-card>

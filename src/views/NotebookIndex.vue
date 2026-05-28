@@ -7,7 +7,7 @@ import { NOTEBOOK_LABELS, LOCALE_METADATA } from "@/i18n";
 import NotebookCard from "@components/NotebookCard.vue";
 import FolderCard from "@components/FolderCard.vue";
 
-import { listNotebooks, deleteNotebook as deleteNotebookFromStorage, importNotebookFromFile, importNotebookFromUrl, type NotebookInfo } from "@storage/notebookStorage";
+import { listNotebooks, deleteNotebook as deleteNotebookFromStorage, renameNotebook as renameNotebookInStorage, importNotebookFromFile, importNotebookFromUrl, type NotebookInfo } from "@storage/notebookStorage";
 import UrlInputDialog from "@components/UrlInputDialog.vue";
 
 const route = useRoute();
@@ -101,6 +101,18 @@ const loadNotebooks = async () => {
 };
 
 onMounted(loadNotebooks);
+
+const renameNotebook = async (notebookId: string, newTitle: string) => {
+  try {
+    await renameNotebookInStorage(notebookId, newTitle);
+    const nb = allNotebooks.value.find(n => n.id === notebookId);
+    if (nb) {
+      nb.title = newTitle;
+    }
+  } catch (error) {
+    console.error('Failed to rename notebook:', error);
+  }
+};
 
 const deleteNotebook = async (notebookId: string) => {
   try {
@@ -254,6 +266,7 @@ const closeErrorDialog = () => {
           <NotebookCard
             :notebook="notebook"
             @delete="deleteNotebook"
+            @rename="renameNotebook"
           />
         </v-col>
       </v-row>

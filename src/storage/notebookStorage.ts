@@ -235,6 +235,15 @@ export const listNotebooks = async (): Promise<NotebookInfo[]> => {
   });
 };
 
+export const renameNotebook = async (id: string, title: string): Promise<void> => {
+  const notebook = await getNotebook(id);
+  if (!notebook.metadata) {
+    notebook.metadata = {};
+  }
+  notebook.metadata.title = title;
+  await saveNotebook(id, notebook);
+};
+
 export const deleteNotebook = async (id: string): Promise<void> => {
   const database = await getDB();
 
