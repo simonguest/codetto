@@ -18,6 +18,13 @@ export const RENDERER_LABELS: Record<Locale, {
   close: string;
   languageOverride: string;
   noLanguageOverride: string;
+  cfuSubmit: string;
+  cfuReset: string;
+  cfuCorrect: string;
+  cfuIncorrect: string;
+  cfuCorrectAnswer: string;
+  cfuTrue: string;
+  cfuFalse: string;
 }> = {
   'en-US': {
     notebookStarting: 'The notebook is starting up...',
@@ -36,7 +43,14 @@ export const RENDERER_LABELS: Record<Locale, {
     cancel: 'Cancel',
     close: 'Close',
     languageOverride: 'Language Override',
-    noLanguageOverride: 'None'
+    noLanguageOverride: 'None',
+    cfuSubmit: 'Submit',
+    cfuReset: 'Try again',
+    cfuCorrect: 'Correct!',
+    cfuIncorrect: 'Not quite.',
+    cfuCorrectAnswer: 'The correct answer is',
+    cfuTrue: 'True',
+    cfuFalse: 'False',
   },
   'ja-JP': {
     notebookStarting: 'ノートブックを起動中...',
@@ -55,7 +69,14 @@ export const RENDERER_LABELS: Record<Locale, {
     cancel: 'キャンセル',
     close: '閉じる',
     languageOverride: '言語オーバーライド',
-    noLanguageOverride: 'なし'
+    noLanguageOverride: 'なし',
+    cfuSubmit: '送信',
+    cfuReset: 'もう一度試す',
+    cfuCorrect: '正解！',
+    cfuIncorrect: '惜しい。',
+    cfuCorrectAnswer: '正しい答えは',
+    cfuTrue: '真',
+    cfuFalse: '偽',
   },
   'hi-IN': {
     notebookStarting: 'नोटबुक शुरू हो रहा है...',
@@ -74,7 +95,14 @@ export const RENDERER_LABELS: Record<Locale, {
     cancel: 'रद्द करें',
     close: 'बंद करें',
     languageOverride: 'भाषा ओवरराइड',
-    noLanguageOverride: 'कोई नहीं'
+    noLanguageOverride: 'कोई नहीं',
+    cfuSubmit: 'जमा करें',
+    cfuReset: 'फिर से कोशिश करें',
+    cfuCorrect: 'सही!',
+    cfuIncorrect: 'गलत।',
+    cfuCorrectAnswer: 'सही उत्तर है',
+    cfuTrue: 'सच',
+    cfuFalse: 'झूठ',
   },
   'fa-IR': {
     notebookStarting: 'دفترچه در حال راه‌اندازی است...',
@@ -93,7 +121,14 @@ export const RENDERER_LABELS: Record<Locale, {
     cancel: 'لغو',
     close: 'بستن',
     languageOverride: 'بازنویسی زبان',
-    noLanguageOverride: 'هیچ'
+    noLanguageOverride: 'هیچ',
+    cfuSubmit: 'ارسال',
+    cfuReset: 'دوباره امتحان کنید',
+    cfuCorrect: '!درست',
+    cfuIncorrect: '.درست نیست',
+    cfuCorrectAnswer: 'جواب درست',
+    cfuTrue: 'درست',
+    cfuFalse: 'نادرست',
   },
   'mn-MN': {
     notebookStarting: 'Дэвтэр эхэлж байна...',
@@ -112,6 +147,13 @@ export const RENDERER_LABELS: Record<Locale, {
     cancel: 'Цуцлах',
     close: 'Хаах',
     languageOverride: 'Хэлний давхардал',
-    noLanguageOverride: 'Байхгүй'
+    noLanguageOverride: 'Байхгүй',
+    cfuSubmit: 'Илгээх',
+    cfuReset: 'Дахин оролдох',
+    cfuCorrect: 'Зөв!',
+    cfuIncorrect: 'Буруу.',
+    cfuCorrectAnswer: 'Зөв хариулт нь',
+    cfuTrue: 'Үнэн',
+    cfuFalse: 'Худал',
   }
 } as const;

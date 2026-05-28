@@ -11,6 +11,7 @@ import CodeCell from "@celltypes/code";
 import VideoCell from "@celltypes/video";
 import ChatCell from "@celltypes/chat";
 import JournalCell from "@celltypes/journal";
+import CfuCell from "@celltypes/cfu";
 import InputDialog from "@components/InputDialog.vue";
 
 const props = defineProps<{
@@ -84,6 +85,11 @@ const rendererLabels = computed(() => RENDERER_LABELS[props.locale]);
       />
       <ChatCell
         v-if="cell.cell_type === 'raw' && cell.metadata.tags?.includes('chat')"
+        :cell="cell"
+        :locale="props.locale"
+      />
+      <CfuCell
+        v-if="cell.cell_type === 'raw' && cell.metadata.tags?.includes('cfu')"
         :cell="cell"
         :locale="props.locale"
       />
