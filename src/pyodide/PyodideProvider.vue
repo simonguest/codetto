@@ -66,16 +66,36 @@ onMounted(async () => {
       case "via": {
         const { op, handle, method, prop, args, value, width, height } = event.data.command;
         if (op === "create_canvas") {
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const h = viaRegister(canvas);
+          const canvasEl = document.createElement("canvas");
+          canvasEl.width = width;
+          canvasEl.height = height;
+          // Register the raw element separately so CanvasResult can append it to the DOM
+          const displayHandle = viaRegister(canvasEl);
           if (pyodideStore.runningCellId) {
             notebookStore.setResult(pyodideStore.runningCellId, {
-              "application/x-via-canvas": String(h),
+              "application/x-via-canvas": String(displayHandle),
             });
           }
-          viaRespond({ type: "handle", id: h });
+          // Canvas controller: the object Python holds. Owns overlay state and exposes
+          // drawing methods so student code calls canvas.draw_bounding_boxes(), not camera.
+          const canvasController = {
+            _canvas: canvasEl,
+            _overlayFn: null as (() => void) | null,
+            drawBoundingBoxes(faces: any[]) {
+              canvasController._overlayFn = !faces?.length ? null : () => {
+                const ctx = canvasEl.getContext("2d")!;
+                ctx.strokeStyle = "#00ff00";
+                ctx.lineWidth = 2;
+                ctx.font = "14px sans-serif";
+                ctx.fillStyle = "#00ff00";
+                for (const face of faces) {
+                  ctx.strokeRect(face.x, face.y, face.w, face.h);
+                  ctx.fillText(`${Math.round(face.confidence * 100)}%`, face.x + 4, face.y - 6);
+                }
+              };
+            },
+          };
+          viaRespond({ type: "handle", id: viaRegister(canvasController) });
         } else if (op === "call") {
           const obj = viaGet(handle);
           if (!obj) { viaRespond({ type: "value", value: null }); break; }
@@ -86,8 +106,9 @@ onMounted(async () => {
           if (obj) obj[prop] = value;
           viaRespond({ type: "value", value: null });
         } else if (op === "create_camera") {
-          const canvas = viaGet(handle);
-          if (!canvas) { viaRespond({ type: "error", message: "Invalid canvas handle" }); break; }
+          const canvasController = viaGet(handle);
+          if (!canvasController?._canvas) { viaRespond({ type: "error", message: "Invalid canvas handle" }); break; }
+          const canvasEl = canvasController._canvas;
           try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             const video = document.createElement("video");
@@ -95,22 +116,19 @@ onMounted(async () => {
             video.muted = true;
             video.playsInline = true;
             await video.play();
-            const ctx = canvas.getContext("2d");
-            let overlayFn: (() => void) | null = null;
+            const ctx = canvasEl.getContext("2d");
             let rafId: number;
             const tick = () => {
               if (video.readyState >= video.HAVE_CURRENT_DATA) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                overlayFn?.();
+                ctx.drawImage(video, 0, 0, canvasEl.width, canvasEl.height);
+                canvasController._overlayFn?.();
               }
               rafId = requestAnimationFrame(tick);
             };
             rafId = requestAnimationFrame(tick);
             const controller = {
               _video: video,
-              _ctx: ctx,
-              setOverlay(fn: () => void) { overlayFn = fn; },
-              clearOverlay() { overlayFn = null; },
+              clearOverlay() { canvasController._overlayFn = null; },
               stop() {
                 cancelAnimationFrame(rafId);
                 stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());

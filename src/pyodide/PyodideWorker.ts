@@ -118,7 +118,7 @@ async function initialize() {
 
     // Synchronous DOM method call: _via_call(handle, "methodName", [args]) → JSON string
     pyodide.globals.set("_via_call", (handle: number, method: string, pyArgs: any) => {
-      const args = pyArgs?.toJs ? pyArgs.toJs() : [];
+      const args = pyArgs?.toJs ? pyArgs.toJs({ dict_converter: Object.fromEntries }) : [];
       return viaSync({ op: "call", handle, method, args });
     });
 
