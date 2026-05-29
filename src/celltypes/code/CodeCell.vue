@@ -28,15 +28,27 @@ const getDefaultTab = () => {
   if (outputTypes.indexOf("error") !== -1) return "error";
 };
 
-const outputTab = ref("result");
+const outputTab = ref(getDefaultTab() ?? "result");
+
+// Track which output types we've already seen to avoid resetting the active tab
+// when only the content of an existing type updates (e.g. new stdout lines arriving
+// while the user is viewing the stdout tab).
+let knownOutputTypes = new Set<string>(outputTypes);
 
 watch(
   () => props.cell.outputs,
   () => {
-    // Get available output types for the cell and reset the tabs
-    outputTypes = notebookStore.getOutputTypes(props.cell.id);
-    outputTab.value = "none";
-    outputTab.value = getDefaultTab() || outputTab.value;
+    const newTypes = notebookStore.getOutputTypes(props.cell.id);
+    const newTypeSet = new Set(newTypes);
+    const typesChanged =
+      newTypes.some(t => !knownOutputTypes.has(t)) ||
+      [...knownOutputTypes].some(t => !newTypeSet.has(t));
+    outputTypes = newTypes;
+    if (typesChanged) {
+      knownOutputTypes = newTypeSet;
+      outputTab.value = "none";
+      outputTab.value = getDefaultTab() ?? "none";
+    }
   },
   { deep: true }
 );

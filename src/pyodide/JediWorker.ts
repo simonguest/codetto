@@ -48,6 +48,13 @@ async function initialize() {
   }
 
   await pyodide.loadPackage(["jedi", "parso"]);
+
+  const stubResponse = await fetch(new URL("./cv/cv.pyi", import.meta.url));
+  const stubContent = await stubResponse.text();
+  pyodide.FS.mkdirTree("/stubs");
+  pyodide.FS.writeFile("/stubs/cv.pyi", stubContent);
+  await pyodide.runPythonAsync(`import sys\nif '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`);
+
   await pyodide.runPythonAsync(JEDI_INIT);
 }
 

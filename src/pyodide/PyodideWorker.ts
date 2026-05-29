@@ -2,11 +2,26 @@
 
 import { additionalPackagesFromCode } from "./additionalPackagesFromCode";
 import { overrides, implementOverride } from "./overrides/implementOverride";
+import { initializeCv, reloadCvPython } from "./cv/worker";
 
 let pyodide: any;
 let interruptBuffer: Int32Array | null = null;
 let appliedEnvVarNames = new Set<string>();
 const hasSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
+
+// via.js bridge — SharedArrayBuffers for synchronous worker↔main DOM calls
+let viaSignal: Int32Array | null = null;   // [0]=ready flag, [1]=data byte length
+let viaData: Uint8Array | null = null;
+const viaDecoder = new TextDecoder();
+
+function viaSync(command: object): string {
+  self.postMessage({ type: "via", command });
+  Atomics.wait(viaSignal!, 0, 0);          // block until main thread sets [0] to 1
+  const len = Atomics.load(viaSignal!, 1);
+  const json = viaDecoder.decode(viaData!.slice(0, len)); // slice() copies out of SAB
+  Atomics.store(viaSignal!, 0, 0);         // reset for next call
+  return json;
+}
 
 async function runPythonFile(url: URL) {
   const response = await fetch(url);
@@ -93,8 +108,32 @@ async function initialize() {
     },
   });
 
+  // via.js bridge setup
+  if (hasSharedArrayBuffer) {
+    console.log("PyodideWorker: Setting up via.js bridge");
+    const viaSignalSAB = new SharedArrayBuffer(8);  // two Int32 slots
+    const viaDataSAB = new SharedArrayBuffer(65536); // 64 KB result buffer
+    viaSignal = new Int32Array(viaSignalSAB);
+    viaData = new Uint8Array(viaDataSAB);
+    self.postMessage({ type: "via_init", viaSignalSAB, viaDataSAB });
+
+    // Synchronous DOM method call: _via_call(handle, "methodName", [args]) → JSON string
+    pyodide.globals.set("_via_call", (handle: number, method: string, pyArgs: any) => {
+      const args = pyArgs?.toJs ? pyArgs.toJs({ dict_converter: Object.fromEntries }) : [];
+      return viaSync({ op: "call", handle, method, args });
+    });
+
+    // Synchronous DOM property set: _via_set(handle, "propName", value)
+    pyodide.globals.set("_via_set", (handle: number, prop: string, value: any) => {
+      viaSync({ op: "set", handle, prop, value });
+    });
+
+  }
+
   console.log("PyodideWorker: Initializing Python environment");
   await runPythonFile(new URL("./python_init.py", import.meta.url));
+
+  await initializeCv(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
 }
 
 self.onmessage = async event => {
@@ -118,6 +157,7 @@ self.onmessage = async event => {
     case "reset":
       console.log("Resetting Pyodide Globals");
       await runPythonFile(new URL("./python_reset_globals.py", import.meta.url));
+      await reloadCvPython(runPythonFile);
       self.postMessage({
         type: "reset_completed"
       });
