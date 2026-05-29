@@ -48,8 +48,23 @@ The `/test/:filename` route (`src/views/TestNotebook.vue`) fetches the notebook 
 ### Key selectors
 
 - **Run button** — `page.getByRole('button', { name: 'Run code' })`; disabled while Pyodide is initialising, enabled when ready
-- **stdout output** — `page.locator('textarea.output-console')`
+- **stdout output** — `page.locator('textarea.output-console')`; only in the DOM when the stdout tab is active (Vuetify tab window items use `v-if`)
 - **Pyodide ready** — inferred from the run button becoming enabled (no direct DOM indicator)
+
+### Testing camera / cv features
+
+Tests that use the webcam must pass fake-camera flags and grant the `camera` permission:
+
+```typescript
+test.use({
+  launchOptions: {
+    args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
+  },
+  permissions: ["camera"],
+});
+```
+
+Chromium's fake device provides a synthetic video stream that MediaPipe can detect faces in. After clicking Run, wait for `.canvas-output canvas` to appear before switching to the stdout tab to read detection output.
 
 ### CI
 
@@ -106,6 +121,54 @@ Locale strings live in `src/i18n/labels/`. The active locale is stored in `setti
 - The worker requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers — these are set in `vite.config.mjs` for both dev and preview.
 - `SharedArrayBuffer` is used for interrupt support when available; the worker gracefully degrades without it.
 - `python_init.py` sets up stdout overrides and async `input()` transforms on worker startup. `python_reset_globals.py` clears Python globals between notebook loads.
+
+### via.js bridge
+
+The bridge enables synchronous DOM calls from the Pyodide worker (which has no DOM access) using `SharedArrayBuffer` + `Atomics`.
+
+**How it works:**
+1. Worker calls `viaSync(command)` — posts a `"via"` message to the main thread, then blocks on `Atomics.wait`.
+2. Main thread (`PyodideProvider.vue`) receives the message, performs the DOM operation, writes the JSON result into a shared `Uint8Array`, and calls `Atomics.notify` to wake the worker.
+3. Worker reads the result and returns it.
+
+**Key files:**
+- `src/bridge/viaStore.ts` — shared handle registry (`viaRegister`, `viaGet`, `viaClear`). Maps integer handles to live JS objects; imported by both `PyodideProvider.vue` and `CanvasResult.vue`.
+- `PyodideWorker.ts` — sets up the two SABs (`viaSignalSAB` 8 bytes, `viaDataSAB` 64 KB), registers `_via_call` and `_via_set` Python globals, and defines `viaSync`.
+- `PyodideProvider.vue` — `"via"` message handler; dispatches to library-specific handlers first, then handles the generic `call` and `set` ops.
+
+**Python side (`DOMProxy` in `cv/cv.py`):** attribute access on a proxy returns a callable that calls `_via_call(handle, camelCaseName, args)`; attribute assignment calls `_via_set`. Snake_case is converted to camelCase automatically. Arrays and plain objects cross the bridge as values (JSON); anything else is registered as a new handle and returned as another `DOMProxy`.
+
+**Adding a new library:** create `src/pyodide/<lib>/worker.ts` exporting `initialize<Lib>(pyodide, viaSync, runPythonFile)` and `src/pyodide/<lib>/provider.ts` exporting `handle<Lib>Op(op, command, viaRespond) → Promise<boolean>`. Wire one call into each host file. See `src/pyodide/cv/` as the reference implementation.
+
+### cv module (`src/pyodide/cv/`)
+
+Provides a `cv` Python module for webcam streaming and computer vision.
+
+| File | Purpose |
+|---|---|
+| `cv.py` | Python `cv` module: `get_canvas`, `start_camera`, `start_detector`, `DOMProxy` |
+| `worker.ts` | Registers `_cv_create_canvas/camera/detector` Python globals; loads `cv.py` |
+| `provider.ts` | `handleCvOp` — handles `create_canvas`, `create_camera`, `create_detector` via ops |
+
+**Python API:**
+```python
+canvas = cv.get_canvas(width, height)      # creates canvas in cell output
+camera = cv.start_camera(canvas)           # starts webcam → rAF loop draws frames
+detector = cv.start_detector(camera)       # loads MediaPipe BlazeFace model
+faces = detector.get_detections()          # → list of {x, y, w, h, confidence}
+canvas.draw_bounding_boxes(faces)          # updates the rAF overlay at 60 fps
+camera.stop() / detector.stop()
+```
+
+**Canvas controller** (what Python's `canvas` variable wraps): holds `_canvas` (raw `HTMLCanvasElement`), `_overlayFn` (drawn each rAF tick after `drawImage`), and `drawBoundingBoxes(faces)`. The raw element is registered under a separate display handle so `CanvasResult.vue` can append it to the DOM without exposing implementation details to Python.
+
+**MediaPipe assets** live at `public/mediapipe/` (committed):
+- `wasm/` — `vision_wasm_internal.js/.wasm` and `vision_wasm_module_internal.js/.wasm`
+- `models/face_detector.tflite` — BlazeFace short-range model
+
+These are served locally to satisfy the `require-corp` COEP header requirement.
+
+**`CanvasResult.vue`** (`src/celltypes/code/results/CanvasResult.vue`) — renders when a cell result contains the MIME type `application/x-via-canvas`. The value is the handle integer for the raw `HTMLCanvasElement`; the component calls `viaGet(handle)` and appends the element to a container div.
 
 ### Branches
 
