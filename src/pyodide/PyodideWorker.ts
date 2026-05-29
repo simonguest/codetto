@@ -2,6 +2,7 @@
 
 import { additionalPackagesFromCode } from "./additionalPackagesFromCode";
 import { overrides, implementOverride } from "./overrides/implementOverride";
+import { initializeCv } from "./cv/worker";
 
 let pyodide: any;
 let interruptBuffer: Int32Array | null = null;
@@ -127,27 +128,12 @@ async function initialize() {
       viaSync({ op: "set", handle, prop, value });
     });
 
-    // Create a canvas element in the cell output and return its handle as JSON
-    pyodide.globals.set("_cv_create_canvas", (width: number, height: number) => {
-      return viaSync({ op: "create_canvas", width, height });
-    });
-
-    // Start a webcam stream drawing into the given canvas handle
-    pyodide.globals.set("_cv_start_camera", (canvasHandle: number) => {
-      return viaSync({ op: "create_camera", handle: canvasHandle });
-    });
-
-    // Attach a face detector to a running camera
-    pyodide.globals.set("_cv_start_detector", (cameraHandle: number) => {
-      return viaSync({ op: "create_detector", handle: cameraHandle });
-    });
   }
 
   console.log("PyodideWorker: Initializing Python environment");
   await runPythonFile(new URL("./python_init.py", import.meta.url));
 
-  console.log("PyodideWorker: Loading cv module");
-  await runPythonFile(new URL("./cv.py", import.meta.url));
+  await initializeCv(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
 }
 
 self.onmessage = async event => {
