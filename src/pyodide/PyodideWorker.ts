@@ -136,6 +136,11 @@ async function initialize() {
     pyodide.globals.set("_cv_start_camera", (canvasHandle: number) => {
       return viaSync({ op: "create_camera", handle: canvasHandle });
     });
+
+    // Attach a face detector to a running camera
+    pyodide.globals.set("_cv_start_detector", (cameraHandle: number) => {
+      return viaSync({ op: "create_detector", handle: cameraHandle });
+    });
   }
 
   console.log("PyodideWorker: Initializing Python environment");

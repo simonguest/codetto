@@ -67,8 +67,20 @@ def start_camera(canvas):
     return _decode(_cv_start_camera(canvas_handle))  # type: ignore
 
 
+def start_detector(camera):
+    """Attach a MediaPipe face detector to a running camera.
+
+    Loads the BlazeFace model (first call only), then runs detection at ~10fps
+    in the background. Bounding boxes are drawn automatically on the canvas.
+    Returns a detector controller with .get_detections() and .stop() methods.
+    """
+    camera_handle = object.__getattribute__(camera, "_handle")
+    return _decode(_cv_start_detector(camera_handle))  # type: ignore
+
+
 _cv_mod = types.ModuleType("cv")
 _cv_mod.get_canvas = get_canvas
 _cv_mod.start_camera = start_camera
+_cv_mod.start_detector = start_detector
 _cv_mod.DOMProxy = DOMProxy
 sys.modules["cv"] = _cv_mod

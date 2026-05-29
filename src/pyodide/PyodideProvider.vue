@@ -26,10 +26,14 @@ function viaRespond(result: any) {
 }
 
 function viaEncodeResult(ret: any): any {
-  if (ret !== null && ret !== undefined && typeof ret === "object") {
-    return { type: "handle", id: viaRegister(ret) };
+  if (ret === null || ret === undefined) return { type: "value", value: null };
+  if (typeof ret !== "object") return { type: "value", value: ret };
+  // Plain arrays and plain objects are JSON-safe — return as values so Python
+  // receives them as native dicts/lists via json.loads, not as opaque handles.
+  if (Array.isArray(ret) || Object.getPrototypeOf(ret) === Object.prototype) {
+    return { type: "value", value: ret };
   }
-  return { type: "value", value: ret ?? null };
+  return { type: "handle", id: viaRegister(ret) };
 }
 
 onMounted(async () => {
@@ -92,20 +96,63 @@ onMounted(async () => {
             video.playsInline = true;
             await video.play();
             const ctx = canvas.getContext("2d");
+            let overlayFn: (() => void) | null = null;
             let rafId: number;
             const tick = () => {
               if (video.readyState >= video.HAVE_CURRENT_DATA) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                overlayFn?.();
               }
               rafId = requestAnimationFrame(tick);
             };
             rafId = requestAnimationFrame(tick);
             const controller = {
+              _video: video,
+              _ctx: ctx,
+              setOverlay(fn: () => void) { overlayFn = fn; },
+              clearOverlay() { overlayFn = null; },
               stop() {
                 cancelAnimationFrame(rafId);
                 stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
                 video.srcObject = null;
               },
+            };
+            viaRespond({ type: "handle", id: viaRegister(controller) });
+          } catch (err) {
+            viaRespond({ type: "error", message: String(err) });
+          }
+        } else if (op === "create_detector") {
+          const camera = viaGet(handle);
+          if (!camera?._video) { viaRespond({ type: "error", message: "Invalid camera handle" }); break; }
+          try {
+            const { FaceDetector, FilesetResolver } = await import("@mediapipe/tasks-vision");
+            const vision = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
+            const faceDetector = await FaceDetector.createFromOptions(vision, {
+              baseOptions: {
+                modelAssetPath: "/mediapipe/models/face_detector.tflite",
+                delegate: "CPU",
+              },
+              runningMode: "VIDEO",
+              minDetectionConfidence: 0.5,
+            });
+            // Detection runs on-demand when Python calls get_detections(), not in a
+            // background interval — avoids blocking the main thread's message loop.
+            const controller = {
+              getDetections() {
+                const video = camera._video;
+                if (video.readyState < video.HAVE_CURRENT_DATA) return [];
+                try {
+                  const result = faceDetector.detectForVideo(video, performance.now());
+                  return (result.detections ?? []).map((d: any) => ({
+                    x: Math.round(d.boundingBox?.originX ?? 0),
+                    y: Math.round(d.boundingBox?.originY ?? 0),
+                    w: Math.round(d.boundingBox?.width ?? 0),
+                    h: Math.round(d.boundingBox?.height ?? 0),
+                    confidence: Math.round((d.categories?.[0]?.score ?? 0) * 100) / 100,
+                  }));
+                } catch (_) { return []; }
+              },
+              stop() { faceDetector.close(); camera.clearOverlay(); },
             };
             viaRespond({ type: "handle", id: viaRegister(controller) });
           } catch (err) {

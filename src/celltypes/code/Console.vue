@@ -7,7 +7,6 @@ const props = defineProps<{
 
 const consoleRef = ref<HTMLTextAreaElement | null>(null);
 
-// Adjust height based on actual rendered content, capped at 10 lines
 const adjustHeight = () => {
   if (!consoleRef.value) return;
   consoleRef.value.style.height = 'auto';
@@ -15,14 +14,14 @@ const adjustHeight = () => {
   consoleRef.value.style.height = Math.min(consoleRef.value.scrollHeight, maxPx) + 'px';
 };
 
-// Watch for changes in stdout
 watch(() => props.stdout, () => {
   nextTick(adjustHeight);
 }, { immediate: true });
 
-onMounted(async () => {
-  await nextTick();
-  adjustHeight();
+onMounted(() => {
+  // Vuetify's tab window slides in with a CSS transition, so scrollHeight reads
+  // as 0 inside a plain nextTick. Two rAF passes let the transition settle first.
+  requestAnimationFrame(() => requestAnimationFrame(adjustHeight));
 });
 </script>
 
