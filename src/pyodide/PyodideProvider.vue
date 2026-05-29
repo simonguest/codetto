@@ -81,6 +81,36 @@ onMounted(async () => {
           const obj = viaGet(handle);
           if (obj) obj[prop] = value;
           viaRespond({ type: "value", value: null });
+        } else if (op === "create_camera") {
+          const canvas = viaGet(handle);
+          if (!canvas) { viaRespond({ type: "error", message: "Invalid canvas handle" }); break; }
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const video = document.createElement("video");
+            video.srcObject = stream;
+            video.muted = true;
+            video.playsInline = true;
+            await video.play();
+            const ctx = canvas.getContext("2d");
+            let rafId: number;
+            const tick = () => {
+              if (video.readyState >= video.HAVE_CURRENT_DATA) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              }
+              rafId = requestAnimationFrame(tick);
+            };
+            rafId = requestAnimationFrame(tick);
+            const controller = {
+              stop() {
+                cancelAnimationFrame(rafId);
+                stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+                video.srcObject = null;
+              },
+            };
+            viaRespond({ type: "handle", id: viaRegister(controller) });
+          } catch (err) {
+            viaRespond({ type: "error", message: String(err) });
+          }
         }
         break;
       }

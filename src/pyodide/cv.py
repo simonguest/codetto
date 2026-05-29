@@ -15,6 +15,8 @@ def _decode(json_str):
     result = json.loads(json_str)
     if result.get("type") == "handle":
         return DOMProxy(result["id"])
+    if result.get("type") == "error":
+        raise RuntimeError(result.get("message", "Bridge error"))
     return result.get("value")
 
 
@@ -55,7 +57,18 @@ def get_canvas(width=400, height=300):
     return _decode(_cv_create_canvas(width, height))  # type: ignore
 
 
+def start_camera(canvas):
+    """Start a webcam stream that draws frames into canvas.
+
+    Blocks until the user grants camera permission (or raises RuntimeError if
+    denied). Returns a camera controller with a .stop() method.
+    """
+    canvas_handle = object.__getattribute__(canvas, "_handle")
+    return _decode(_cv_start_camera(canvas_handle))  # type: ignore
+
+
 _cv_mod = types.ModuleType("cv")
 _cv_mod.get_canvas = get_canvas
+_cv_mod.start_camera = start_camera
 _cv_mod.DOMProxy = DOMProxy
 sys.modules["cv"] = _cv_mod

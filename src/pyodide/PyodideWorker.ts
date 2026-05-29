@@ -131,6 +131,11 @@ async function initialize() {
     pyodide.globals.set("_cv_create_canvas", (width: number, height: number) => {
       return viaSync({ op: "create_canvas", width, height });
     });
+
+    // Start a webcam stream drawing into the given canvas handle
+    pyodide.globals.set("_cv_start_camera", (canvasHandle: number) => {
+      return viaSync({ op: "create_camera", handle: canvasHandle });
+    });
   }
 
   console.log("PyodideWorker: Initializing Python environment");
