@@ -3,6 +3,7 @@ import TextPlain from "./results/TextPlain.vue";
 import TextHtml from "./results/TextHtml.vue";
 import ImagePng from "./results/ImagePng.vue";
 import ImageSvg from "./results/ImageSvg.vue";
+import CanvasResult from "./results/CanvasResult.vue";
 import type { Locale } from "@/i18n";
 
 const props = defineProps<{
@@ -14,6 +15,7 @@ const props = defineProps<{
 
 <template>
   <!-- {{ console.log(props.value)}} -->
+  <CanvasResult v-if="value['application/x-canvas']" :value="value['application/x-canvas']" />
   <ImageSvg v-if="value['image/svg+xml']" :value="value['image/svg+xml']" :locale="locale" />
   <ImagePng v-if="value['image/png']" :value="value['image/png']" :locale="locale" />
   <TextHtml v-else-if="value['text/html']" :value="value['text/html']" />

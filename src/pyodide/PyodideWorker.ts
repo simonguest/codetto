@@ -93,8 +93,17 @@ async function initialize() {
     },
   });
 
+  // Canvas display bridge
+  console.log("PyodideWorker: Creating override for canvas display");
+  pyodide.globals.set("_cv_display", (payload: string) => {
+    self.postMessage({ type: "execute_result", result: { "application/x-canvas": payload } });
+  });
+
   console.log("PyodideWorker: Initializing Python environment");
   await runPythonFile(new URL("./python_init.py", import.meta.url));
+
+  console.log("PyodideWorker: Loading cv module");
+  await runPythonFile(new URL("./cv.py", import.meta.url));
 }
 
 self.onmessage = async event => {
