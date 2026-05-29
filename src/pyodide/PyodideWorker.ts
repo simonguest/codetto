@@ -2,7 +2,7 @@
 
 import { additionalPackagesFromCode } from "./additionalPackagesFromCode";
 import { overrides, implementOverride } from "./overrides/implementOverride";
-import { initializeCv } from "./cv/worker";
+import { initializeCv, reloadCvPython } from "./cv/worker";
 
 let pyodide: any;
 let interruptBuffer: Int32Array | null = null;
@@ -157,6 +157,7 @@ self.onmessage = async event => {
     case "reset":
       console.log("Resetting Pyodide Globals");
       await runPythonFile(new URL("./python_reset_globals.py", import.meta.url));
+      await reloadCvPython(runPythonFile);
       self.postMessage({
         type: "reset_completed"
       });

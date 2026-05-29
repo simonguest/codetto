@@ -1,12 +1,15 @@
 /**
  * CV module — worker-side initialisation.
  *
- * Registers the Python globals that proxy cv operations through the via.js
- * bridge, then loads cv.py into the Pyodide environment.
+ * initializeCv: called once at startup. Registers the JS globals that proxy
+ * cv operations through the via.js bridge, then loads cv.py.
  *
- * Called from PyodideWorker.ts after python_init.py has been loaded.
+ * reloadCvPython: called after every Pyodide globals reset. python_reset_globals.py
+ * deletes non-underscore-prefixed names (including cv.py's `import json`), so
+ * cv.py must be re-run to restore those bindings before student code can run.
+ *
  * viaSync is null when SharedArrayBuffer is unavailable; in that case the
- * globals are skipped and cv will not function.
+ * JS globals are skipped and cv will not function.
  */
 export async function initializeCv(
   pyodide: any,
@@ -25,6 +28,12 @@ export async function initializeCv(
     );
   }
 
+  await reloadCvPython(runPythonFile);
+}
+
+export async function reloadCvPython(
+  runPythonFile: (url: URL) => Promise<any>
+): Promise<void> {
   console.log("PyodideWorker: Loading cv module");
   await runPythonFile(new URL("./cv.py", import.meta.url));
 }
