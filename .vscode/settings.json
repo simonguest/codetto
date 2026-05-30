@@ -2,11 +2,15 @@
   "cSpell.words": [
     "celltypes",
     "Embedder",
+    "efficientdet",
+    "Fileset",
     "iconsets",
+    "mediapipe",
     "peaceiris",
     "Pyodide",
     "repr",
     "tauri",
+    "tflite",
     "videojs",
     "Vuetify"
   ]

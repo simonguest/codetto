@@ -45,6 +45,8 @@ The `/test/:filename` route (`src/views/TestNotebook.vue`) fetches the notebook 
 4. Wait for Pyodide to be ready: `await expect(page.getByRole('button', { name: 'Run code' })).toBeEnabled({ timeout: 90_000 })`
 5. Click the run button, then assert on `textarea.output-console` (stdout) or other output selectors
 
+> **Do not use `NotebookEdit` to edit notebooks in `public/test/`.** It writes `source` as a plain string instead of the required array-of-lines format, which breaks the notebook parser. Use `Write` with explicit JSON instead.
+
 ### Key selectors
 
 - **Run button** — `page.getByRole('button', { name: 'Run code' })`; disabled while Pyodide is initialising, enabled when ready
@@ -146,29 +148,44 @@ Provides a `cv` Python module for webcam streaming and computer vision.
 
 | File | Purpose |
 |---|---|
-| `cv.py` | Python `cv` module: `get_canvas`, `start_camera`, `start_detector`, `DOMProxy` |
-| `worker.ts` | Registers `_cv_create_canvas/camera/detector` Python globals; loads `cv.py` |
-| `provider.ts` | `handleCvOp` — handles `create_canvas`, `create_camera`, `create_detector` via ops |
+| `cv.py` | Python `cv` module: `get_canvas`, `start_camera`, `start_face_detector`, `start_object_detector`, `DOMProxy` |
+| `cv.pyi` | Type stubs for editor autocompletion |
+| `worker.ts` | Registers Python globals for all cv ops; loads `cv.py` |
+| `provider.ts` | `handleCvOp` — handles all `create_*` via ops on the main thread |
+| `objectDetectionWorker.ts` | Dedicated Web Worker that runs EfficientDet-Lite0 inference off the main thread |
 
 **Python API:**
 ```python
-canvas = cv.get_canvas(width, height)      # creates canvas in cell output
-camera = cv.start_camera(canvas)           # starts webcam → rAF loop draws frames
-detector = cv.start_detector(camera)       # loads MediaPipe BlazeFace model
-faces = detector.get_detections()          # → list of {x, y, w, h, confidence}
-canvas.draw_bounding_boxes(faces)          # updates the rAF overlay at 60 fps
+canvas = cv.get_canvas()                            # auto-sizes to cell width, 4:3 aspect ratio
+canvas = cv.get_canvas(width, height)               # explicit pixel dimensions
+camera = cv.start_camera(canvas)                    # starts webcam → rAF loop draws frames
+detector = cv.start_face_detector(camera)           # BlazeFace model
+detector = cv.start_object_detector(camera, delegate="CPU")  # EfficientDet-Lite0; delegate="GPU" also supported
+detections = detector.get_detections()              # → list of {type, x, y, w, h, confidence}
+canvas.draw_bounding_boxes(detections)              # renders labels + boxes on the rAF overlay
 camera.stop() / detector.stop()
 ```
 
-**Canvas controller** (what Python's `canvas` variable wraps): holds `_canvas` (raw `HTMLCanvasElement`), `_overlayFn` (drawn each rAF tick after `drawImage`), and `drawBoundingBoxes(faces)`. The raw element is registered under a separate display handle so `CanvasResult.vue` can append it to the DOM without exposing implementation details to Python.
+Each detection dict has the same shape for both detectors: `{"type": "face"|"<label>", "x": int, "y": int, "w": int, "h": int, "confidence": float}`. Coordinates are in logical canvas pixels.
+
+**Canvas controller** (what Python's `canvas` variable wraps): holds `_canvas` (raw `HTMLCanvasElement`), `_logicalWidth/Height`, `_dpr`, `_overlayFn` (drawn each rAF tick), and `drawBoundingBoxes(detections)`. The backing buffer is scaled by `devicePixelRatio` for sharp rendering on HiDPI displays; all drawing uses `ctx.scale(dpr, dpr)` so coordinates stay in logical pixel space. The raw element is registered under a separate display handle so `CanvasResult.vue` can append it to the DOM.
+
+**Camera controller** (`_cameraRef`): exposes a `_cameraRef.onFrame` slot that detectors can write to. Each rAF tick, after drawing the video frame, the tick calls `cameraRef.onFrame?.(video)`. This allows detectors to receive frames without the camera needing to know about detectors.
+
+**Object detection worker** (`objectDetectionWorker.ts`): runs MediaPipe `ObjectDetector` off the main thread so inference never blocks the camera's rAF loop. The main thread sends each video frame as a zero-copy `ImageBitmap` transfer; the worker posts raw `Detection[]` back; the main thread scales coordinates and caches them. `getDetections()` returns the cache instantly.
+
+**Vite / WASM loading caveat:** `@mediapipe/tasks-vision` loads its WASM glue via `importScripts()` in classic workers and `import()` in module workers. Vite dev mode blocks `import()` of files in `/public`. `objectDetectionWorker.ts` overrides `self.importScripts` with a synchronous-XHR + indirect-`eval` implementation before importing the library, so the WASM is always fetched as a plain HTTP request regardless of worker type. This override must remain at the top of the file, before the static `import` of `@mediapipe/tasks-vision`.
+
+**GPU delegate fallback:** if `delegate="GPU"` is requested but unavailable, the object detector automatically falls back to CPU and prints a warning to the student's stdout via the via.js response `warning` field (handled in `cv.py`'s `_decode()`).
 
 **MediaPipe assets** live at `public/mediapipe/` (committed):
 - `wasm/` — `vision_wasm_internal.js/.wasm` and `vision_wasm_module_internal.js/.wasm`
 - `models/face_detector.tflite` — BlazeFace short-range model
+- `models/efficientdet_lite0.tflite` — EfficientDet-Lite0 object detection model (13 MB)
 
 These are served locally to satisfy the `require-corp` COEP header requirement.
 
-**`CanvasResult.vue`** (`src/celltypes/code/results/CanvasResult.vue`) — renders when a cell result contains the MIME type `application/x-via-canvas`. The value is the handle integer for the raw `HTMLCanvasElement`; the component calls `viaGet(handle)` and appends the element to a container div.
+**`CanvasResult.vue`** (`src/celltypes/code/results/CanvasResult.vue`) — renders when a cell result contains the MIME type `application/x-via-canvas`. The value is the handle integer for the raw `HTMLCanvasElement`; the component calls `viaGet(handle)` and appends the element to a container div. CSS `max-width: 100%; height: auto` makes the canvas scale responsively on narrow viewports.
 
 ### Branches
 
