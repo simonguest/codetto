@@ -52,6 +52,7 @@ async function initialize() {
     const buffer = new SharedArrayBuffer(4);
     interruptBuffer = new Int32Array(buffer);
     pyodide.setInterruptBuffer(interruptBuffer);
+    pyodide.globals.set("_interrupt_buffer", interruptBuffer);
     console.log("PyodideWorker: Interrupt buffer created");
   } else {
     console.warn(

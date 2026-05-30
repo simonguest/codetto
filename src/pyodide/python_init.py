@@ -43,3 +43,26 @@ sys.modules.setdefault('IPython.display', _ipython_display_mod)
 # Also patch in case IPython was already loaded before this runs
 if 'IPython.display' in sys.modules:
     sys.modules['IPython.display'].display = _display_func
+
+# Patch time.sleep to check for interrupts in small chunks, working around
+# https://github.com/pyodide/pyodide/issues/5927 (Chrome ignores interrupts
+# during a native sleep call).
+import time as _time
+_real_sleep = _time.sleep
+
+def _patched_sleep(secs):
+    if _interrupt_buffer is None:  # type: ignore[name-defined]  # noqa: F821
+        _real_sleep(secs)
+        return
+    from js import Atomics
+    remaining_ms = float(secs) * 1000
+    chunk_ms = 50.0
+    while remaining_ms > 0:
+        # Atomics.wait blocks while buffer[0]==0, waking early if interrupted
+        Atomics.wait(_interrupt_buffer, 0, 0, min(chunk_ms, remaining_ms))  # type: ignore[name-defined]  # noqa: F821
+        if _interrupt_buffer[0] != 0:  # type: ignore[name-defined]  # noqa: F821
+            _interrupt_buffer[0] = 0  # type: ignore[name-defined]  # noqa: F821
+            raise KeyboardInterrupt()
+        remaining_ms -= chunk_ms
+
+_time.sleep = _patched_sleep
