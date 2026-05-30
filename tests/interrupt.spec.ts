@@ -3,6 +3,12 @@ import { test, expect } from "@playwright/test";
 // Note: This test relies on SharedArrayBuffer being available in the browser
 // (required for Pyodide interrupt support). The dev server sets the necessary
 // COOP/COEP headers, so interrupts should work in both local and CI runs.
+//
+// The notebook uses time.sleep() specifically to cover the Chrome-specific bug
+// where native sleep ignores the Pyodide interrupt buffer. See:
+// https://github.com/pyodide/pyodide/issues/5927
+// When that is fixed upstream, the monkey patch in python_init.py can be
+// removed — this test is the regression guard.
 test("running cell can be interrupted with the Stop button", async ({
   page,
 }) => {
@@ -25,8 +31,10 @@ test("running cell can be interrupted with the Stop button", async ({
   await stopButton.click();
 
   // After the interrupt the run button should become enabled again,
-  // indicating Pyodide has returned to idle.
-  await expect(runButton).toBeEnabled({ timeout: 15_000 });
+  // indicating Pyodide has returned to idle. 4s is enough for a working
+  // interrupt (50ms chunk) but tight enough to catch regressions where
+  // sleep chunks are too large or interrupts are very slow.
+  await expect(runButton).toBeEnabled({ timeout: 4_000 });
 
   // The loop printed at most a few numbers — "done" should NOT appear because
   // the cell was interrupted before completing all 10 iterations.
