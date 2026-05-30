@@ -10,13 +10,28 @@ test.use({
   permissions: ["camera"],
 });
 
+test("cv headless camera runs without canvas", async ({ page }) => {
+  await page.goto("/#/test/cv_camera.ipynb");
+
+  const runButtons = page.getByRole("button", { name: "Run code" });
+  await expect(runButtons.first()).toBeEnabled({ timeout: 90_000 });
+
+  await runButtons.first().click();
+
+  // Headless camera prints confirmation and stops cleanly
+  const stdoutTab = page.locator('[value="stdout"]').first();
+  await stdoutTab.click();
+  const console_ = page.locator("textarea.output-console").first();
+  await expect(console_).toHaveValue(/Headless camera OK/, { timeout: 15_000 });
+});
+
 test("cv camera streams to canvas", async ({ page }) => {
   await page.goto("/#/test/cv_camera.ipynb");
 
-  const runButton = page.getByRole("button", { name: "Run code" });
-  await expect(runButton).toBeEnabled({ timeout: 90_000 });
+  const runButtons = page.getByRole("button", { name: "Run code" });
+  await expect(runButtons.nth(1)).toBeEnabled({ timeout: 90_000 });
 
-  await runButton.click();
+  await runButtons.nth(1).click();
 
   // Camera stream renders into a canvas in the result area
   const canvas = page.locator(".canvas-output canvas");
