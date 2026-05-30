@@ -85,6 +85,8 @@ export async function handleCvOp(
       video.muted = true;
       video.playsInline = true;
       await video.play();
+      // Mutable slot detectors can write to in order to receive each rAF frame.
+      const cameraRef = { onFrame: null as ((video: HTMLVideoElement) => void) | null };
       let rafId: number;
       const tick = () => {
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
@@ -96,6 +98,7 @@ export async function handleCvOp(
           ctx.drawImage(video, 0, 0, lw, lh);
           canvasController._overlayFn?.();
           ctx.restore();
+          cameraRef.onFrame?.(video);
         }
         rafId = requestAnimationFrame(tick);
       };
@@ -104,9 +107,11 @@ export async function handleCvOp(
         _video: video,
         _logicalWidth: lw,
         _logicalHeight: lh,
+        _cameraRef: cameraRef,
         clearOverlay() { canvasController._overlayFn = null; },
         stop() {
           cancelAnimationFrame(rafId);
+          cameraRef.onFrame = null;
           stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
           video.srcObject = null;
         },
@@ -171,54 +176,70 @@ export async function handleCvOp(
     }
     const requestedDelegate = (command.delegate ?? "CPU") as "CPU" | "GPU";
     try {
-      const { ObjectDetector, FilesetResolver } = await import("@mediapipe/tasks-vision");
-      const vision = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
-      const modelAssetPath = "/mediapipe/models/efficientdet_lite0.tflite";
+      // Spawn the dedicated inference worker. All MediaPipe CPU work happens
+      // there so the main thread's rAF loop is never blocked.
+      const worker = new Worker(
+        new URL("./objectDetectionWorker.ts", import.meta.url),
+        { type: "module" }
+      );
 
-      let objectDetector: any;
-      let warning: string | undefined;
-
-      try {
-        objectDetector = await ObjectDetector.createFromOptions(vision, {
-          baseOptions: { modelAssetPath, delegate: requestedDelegate },
-          runningMode: "VIDEO",
-          maxResults: 10,
-          scoreThreshold: 0.5,
+      // Wait for the model to load before responding to Python.
+      // onerror ensures the Promise rejects immediately if the worker fails to
+      // start, rather than hanging Atomics.wait in the Pyodide worker forever.
+      const { warning } = await new Promise<{ warning?: string }>((resolve, reject) => {
+        worker.onmessage = (e: MessageEvent) => {
+          if (e.data.type === "ready") resolve({ warning: e.data.warning });
+          else if (e.data.type === "error") reject(new Error(e.data.message));
+        };
+        worker.onerror = (e: ErrorEvent) => reject(new Error(e.message ?? "Object detection worker failed"));
+        worker.postMessage({
+          type: "init",
+          modelPath: "/mediapipe/models/efficientdet_lite0.tflite",
+          delegate: requestedDelegate,
         });
-      } catch (_) {
-        if (requestedDelegate === "GPU") {
-          warning = "GPU delegate unavailable, falling back to CPU";
-          objectDetector = await ObjectDetector.createFromOptions(vision, {
-            baseOptions: { modelAssetPath, delegate: "CPU" },
-            runningMode: "VIDEO",
-            maxResults: 10,
-            scoreThreshold: 0.5,
-          });
-        } else {
-          throw _;
-        }
-      }
+      });
+
+      let cachedDetections: any[] = [];
+      let workerBusy = false;
+
+      // Scale raw MediaPipe coords (video native resolution) to logical canvas pixels.
+      worker.onmessage = (e: MessageEvent) => {
+        if (e.data.type !== "result") return;
+        const video = camera._video;
+        const scaleX = camera._logicalWidth / (video.videoWidth || camera._logicalWidth);
+        const scaleY = camera._logicalHeight / (video.videoHeight || camera._logicalHeight);
+        cachedDetections = (e.data.detections as any[]).map((d: any) => ({
+          type: d.categories?.[0]?.categoryName ?? "object",
+          x: Math.round((d.boundingBox?.originX ?? 0) * scaleX),
+          y: Math.round((d.boundingBox?.originY ?? 0) * scaleY),
+          w: Math.round((d.boundingBox?.width ?? 0) * scaleX),
+          h: Math.round((d.boundingBox?.height ?? 0) * scaleY),
+          confidence: Math.round((d.categories?.[0]?.score ?? 0) * 100) / 100,
+        }));
+        workerBusy = false;
+      };
+
+      // Hook into the camera's rAF. Each frame is captured as a zero-copy
+      // ImageBitmap and transferred to the worker. workerBusy ensures we never
+      // queue more than one frame — inference runs as fast as the model allows.
+      camera._cameraRef.onFrame = (video: HTMLVideoElement) => {
+        if (workerBusy) return;
+        workerBusy = true;
+        createImageBitmap(video).then((bitmap) => {
+          worker.postMessage(
+            { type: "detect", bitmap, timestamp: performance.now() },
+            [bitmap]
+          );
+        });
+      };
 
       const controller = {
-        getDetections() {
-          const video = camera._video;
-          if (video.readyState < video.HAVE_CURRENT_DATA) return [];
-          try {
-            const result = objectDetector.detectForVideo(video, performance.now());
-            // MediaPipe coords are in video native resolution; scale to logical canvas pixels.
-            const scaleX = camera._logicalWidth / (video.videoWidth || camera._logicalWidth);
-            const scaleY = camera._logicalHeight / (video.videoHeight || camera._logicalHeight);
-            return (result.detections ?? []).map((d: any) => ({
-              type: d.categories?.[0]?.categoryName ?? "object",
-              x: Math.round((d.boundingBox?.originX ?? 0) * scaleX),
-              y: Math.round((d.boundingBox?.originY ?? 0) * scaleY),
-              w: Math.round((d.boundingBox?.width ?? 0) * scaleX),
-              h: Math.round((d.boundingBox?.height ?? 0) * scaleY),
-              confidence: Math.round((d.categories?.[0]?.score ?? 0) * 100) / 100,
-            }));
-          } catch (_) { return []; }
+        getDetections() { return cachedDetections; },
+        stop() {
+          camera._cameraRef.onFrame = null;
+          worker.terminate();
+          camera.clearOverlay();
         },
-        stop() { objectDetector.close(); camera.clearOverlay(); },
       };
 
       const response: any = { type: "handle", id: viaRegister(controller) };
