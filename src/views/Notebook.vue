@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { settingsStore } from "@store/settingsStore";
 import { notebookStore } from "@store/notebookStore";
+import { pyodideStore } from "@store/pyodideStore";
 import { NOTEBOOK_LABELS, LOCALE_METADATA } from "@/i18n";
 import { getNotebook } from "@storage/notebookStorage";
 import { useNotebookAutoSave } from "@composables/useNotebookAutoSave";
@@ -51,7 +52,9 @@ const toggleResources = () => {
 };
 
 onUnmounted(() => {
-  // Clear the notebook store and stop watching for auto-save changes
+  if (pyodideStore.executionStatus !== "idle") {
+    pyodideStore.interruptExecution();
+  }
   notebookStore.clear();
   stopWatcher();
 });
