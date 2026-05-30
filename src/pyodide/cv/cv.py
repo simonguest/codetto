@@ -14,6 +14,8 @@ def _decode(json_str):
     """Decode a via.js result JSON string from the bridge."""
     result = json.loads(json_str)
     if result.get("type") == "handle":
+        if result.get("warning"):
+            print(f"Warning: {result['warning']}", flush=True)
         return DOMProxy(result["id"])
     if result.get("type") == "error":
         raise RuntimeError(result.get("message", "Bridge error"))
@@ -67,20 +69,33 @@ def start_camera(canvas):
     return _decode(_cv_start_camera(canvas_handle))  # type: ignore
 
 
-def start_detector(camera):
+def start_face_detector(camera):
     """Attach a MediaPipe face detector to a running camera.
 
-    Loads the BlazeFace model (first call only), then runs detection at ~10fps
-    in the background. Bounding boxes are drawn automatically on the canvas.
-    Returns a detector controller with .get_detections() and .stop() methods.
+    Loads the BlazeFace model (first call only), then runs detection on demand.
+    Returns a detector with .get_detections() and .stop() methods.
+    Each detection: {"type": "face", "x", "y", "w", "h", "confidence"}.
     """
     camera_handle = object.__getattribute__(camera, "_handle")
-    return _decode(_cv_start_detector(camera_handle))  # type: ignore
+    return _decode(_cv_start_face_detector(camera_handle))  # type: ignore
+
+
+def start_object_detector(camera, delegate="CPU"):
+    """Attach a MediaPipe EfficientDet-Lite0 object detector to a running camera.
+
+    delegate: "CPU" (default) or "GPU". If GPU is unavailable a warning is
+    printed and the detector falls back to CPU automatically.
+    Returns a detector with .get_detections() and .stop() methods.
+    Each detection: {"type": "<label>", "x", "y", "w", "h", "confidence"}.
+    """
+    camera_handle = object.__getattribute__(camera, "_handle")
+    return _decode(_cv_start_object_detector(camera_handle, delegate))  # type: ignore
 
 
 _cv_mod = types.ModuleType("cv")
 _cv_mod.get_canvas = get_canvas
 _cv_mod.start_camera = start_camera
-_cv_mod.start_detector = start_detector
+_cv_mod.start_face_detector = start_face_detector
+_cv_mod.start_object_detector = start_object_detector
 _cv_mod.DOMProxy = DOMProxy
 sys.modules["cv"] = _cv_mod

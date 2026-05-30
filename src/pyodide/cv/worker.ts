@@ -23,8 +23,11 @@ export async function initializeCv(
     pyodide.globals.set("_cv_start_camera", (canvasHandle: number) =>
       viaSync({ op: "create_camera", handle: canvasHandle })
     );
-    pyodide.globals.set("_cv_start_detector", (cameraHandle: number) =>
-      viaSync({ op: "create_detector", handle: cameraHandle })
+    pyodide.globals.set("_cv_start_face_detector", (cameraHandle: number) =>
+      viaSync({ op: "create_face_detector", handle: cameraHandle })
+    );
+    pyodide.globals.set("_cv_start_object_detector", (cameraHandle: number, delegate: string) =>
+      viaSync({ op: "create_object_detector", handle: cameraHandle, delegate })
     );
   }
 
