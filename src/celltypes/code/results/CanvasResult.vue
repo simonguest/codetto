@@ -33,6 +33,8 @@ watch(() => props.value, mount);
 }
 .canvas-output :deep(canvas) {
   display: block;
+  max-width: 100%;
+  height: auto;
   border: 1px solid rgba(128, 128, 128, 0.2);
   border-radius: 4px;
 }

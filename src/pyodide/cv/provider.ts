@@ -18,16 +18,26 @@ export async function handleCvOp(
   const { handle, width, height } = command;
 
   if (op === "create_canvas") {
+    // Auto-size: when the student calls get_canvas() with no arguments, fill
+    // the available output cell width (measured from the main content area)
+    // and derive height at a 4:3 aspect ratio.
+    const el = (document.querySelector(".v-main") ?? document.body) as HTMLElement;
+    const availableWidth = Math.max(320, el.clientWidth - 32);
+    const lw = width || Math.min(availableWidth, 1280);
+    const lh = height || Math.round(lw * 3 / 4);
+
     // Scale the backing buffer for HiDPI/Retina displays so the canvas is
     // sharp. CSS width/height stays at logical pixels; everything that draws
     // into the canvas (video frames and overlays) uses ctx.scale(dpr, dpr)
     // so all coordinates stay in logical pixel space.
     const dpr = window.devicePixelRatio || 1;
     const canvasEl = document.createElement("canvas");
-    canvasEl.width = width * dpr;
-    canvasEl.height = height * dpr;
-    canvasEl.style.width = `${width}px`;
-    canvasEl.style.height = `${height}px`;
+    canvasEl.width = lw * dpr;
+    canvasEl.height = lh * dpr;
+    canvasEl.style.width = `${lw}px`;
+    // No inline height — CSS height:auto in CanvasResult.vue computes it from
+    // the canvas's intrinsic aspect ratio (lh/lw, DPR cancels), so the height
+    // stays proportional even when max-width:100% shrinks the CSS width.
 
     // Register the raw element separately so CanvasResult can append it to the DOM.
     const displayHandle = viaRegister(canvasEl);
@@ -42,16 +52,17 @@ export async function handleCvOp(
     // coordinates passed to it are in logical pixel space.
     const canvasController = {
       _canvas: canvasEl,
-      _logicalWidth: width,
-      _logicalHeight: height,
+      _logicalWidth: lw,
+      _logicalHeight: lh,
       _dpr: dpr,
       _overlayFn: null as (() => void) | null,
       drawBoundingBoxes(detections: any[]) {
         canvasController._overlayFn = !detections?.length ? null : () => {
           const ctx = canvasEl.getContext("2d")!;
+          const fontSize = Math.max(14, Math.round(lw / 40));
           ctx.strokeStyle = "#00ff00";
-          ctx.lineWidth = 2;
-          ctx.font = "14px sans-serif";
+          ctx.lineWidth = Math.max(2, Math.round(lw / 320));
+          ctx.font = `${fontSize}px sans-serif`;
           ctx.fillStyle = "#00ff00";
           for (const det of detections) {
             ctx.strokeRect(det.x, det.y, det.w, det.h);

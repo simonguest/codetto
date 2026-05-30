@@ -50,11 +50,12 @@ class DOMProxy:
             _via_set(handle, _camel(name), value)  # type: ignore
 
 
-def get_canvas(width=400, height=300):
+def get_canvas(width=0, height=0):
     """Create a canvas in the cell output area and return a DOMProxy for it.
 
-    The canvas element is created on the main thread synchronously; the
-    cell result tab is updated to display it before this call returns.
+    With no arguments the canvas fills the output cell width at a 4:3 aspect
+    ratio and scales responsively on narrow screens. Supply both width and
+    height (in pixels) to use explicit dimensions instead.
     """
     return _decode(_cv_create_canvas(width, height))  # type: ignore
 
