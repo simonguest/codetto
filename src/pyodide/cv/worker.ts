@@ -17,9 +17,6 @@ export async function initializeCv(
   runPythonFile: (url: URL) => Promise<any>
 ): Promise<void> {
   if (viaSync) {
-    pyodide.globals.set("_cv_create_canvas", (width: number, height: number) =>
-      viaSync({ op: "create_canvas", width, height })
-    );
     pyodide.globals.set("_cv_start_camera", (canvasHandle: number) =>
       viaSync({ op: "create_camera", handle: canvasHandle })
     );

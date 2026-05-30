@@ -2,6 +2,7 @@
 
 import { additionalPackagesFromCode } from "./additionalPackagesFromCode";
 import { overrides, implementOverride } from "./overrides/implementOverride";
+import { initializeGraphics, reloadGraphicsPython } from "./graphics/worker";
 import { initializeCv, reloadCvPython } from "./cv/worker";
 
 let pyodide: any;
@@ -134,6 +135,7 @@ async function initialize() {
   console.log("PyodideWorker: Initializing Python environment");
   await runPythonFile(new URL("./python_init.py", import.meta.url));
 
+  await initializeGraphics(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
   await initializeCv(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
 }
 
@@ -158,6 +160,7 @@ self.onmessage = async event => {
     case "reset":
       console.log("Resetting Pyodide Globals");
       await runPythonFile(new URL("./python_reset_globals.py", import.meta.url));
+      await reloadGraphicsPython(runPythonFile);
       await reloadCvPython(runPythonFile);
       self.postMessage({
         type: "reset_completed"

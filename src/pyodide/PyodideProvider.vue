@@ -7,6 +7,7 @@ import { jediStore } from "@store/jediStore";
 import { settingsStore } from "@store/settingsStore";
 import { Locale } from "@/i18n";
 import { viaRegister, viaGet, viaClear } from "@/bridge/viaStore";
+import { handleGraphicsOp } from "./graphics/provider";
 import { handleCvOp } from "./cv/provider";
 
 const props = defineProps<{ locale: Locale | null }>();
@@ -66,6 +67,7 @@ onMounted(async () => {
         break;
       case "via": {
         const { op, handle, method, prop, args, value } = event.data.command;
+        if (await handleGraphicsOp(op, event.data.command, viaRespond)) break;
         if (await handleCvOp(op, event.data.command, viaRespond)) break;
         if (op === "call") {
           const obj = viaGet(handle);

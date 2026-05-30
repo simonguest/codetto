@@ -50,23 +50,16 @@ class DOMProxy:
             _via_set(handle, _camel(name), value)  # type: ignore
 
 
-def get_canvas(width=0, height=0):
-    """Create a canvas in the cell output area and return a DOMProxy for it.
+def start_camera(canvas=None):
+    """Start a webcam stream.
 
-    With no arguments the canvas fills the output cell width at a 4:3 aspect
-    ratio and scales responsively on narrow screens. Supply both width and
-    height (in pixels) to use explicit dimensions instead.
-    """
-    return _decode(_cv_create_canvas(width, height))  # type: ignore
-
-
-def start_camera(canvas):
-    """Start a webcam stream that draws frames into canvas.
-
+    If canvas is provided, frames are drawn into it each animation frame.
+    Without a canvas the camera runs headlessly — useful when you only need
+    detection data (e.g. inside a pygame loop).
     Blocks until the user grants camera permission (or raises RuntimeError if
     denied). Returns a camera controller with a .stop() method.
     """
-    canvas_handle = object.__getattribute__(canvas, "_handle")
+    canvas_handle = object.__getattribute__(canvas, "_handle") if canvas is not None else None
     return _decode(_cv_start_camera(canvas_handle))  # type: ignore
 
 
@@ -94,7 +87,6 @@ def start_object_detector(camera, delegate="CPU"):
 
 
 _cv_mod = types.ModuleType("cv")
-_cv_mod.get_canvas = get_canvas
 _cv_mod.start_camera = start_camera
 _cv_mod.start_face_detector = start_face_detector
 _cv_mod.start_object_detector = start_object_detector

@@ -1,114 +1,59 @@
 /**
  * CV module — main-thread (provider) side.
  *
- * Handles the via.js ops that require DOM access: create_canvas,
- * create_camera, create_face_detector, and create_object_detector.
+ * Handles the via.js ops that require DOM access: create_camera,
+ * create_face_detector, and create_object_detector.
  * Returns true if the op was handled (so PyodideProvider can break out of
  * its switch), false otherwise.
  */
 import { viaRegister, viaGet } from "@/bridge/viaStore";
-import { notebookStore } from "@store/notebookStore";
-import { pyodideStore } from "@store/pyodideStore";
 
 export async function handleCvOp(
   op: string,
   command: any,
   viaRespond: (result: any) => void
 ): Promise<boolean> {
-  const { handle, width, height } = command;
-
-  if (op === "create_canvas") {
-    // Auto-size: when the student calls get_canvas() with no arguments, fill
-    // the available output cell width (measured from the main content area)
-    // and derive height at a 4:3 aspect ratio.
-    const el = (document.querySelector(".v-main") ?? document.body) as HTMLElement;
-    const availableWidth = Math.max(320, el.clientWidth - 32);
-    const lw = width || Math.min(availableWidth, 1280);
-    const lh = height || Math.round(lw * 3 / 4);
-
-    // Scale the backing buffer for HiDPI/Retina displays so the canvas is
-    // sharp. CSS width/height stays at logical pixels; everything that draws
-    // into the canvas (video frames and overlays) uses ctx.scale(dpr, dpr)
-    // so all coordinates stay in logical pixel space.
-    const dpr = window.devicePixelRatio || 1;
-    const canvasEl = document.createElement("canvas");
-    canvasEl.width = lw * dpr;
-    canvasEl.height = lh * dpr;
-    canvasEl.style.width = `${lw}px`;
-    // No inline height — CSS height:auto in CanvasResult.vue computes it from
-    // the canvas's intrinsic aspect ratio (lh/lw, DPR cancels), so the height
-    // stays proportional even when max-width:100% shrinks the CSS width.
-
-    // Register the raw element separately so CanvasResult can append it to the DOM.
-    const displayHandle = viaRegister(canvasEl);
-    if (pyodideStore.runningCellId) {
-      notebookStore.setResult(pyodideStore.runningCellId, {
-        "application/x-via-canvas": String(displayHandle),
-      });
-    }
-    // Canvas controller: the object Python holds. Owns overlay state and exposes
-    // drawing methods so student code calls canvas.draw_bounding_boxes(), not camera.
-    // _overlayFn is called inside the rAF tick after ctx.scale(dpr, dpr), so all
-    // coordinates passed to it are in logical pixel space.
-    const canvasController = {
-      _canvas: canvasEl,
-      _logicalWidth: lw,
-      _logicalHeight: lh,
-      _dpr: dpr,
-      _overlayFn: null as (() => void) | null,
-      drawBoundingBoxes(detections: any[]) {
-        canvasController._overlayFn = !detections?.length ? null : () => {
-          const ctx = canvasEl.getContext("2d")!;
-          const fontSize = Math.max(14, Math.round(lw / 40));
-          ctx.strokeStyle = "#00ff00";
-          ctx.lineWidth = Math.max(2, Math.round(lw / 320));
-          ctx.font = `${fontSize}px sans-serif`;
-          ctx.fillStyle = "#00ff00";
-          for (const det of detections) {
-            ctx.strokeRect(det.x, det.y, det.w, det.h);
-            const pct = `${Math.round(det.confidence * 100)}%`;
-            const label = det.type ? `${det.type} ${pct}` : pct;
-            ctx.fillText(label, det.x + 4, det.y - 6);
-          }
-        };
-      },
-    };
-    viaRespond({ type: "handle", id: viaRegister(canvasController) });
-    return true;
-  }
+  const { handle } = command;
 
   if (op === "create_camera") {
-    const canvasController = viaGet(handle);
-    if (!canvasController?._canvas) {
+    // handle is null when Python called start_camera() with no canvas argument.
+    const canvasController = handle != null ? viaGet(handle) : null;
+    if (handle != null && !canvasController?._canvas) {
       viaRespond({ type: "error", message: "Invalid canvas handle" });
       return true;
     }
-    const { _canvas: canvasEl, _logicalWidth: lw, _logicalHeight: lh, _dpr: dpr } = canvasController;
-    const ctx = canvasEl.getContext("2d")!;
+    const canvasEl = canvasController?._canvas ?? null;
+    const dpr = canvasController?._dpr ?? 1;
+    const ctx = canvasEl ? canvasEl.getContext("2d")! : null;
+    // Ideal stream dimensions: use canvas logical size if available, else 640×480.
+    const requestW = canvasController?._logicalWidth ?? 640;
+    const requestH = canvasController?._logicalHeight ?? 480;
     try {
-      // Request the stream at the canvas's logical size to avoid unnecessary
-      // upscaling from a low-res stream.
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: lw }, height: { ideal: lh } },
+        video: { width: { ideal: requestW }, height: { ideal: requestH } },
       });
       const video = document.createElement("video");
       video.srcObject = stream;
       video.muted = true;
       video.playsInline = true;
       await video.play();
+      // Logical dimensions for coordinate scaling in detectors.
+      // Canvas supplies exact logical pixels; headless cameras use the actual
+      // video stream dimensions (available after play() resolves).
+      const lw = canvasController?._logicalWidth ?? (video.videoWidth || requestW);
+      const lh = canvasController?._logicalHeight ?? (video.videoHeight || requestH);
       // Mutable slot detectors can write to in order to receive each rAF frame.
       const cameraRef = { onFrame: null as ((video: HTMLVideoElement) => void) | null };
       let rafId: number;
       const tick = () => {
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
-          // Scale the context so both the video frame and any overlay draw in
-          // logical pixel coordinates, letting the DPR-scaled backing buffer
-          // produce a sharp image on HiDPI displays.
-          ctx.save();
-          ctx.scale(dpr, dpr);
-          ctx.drawImage(video, 0, 0, lw, lh);
-          canvasController._overlayFn?.();
-          ctx.restore();
+          if (ctx) {
+            ctx.save();
+            ctx.scale(dpr, dpr);
+            ctx.drawImage(video, 0, 0, lw, lh);
+            canvasController!._overlayFn?.();
+            ctx.restore();
+          }
           cameraRef.onFrame?.(video);
         }
         rafId = requestAnimationFrame(tick);
@@ -119,7 +64,9 @@ export async function handleCvOp(
         _logicalWidth: lw,
         _logicalHeight: lh,
         _cameraRef: cameraRef,
-        clearOverlay() { canvasController._overlayFn = null; },
+        clearOverlay() {
+          if (canvasController) canvasController._overlayFn = null;
+        },
         stop() {
           cancelAnimationFrame(rafId);
           cameraRef.onFrame = null;
