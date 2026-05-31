@@ -63,18 +63,20 @@ def start_camera(canvas=None):
     return _decode(_cv_start_camera(canvas_handle))  # type: ignore
 
 
-def start_face_detector(camera):
+def start_face_detector(camera, delegate="GPU"):
     """Attach a MediaPipe face detector to a running camera.
 
+    delegate: "GPU" (default) or "CPU". Falls back to CPU with a warning if
+    GPU is unavailable.
     Loads the BlazeFace model (first call only), then runs detection on demand.
     Returns a detector with .get_detections() and .stop() methods.
     Each detection: {"type": "face", "x", "y", "w", "h", "confidence"}.
     """
     camera_handle = object.__getattribute__(camera, "_handle")
-    return _decode(_cv_start_face_detector(camera_handle))  # type: ignore
+    return _decode(_cv_start_face_detector(camera_handle, delegate))  # type: ignore
 
 
-def start_object_detector(camera, delegate="CPU"):
+def start_object_detector(camera, delegate="GPU"):
     """Attach a MediaPipe EfficientDet-Lite0 object detector to a running camera.
 
     delegate: "CPU" (default) or "GPU". If GPU is unavailable a warning is
@@ -86,7 +88,7 @@ def start_object_detector(camera, delegate="CPU"):
     return _decode(_cv_start_object_detector(camera_handle, delegate))  # type: ignore
 
 
-def start_pose_detector(camera, delegate="CPU", num_poses=1):
+def start_pose_detector(camera, delegate="GPU", num_poses=1):
     """Attach a MediaPipe Pose Landmarker to a running camera.
 
     delegate: "CPU" (default) or "GPU". If GPU is unavailable a warning is
@@ -101,7 +103,7 @@ def start_pose_detector(camera, delegate="CPU", num_poses=1):
     return _decode(_cv_start_pose_detector(camera_handle, delegate, num_poses))  # type: ignore
 
 
-def start_gesture_detector(camera, delegate="CPU", num_hands=2):
+def start_gesture_detector(camera, delegate="GPU", num_hands=2):
     """Attach a MediaPipe Gesture Recognizer to a running camera.
 
     delegate: "CPU" (default) or "GPU". Falls back to CPU with a warning if
