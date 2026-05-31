@@ -121,6 +121,63 @@ def start_gesture_detector(camera, delegate="GPU", num_hands=2):
     return _decode(_cv_start_gesture_detector(camera_handle, delegate, num_hands))  # type: ignore
 
 
+def start_segmenter(camera, delegate="GPU"):
+    """Attach a MediaPipe Selfie Multi-Class segmenter to a running camera.
+
+    delegate: "GPU" (default) or "CPU". Falls back to CPU with a warning if
+    GPU is unavailable.
+    Returns a segmenter with .get_segments() and .stop() methods.
+    .get_segments() returns a list of class names visible in the current frame,
+    e.g. ["background", "hair", "clothes"].
+    Use cv.color_segment() or cv.apply_image_to_segment() to paint segments.
+    """
+    camera_handle = object.__getattribute__(camera, "_handle")
+    return _decode(_cv_start_segmenter(camera_handle, delegate))  # type: ignore
+
+
+def color_segment(canvas, segmenter, class_name, color, opacity=0.5):
+    """Paint a segment class with a solid color on the canvas overlay.
+
+    canvas: the graphics canvas.
+    segmenter: a segmenter returned by cv.start_segmenter().
+    class_name: one of cv.SEGMENT constants or a string:
+                "background", "hair", "body_skin", "face_skin", "clothes", "others".
+    color: any CSS color string, e.g. "#ff0000" or "red".
+    opacity: 0.0 (transparent) to 1.0 (opaque), default 0.5.
+    Replaces any previous overlay (draw_poses, draw_hands, etc.).
+    """
+    canvas_handle = object.__getattribute__(canvas, "_handle")
+    segmenter_handle = object.__getattribute__(segmenter, "_handle")
+    _cv_color_segment(canvas_handle, segmenter_handle, class_name, color, opacity)  # type: ignore
+
+
+def apply_image_to_segment(canvas, segmenter, class_name, image_path, opacity=0.8):
+    """Apply an image to a segment class, clipped to the segment shape.
+
+    canvas: the graphics canvas.
+    segmenter: a segmenter returned by cv.start_segmenter().
+    class_name: one of cv.SEGMENT constants or a string.
+    image_path: path to an image file, e.g. "/sample_files/cat.png".
+    opacity: 0.0 to 1.0, default 0.8.
+    The image is scaled to fill the full canvas and clipped to the segment.
+    Replaces any previous overlay.
+    """
+    canvas_handle = object.__getattribute__(canvas, "_handle")
+    segmenter_handle = object.__getattribute__(segmenter, "_handle")
+    _cv_apply_image_to_segment(canvas_handle, segmenter_handle, class_name, image_path, opacity)  # type: ignore
+
+
+class _SegmentClasses:
+    BACKGROUND = 'background'
+    HAIR = 'hair'
+    BODY_SKIN = 'body_skin'
+    FACE_SKIN = 'face_skin'
+    CLOTHES = 'clothes'
+    OTHERS = 'others'
+
+
+SEGMENT = _SegmentClasses()
+
 class _HandLandmarks:
     WRIST = 0
     THUMB_CMC = 1
@@ -193,5 +250,9 @@ _cv_mod.start_pose_detector = start_pose_detector
 _cv_mod.POSE = POSE
 _cv_mod.start_gesture_detector = start_gesture_detector
 _cv_mod.HAND = HAND
+_cv_mod.start_segmenter = start_segmenter
+_cv_mod.color_segment = color_segment
+_cv_mod.apply_image_to_segment = apply_image_to_segment
+_cv_mod.SEGMENT = SEGMENT
 _cv_mod.DOMProxy = DOMProxy
 sys.modules["cv"] = _cv_mod

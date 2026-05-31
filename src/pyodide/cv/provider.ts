@@ -380,5 +380,184 @@ export async function handleCvOp(
     return true;
   }
 
+  if (op === "create_segmenter") {
+    const camera = viaGet(handle);
+    if (!camera?._video) {
+      viaRespond({ type: "error", message: "Invalid camera handle" });
+      return true;
+    }
+    const requestedDelegate = (command.delegate ?? "GPU") as "CPU" | "GPU";
+    try {
+      const worker = new Worker(
+        new URL("./imageSegmentationWorker.ts", import.meta.url),
+        { type: "module" }
+      );
+
+      const { warning } = await new Promise<{ warning?: string }>((resolve, reject) => {
+        worker.onmessage = (e: MessageEvent) => {
+          if (e.data.type === "ready") resolve({ warning: e.data.warning });
+          else if (e.data.type === "error") reject(new Error(e.data.message));
+        };
+        worker.onerror = (e: ErrorEvent) => reject(new Error(e.message ?? "Segmentation worker failed"));
+        worker.postMessage({
+          type: "init",
+          modelPath: "/mediapipe/models/selfie_multiclass_256x256.tflite",
+          delegate: requestedDelegate,
+        });
+      });
+
+      let cachedMask: { data: Uint8Array; width: number; height: number } | null = null;
+      let workerBusy = false;
+
+      worker.onmessage = (e: MessageEvent) => {
+        if (e.data.type !== "result") return;
+        if (e.data.mask) cachedMask = { data: e.data.mask, width: e.data.width, height: e.data.height };
+        workerBusy = false;
+      };
+
+      camera._cameraRef.onFrame = (video: HTMLVideoElement) => {
+        if (workerBusy) return;
+        workerBusy = true;
+        createImageBitmap(video).then((bitmap) => {
+          worker.postMessage(
+            { type: "segment", bitmap, timestamp: performance.now() },
+            [bitmap]
+          );
+        });
+      };
+
+      const CLASS_NAMES = ["background", "hair", "body_skin", "face_skin", "clothes", "others"];
+
+      const controller = {
+        _cachedMask: null as { data: Uint8Array; width: number; height: number } | null,
+        getSegments() {
+          const mask = cachedMask;
+          if (!mask) return [];
+          const present = new Set<number>();
+          for (const byte of mask.data) present.add(byte);
+          return [...present].sort().map((i) => CLASS_NAMES[i]).filter(Boolean);
+        },
+        get _mask() { return cachedMask; },
+        stop() {
+          camera._cameraRef.onFrame = null;
+          worker.terminate();
+          camera.clearOverlay();
+        },
+      };
+
+      const response: any = { type: "handle", id: viaRegister(controller) };
+      if (warning) response.warning = warning;
+      viaRespond(response);
+    } catch (err) {
+      viaRespond({ type: "error", message: String(err) });
+    }
+    return true;
+  }
+
+  // Segment class name → categoryMask index
+  const SEGMENT_INDEX: Record<string, number> = {
+    background: 0, hair: 1, body_skin: 2, face_skin: 3, clothes: 4, others: 5,
+  };
+
+  if (op === "color_segment") {
+    const canvasController = viaGet(command.canvasHandle);
+    const segController = viaGet(command.segmenterHandle);
+    if (!canvasController || !segController) {
+      viaRespond({ type: "value", value: null });
+      return true;
+    }
+    const classIndex = SEGMENT_INDEX[command.className] ?? -1;
+    const opacity = command.opacity ?? 0.5;
+    // Parse CSS color to RGB via a temporary canvas element.
+    const tmp = document.createElement("canvas").getContext("2d")!;
+    tmp.fillStyle = command.color ?? "#ffffff";
+    const hex = tmp.fillStyle as string;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const alpha = Math.round(opacity * 255);
+    const lw = canvasController._logicalWidth;
+    const lh = canvasController._logicalHeight;
+    const videoCanvas = canvasController._canvas as HTMLCanvasElement;
+
+    const colorOverlayFn = () => {
+      const cached = segController._mask;
+      if (!cached || classIndex < 0) return;
+      const { data: mask, width: mw, height: mh } = cached;
+      const imgData = new ImageData(mw, mh);
+      const d = imgData.data;
+      for (let i = 0; i < mask.length; i++) {
+        if (mask[i] === classIndex) {
+          d[i * 4]     = r;
+          d[i * 4 + 1] = g;
+          d[i * 4 + 2] = b;
+          d[i * 4 + 3] = alpha;
+        }
+      }
+      const offscreen = new OffscreenCanvas(mw, mh);
+      offscreen.getContext("2d")!.putImageData(imgData, 0, 0);
+      videoCanvas.getContext("2d")!.drawImage(offscreen, 0, 0, lw, lh);
+    };
+    if (!canvasController._segmentOverlays) canvasController._segmentOverlays = new Map();
+    canvasController._segmentOverlays.set(command.className, colorOverlayFn);
+    const segOverlays = canvasController._segmentOverlays;
+    canvasController._overlayFn = () => { for (const fn of segOverlays.values()) fn(); };
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  if (op === "apply_image_to_segment") {
+    const canvasController = viaGet(command.canvasHandle);
+    const segController = viaGet(command.segmenterHandle);
+    if (!canvasController || !segController) {
+      viaRespond({ type: "value", value: null });
+      return true;
+    }
+    const classIndex = SEGMENT_INDEX[command.className] ?? -1;
+    const opacity = command.opacity ?? 0.8;
+    const lw = canvasController._logicalWidth;
+    const lh = canvasController._logicalHeight;
+    const videoCanvas = canvasController._canvas as HTMLCanvasElement;
+
+    const img = new Image();
+    await new Promise<void>((resolve) => {
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = command.imagePath;
+    });
+
+    const imageOverlayFn = () => {
+      const cached = segController._mask;
+      if (!cached || classIndex < 0 || img.width === 0) return;
+      const { data: mask, width: mw, height: mh } = cached;
+
+      // Build a mask at the model's native resolution.
+      const maskData = new ImageData(mw, mh);
+      for (let i = 0; i < mask.length; i++) {
+        if (mask[i] === classIndex) maskData.data[i * 4 + 3] = 255;
+      }
+      const maskCanvas = new OffscreenCanvas(mw, mh);
+      maskCanvas.getContext("2d")!.putImageData(maskData, 0, 0);
+
+      // Draw the image at full logical size, then clip it to the segment shape.
+      const imgCanvas = new OffscreenCanvas(lw, lh);
+      const imgCtx = imgCanvas.getContext("2d")!;
+      imgCtx.drawImage(img, 0, 0, lw, lh);
+      imgCtx.globalCompositeOperation = "destination-in";
+      imgCtx.drawImage(maskCanvas, 0, 0, lw, lh);
+
+      const ctx = videoCanvas.getContext("2d")!;
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(imgCanvas, 0, 0);
+      ctx.globalAlpha = 1;
+    };
+    if (!canvasController._segmentOverlays) canvasController._segmentOverlays = new Map();
+    canvasController._segmentOverlays.set(command.className, imageOverlayFn);
+    const segOverlays = canvasController._segmentOverlays;
+    canvasController._overlayFn = () => { for (const fn of segOverlays.values()) fn(); };
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
   return false;
 }

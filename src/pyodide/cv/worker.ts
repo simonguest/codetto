@@ -32,6 +32,15 @@ export async function initializeCv(
     pyodide.globals.set("_cv_start_gesture_detector", (cameraHandle: number, delegate: string, numHands: number) =>
       viaSync({ op: "create_gesture_detector", handle: cameraHandle, delegate, numHands })
     );
+    pyodide.globals.set("_cv_start_segmenter", (cameraHandle: number, delegate: string) =>
+      viaSync({ op: "create_segmenter", handle: cameraHandle, delegate })
+    );
+    pyodide.globals.set("_cv_color_segment", (canvasHandle: number, segmenterHandle: number, className: string, color: string, opacity: number) =>
+      viaSync({ op: "color_segment", canvasHandle, segmenterHandle, className, color, opacity })
+    );
+    pyodide.globals.set("_cv_apply_image_to_segment", (canvasHandle: number, segmenterHandle: number, className: string, imagePath: string, opacity: number) =>
+      viaSync({ op: "apply_image_to_segment", canvasHandle, segmenterHandle, className, imagePath, opacity })
+    );
   }
 
   await reloadCvPython(runPythonFile);
