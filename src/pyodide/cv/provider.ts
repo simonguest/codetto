@@ -285,5 +285,82 @@ export async function handleCvOp(
     return true;
   }
 
+  if (op === "create_gesture_detector") {
+    const camera = viaGet(handle);
+    if (!camera?._video) {
+      viaRespond({ type: "error", message: "Invalid camera handle" });
+      return true;
+    }
+    const requestedDelegate = (command.delegate ?? "CPU") as "CPU" | "GPU";
+    const numHands = command.numHands ?? 1;
+    try {
+      const worker = new Worker(
+        new URL("./gestureRecognitionWorker.ts", import.meta.url),
+        { type: "module" }
+      );
+
+      const { warning } = await new Promise<{ warning?: string }>((resolve, reject) => {
+        worker.onmessage = (e: MessageEvent) => {
+          if (e.data.type === "ready") resolve({ warning: e.data.warning });
+          else if (e.data.type === "error") reject(new Error(e.data.message));
+        };
+        worker.onerror = (e: ErrorEvent) => reject(new Error(e.message ?? "Gesture recognition worker failed"));
+        worker.postMessage({
+          type: "init",
+          modelPath: "/mediapipe/models/gesture_recognizer.task",
+          delegate: requestedDelegate,
+          numHands,
+        });
+      });
+
+      let cachedHands: any[] = [];
+      let workerBusy = false;
+
+      worker.onmessage = (e: MessageEvent) => {
+        if (e.data.type !== "result") return;
+        const lw = camera._logicalWidth;
+        const lh = camera._logicalHeight;
+        cachedHands = (e.data.hands as any[]).map((hand: any) => ({
+          gesture: hand.gesture,
+          confidence: hand.confidence,
+          handedness: hand.handedness,
+          landmarks: (hand.landmarks as any[]).map((lm: any) => ({
+            x: Math.round(lm.x * lw),
+            y: Math.round(lm.y * lh),
+            z: lm.z ?? 0,
+          })),
+        }));
+        workerBusy = false;
+      };
+
+      camera._cameraRef.onFrame = (video: HTMLVideoElement) => {
+        if (workerBusy) return;
+        workerBusy = true;
+        createImageBitmap(video).then((bitmap) => {
+          worker.postMessage(
+            { type: "detect", bitmap, timestamp: performance.now() },
+            [bitmap]
+          );
+        });
+      };
+
+      const controller = {
+        getDetections() { return cachedHands; },
+        stop() {
+          camera._cameraRef.onFrame = null;
+          worker.terminate();
+          camera.clearOverlay();
+        },
+      };
+
+      const response: any = { type: "handle", id: viaRegister(controller) };
+      if (warning) response.warning = warning;
+      viaRespond(response);
+    } catch (err) {
+      viaRespond({ type: "error", message: String(err) });
+    }
+    return true;
+  }
+
   return false;
 }

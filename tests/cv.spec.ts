@@ -97,6 +97,34 @@ test("cv canvas layers: student drawing and detection overlay coexist", async ({
   await expect(runButton).toBeEnabled({ timeout: 10_000 });
 });
 
+test("cv gesture detection draws hands and prints detection counts", async ({ page }) => {
+  test.setTimeout(180_000);
+
+  await page.goto("/#/test/cv_gesture.ipynb");
+
+  const runButton = page.getByRole("button", { name: "Run code" });
+  await expect(runButton).toBeEnabled({ timeout: 90_000 });
+
+  await runButton.click();
+
+  const canvas = page.locator(".canvas-output canvas").first();
+  await expect(canvas).toBeVisible({ timeout: 30_000 });
+
+  // Wait for stdout tab — appears once the loop starts printing
+  const stdoutTab = page.locator('[value="stdout"]').last();
+  await expect(stdoutTab).toBeVisible({ timeout: 30_000 });
+  await stdoutTab.click();
+
+  const console_ = page.locator("textarea.output-console");
+  await expect(console_).toBeVisible({ timeout: 5_000 });
+  const text = await console_.inputValue();
+  expect(text).toContain("Hands detected:");
+
+  const stopButton = page.getByRole("button", { name: "Stop code" });
+  await stopButton.click();
+  await expect(runButton).toBeEnabled({ timeout: 10_000 });
+});
+
 test("cv face detection prints detection counts", async ({ page }) => {
   await page.goto("/#/test/cv_face.ipynb");
 

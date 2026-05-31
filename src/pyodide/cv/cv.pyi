@@ -44,7 +44,33 @@ class _PoseLandmarks:
 
 POSE: _PoseLandmarks
 
+class _HandLandmarks:
+    WRIST: int
+    THUMB_CMC: int
+    THUMB_MCP: int
+    THUMB_IP: int
+    THUMB_TIP: int
+    INDEX_FINGER_MCP: int
+    INDEX_FINGER_PIP: int
+    INDEX_FINGER_DIP: int
+    INDEX_FINGER_TIP: int
+    MIDDLE_FINGER_MCP: int
+    MIDDLE_FINGER_PIP: int
+    MIDDLE_FINGER_DIP: int
+    MIDDLE_FINGER_TIP: int
+    RING_FINGER_MCP: int
+    RING_FINGER_PIP: int
+    RING_FINGER_DIP: int
+    RING_FINGER_TIP: int
+    PINKY_MCP: int
+    PINKY_PIP: int
+    PINKY_DIP: int
+    PINKY_TIP: int
+
+HAND: _HandLandmarks
+
 def start_camera(canvas: Canvas | None = None) -> Camera: ...
 def start_face_detector(camera: Camera) -> Detector: ...
 def start_object_detector(camera: Camera, delegate: str = "CPU") -> Detector: ...
 def start_pose_detector(camera: Camera, delegate: str = "CPU", num_poses: int = 1) -> Detector: ...
+def start_gesture_detector(camera: Camera, delegate: str = "CPU", num_hands: int = 2) -> Detector: ...

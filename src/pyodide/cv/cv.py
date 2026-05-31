@@ -101,6 +101,50 @@ def start_pose_detector(camera, delegate="CPU", num_poses=1):
     return _decode(_cv_start_pose_detector(camera_handle, delegate, num_poses))  # type: ignore
 
 
+def start_gesture_detector(camera, delegate="CPU", num_hands=2):
+    """Attach a MediaPipe Gesture Recognizer to a running camera.
+
+    delegate: "CPU" (default) or "GPU". Falls back to CPU with a warning if
+    GPU is unavailable.
+    num_hands: maximum number of hands to detect simultaneously (default 2).
+    Returns a detector with .get_detections() and .stop() methods.
+    Each detection is a dict:
+      {"gesture": str, "confidence": float, "handedness": "Left"|"Right",
+       "landmarks": [{"x": int, "y": int, "z": float}, ...]}  # 21 landmarks
+    Use cv.HAND constants to index landmarks, e.g. cv.HAND.THUMB_TIP.
+    Gesture values: "None", "Closed_Fist", "Open_Palm", "Pointing_Up",
+                    "Thumb_Down", "Thumb_Up", "Victory", "ILoveYou".
+    """
+    camera_handle = object.__getattribute__(camera, "_handle")
+    return _decode(_cv_start_gesture_detector(camera_handle, delegate, num_hands))  # type: ignore
+
+
+class _HandLandmarks:
+    WRIST = 0
+    THUMB_CMC = 1
+    THUMB_MCP = 2
+    THUMB_IP = 3
+    THUMB_TIP = 4
+    INDEX_FINGER_MCP = 5
+    INDEX_FINGER_PIP = 6
+    INDEX_FINGER_DIP = 7
+    INDEX_FINGER_TIP = 8
+    MIDDLE_FINGER_MCP = 9
+    MIDDLE_FINGER_PIP = 10
+    MIDDLE_FINGER_DIP = 11
+    MIDDLE_FINGER_TIP = 12
+    RING_FINGER_MCP = 13
+    RING_FINGER_PIP = 14
+    RING_FINGER_DIP = 15
+    RING_FINGER_TIP = 16
+    PINKY_MCP = 17
+    PINKY_PIP = 18
+    PINKY_DIP = 19
+    PINKY_TIP = 20
+
+
+HAND = _HandLandmarks()
+
 class _PoseLandmarks:
     NOSE = 0
     LEFT_EYE_INNER = 1
@@ -145,5 +189,7 @@ _cv_mod.start_face_detector = start_face_detector
 _cv_mod.start_object_detector = start_object_detector
 _cv_mod.start_pose_detector = start_pose_detector
 _cv_mod.POSE = POSE
+_cv_mod.start_gesture_detector = start_gesture_detector
+_cv_mod.HAND = HAND
 _cv_mod.DOMProxy = DOMProxy
 sys.modules["cv"] = _cv_mod

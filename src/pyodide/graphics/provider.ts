@@ -114,6 +114,51 @@ export async function handleGraphicsOp(
       }
     }
 
+    const HAND_CONNECTIONS: [number, number][] = [
+      [0,1],[1,2],[2,3],[3,4],          // thumb
+      [0,5],[5,6],[6,7],[7,8],          // index finger
+      [0,9],[9,10],[10,11],[11,12],     // middle finger
+      [0,13],[13,14],[14,15],[15,16],   // ring finger
+      [0,17],[17,18],[18,19],[19,20],   // pinky
+      [5,9],[9,13],[13,17],             // palm
+    ];
+
+    function drawHandLandmarks(ctx: CanvasRenderingContext2D, hand: any) {
+      const landmarks: any[] = hand?.landmarks;
+      if (!landmarks?.length) return;
+      const dotRadius = Math.max(4, Math.round(lw / 160));
+      const lineWidth = Math.max(2, Math.round(lw / 320));
+      const fontSize = Math.max(14, Math.round(lw / 40));
+      // Connections
+      ctx.strokeStyle = "#00ccff";
+      ctx.lineWidth = lineWidth;
+      for (const [a, b] of HAND_CONNECTIONS) {
+        const la = landmarks[a];
+        const lb = landmarks[b];
+        if (!la || !lb) continue;
+        ctx.beginPath();
+        ctx.moveTo(la.x, la.y);
+        ctx.lineTo(lb.x, lb.y);
+        ctx.stroke();
+      }
+      // Dots
+      ctx.fillStyle = "#ffffff";
+      for (const lm of landmarks) {
+        if (!lm) continue;
+        ctx.beginPath();
+        ctx.arc(lm.x, lm.y, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Gesture label above wrist
+      if (hand.gesture && hand.gesture !== "None") {
+        const wrist = landmarks[0];
+        const pct = `${Math.round(hand.confidence * 100)}%`;
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.fillStyle = "#00ccff";
+        ctx.fillText(`${hand.gesture} ${pct}`, wrist.x + 4, wrist.y - 8);
+      }
+    }
+
     // Returns a DPR-scaled context on the student canvas. The scale is applied
     // once and cached so repeated calls don't double-apply the transform.
     let studentCtx: CanvasRenderingContext2D | null = null;
@@ -170,6 +215,22 @@ export async function handleGraphicsOp(
           (ctx) => { for (const pose of poses ?? []) drawPoseLandmarks(ctx, pose); },
           poses?.length
             ? () => { for (const pose of poses) drawPoseLandmarks(videoCanvas.getContext("2d")!, pose); }
+            : null
+        );
+      },
+      drawHand(hand: any) {
+        drawToVideoLayer(
+          (ctx) => drawHandLandmarks(ctx, hand),
+          hand?.landmarks?.length
+            ? () => drawHandLandmarks(videoCanvas.getContext("2d")!, hand)
+            : null
+        );
+      },
+      drawHands(hands: any[]) {
+        drawToVideoLayer(
+          (ctx) => { for (const hand of hands ?? []) drawHandLandmarks(ctx, hand); },
+          hands?.length
+            ? () => { for (const hand of hands) drawHandLandmarks(videoCanvas.getContext("2d")!, hand); }
             : null
         );
       },
