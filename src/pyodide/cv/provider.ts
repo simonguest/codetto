@@ -37,10 +37,15 @@ export async function handleCvOp(
       video.muted = true;
       video.playsInline = true;
       await video.play();
-      // Logical dimensions for coordinate scaling in detectors.
-      // Canvas supplies exact logical pixels; headless cameras use the actual
-      // video stream dimensions (available after play() resolves).
+      // Resize the canvas to match the stream's actual aspect ratio.
+      // video.videoWidth/Height are reliable after play() resolves.
+      // This corrects the default 4:3 canvas for 16:9, 9:16 (portrait phone), etc.
       const lw = canvasController?._logicalWidth ?? (video.videoWidth || requestW);
+      if (canvasController && video.videoWidth && video.videoHeight) {
+        const actualLh = Math.round(lw * video.videoHeight / video.videoWidth);
+        canvasController._resize(actualLh);
+      }
+      // Read lh after the resize so detectors and the rAF use the corrected value.
       const lh = canvasController?._logicalHeight ?? (video.videoHeight || requestH);
       // Mutable slot detectors can write to in order to receive each rAF frame.
       const cameraRef = { onFrame: null as ((video: HTMLVideoElement) => void) | null };

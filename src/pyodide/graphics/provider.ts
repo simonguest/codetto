@@ -25,7 +25,7 @@ export async function handleGraphicsOp(
     const el = (document.querySelector(".v-main") ?? document.body) as HTMLElement;
     const availableWidth = Math.max(320, el.clientWidth - 32);
     const lw = width || Math.min(availableWidth, 1280);
-    const lh = height || Math.round(lw * 3 / 4);
+    let lh = height || Math.round(lw * 3 / 4);
 
     const dpr = window.devicePixelRatio || 1;
 
@@ -193,6 +193,21 @@ export async function handleGraphicsOp(
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, studentCanvas.width, studentCanvas.height);
         ctx.restore();
+      },
+      // Called by the camera setup after video.play() to match the canvas
+      // height to the stream's actual aspect ratio. Resizes both canvas backing
+      // buffers and the wrapper div; studentCtx is reset so the DPR scale is
+      // reapplied on the next getContext() call.
+      _resize(newLh: number) {
+        if (Math.abs(newLh - lh) < 2) return;
+        lh = newLh;
+        canvasController._logicalHeight = newLh;
+        videoCanvas.width = lw * dpr;
+        videoCanvas.height = newLh * dpr;
+        studentCanvas.width = lw * dpr;
+        studentCanvas.height = newLh * dpr;
+        wrapperDiv.style.aspectRatio = `${lw} / ${newLh}`;
+        studentCtx = null;
       },
       drawBoundingBoxes(detections: any[]) {
         drawToVideoLayer(
