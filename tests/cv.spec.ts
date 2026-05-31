@@ -34,7 +34,7 @@ test("cv camera streams to canvas", async ({ page }) => {
   await runButtons.nth(1).click();
 
   // Camera stream renders into a canvas in the result area
-  const canvas = page.locator(".canvas-output canvas");
+  const canvas = page.locator(".canvas-output canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
 });
 
@@ -49,7 +49,7 @@ test("cv pose detection draws landmarks and prints detection counts", async ({ p
   await runButton.click();
 
   // Canvas appears once camera starts
-  const canvas = page.locator(".canvas-output canvas");
+  const canvas = page.locator(".canvas-output canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
 
   // Wait for the stdout tab to appear — it shows up as soon as the first
@@ -68,6 +68,35 @@ test("cv pose detection draws landmarks and prints detection counts", async ({ p
   await expect(runButton).toBeEnabled({ timeout: 10_000 });
 });
 
+test("cv canvas layers: student drawing and detection overlay coexist", async ({ page }) => {
+  test.setTimeout(180_000);
+
+  await page.goto("/#/test/cv_canvas_layers.ipynb");
+
+  const runButton = page.getByRole("button", { name: "Run code" });
+  await expect(runButton).toBeEnabled({ timeout: 90_000 });
+
+  await runButton.click();
+
+  // Both canvases (video layer + student layer) should be present in the wrapper
+  const canvases = page.locator(".canvas-output canvas");
+  await expect(canvases).toHaveCount(2, { timeout: 30_000 });
+
+  // Wait for stdout tab — appears once the loop starts printing
+  const stdoutTab = page.locator('[value="stdout"]').last();
+  await expect(stdoutTab).toBeVisible({ timeout: 30_000 });
+  await stdoutTab.click();
+
+  const console_ = page.locator("textarea.output-console");
+  await expect(console_).toBeVisible({ timeout: 5_000 });
+  const text = await console_.inputValue();
+  expect(text).toContain("Poses:");
+
+  const stopButton = page.getByRole("button", { name: "Stop code" });
+  await stopButton.click();
+  await expect(runButton).toBeEnabled({ timeout: 10_000 });
+});
+
 test("cv face detection prints detection counts", async ({ page }) => {
   await page.goto("/#/test/cv_face.ipynb");
 
@@ -77,7 +106,7 @@ test("cv face detection prints detection counts", async ({ page }) => {
   await runButton.click();
 
   // Canvas appears once camera starts
-  const canvas = page.locator(".canvas-output canvas");
+  const canvas = page.locator(".canvas-output canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
 
   // Allow time for the MediaPipe model to load and run a few detections

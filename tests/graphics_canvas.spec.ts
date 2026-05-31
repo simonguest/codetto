@@ -9,7 +9,7 @@ test("graphics canvas renders and drawing methods run without error", async ({ p
   await runButton.click();
 
   // Canvas element should appear in the result area
-  const canvas = page.locator(".canvas-output canvas");
+  const canvas = page.locator(".canvas-output canvas").first();
   await expect(canvas).toBeVisible({ timeout: 15_000 });
 
   // Stdout tab should show the confirmation print

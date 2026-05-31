@@ -49,7 +49,7 @@ export async function handleCvOp(
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
           if (ctx) {
             ctx.save();
-            ctx.scale(dpr, dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.drawImage(video, 0, 0, lw, lh);
             canvasController!._overlayFn?.();
             ctx.restore();
