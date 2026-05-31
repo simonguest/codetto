@@ -2,6 +2,7 @@ import { EditorView } from '@codemirror/view'
 import { Extension } from '@codemirror/state'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
+import { useBackgroundColor } from 'vuetify/lib/composables/color'
 
 const base00 = '#2e3235',
   base01 = '#505d64',
@@ -75,6 +76,10 @@ export const materialDarkTheme = EditorView.theme(
       backgroundColor: base00,
       borderRight: '1px solid #4f5b66',
       color: base02
+    },
+
+    '.cm-activeLine': {
+      backgroundColor: 'rgba(29, 97, 38, 0.2)'
     },
 
     '.cm-activeLineGutter': {
