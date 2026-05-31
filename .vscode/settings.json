@@ -1,10 +1,11 @@
 {
   "cSpell.words": [
     "celltypes",
-    "Embedder",
     "efficientdet",
+    "Embedder",
     "Fileset",
     "iconsets",
+    "keymap",
     "mediapipe",
     "peaceiris",
     "Pyodide",

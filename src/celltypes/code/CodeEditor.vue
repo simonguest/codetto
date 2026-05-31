@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onMounted, watch, computed, ref } from "vue";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Prec } from "@codemirror/state";
 import { EditorView, basicSetup } from "codemirror";
 import { keymap } from "@codemirror/view";
-import { Prec } from "@codemirror/state";
+import { indentWithTab } from "@codemirror/commands";
+import { indentUnit } from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
 import { autocompletion, CompletionContext, CompletionResult, CompletionSource } from "@codemirror/autocomplete";
 
@@ -120,9 +121,10 @@ onMounted(() => {
       basicSetup,
       python(),
       theme,
+      indentUnit.of("  "),
       EditorView.lineWrapping,
       autocompletion({ override: [jediCompletionSource] }),
-      Prec.highest(keymap.of([{
+      Prec.highest(keymap.of([indentWithTab, {
         key: "Mod-Enter",
         run: () => {
           if (pyodideStore.executionStatus === "idle" && pyodideStore.workerStatus === "ready") {
