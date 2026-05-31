@@ -4,7 +4,7 @@
  * Handles the create_canvas via.js op that requires DOM access.
  * Returns true if the op was handled, false otherwise.
  */
-import { viaRegister } from "@/bridge/viaStore";
+import { viaRegister, viaGet } from "@/bridge/viaStore";
 import { notebookStore } from "@store/notebookStore";
 import { pyodideStore } from "@store/pyodideStore";
 
@@ -97,6 +97,23 @@ export async function handleGraphicsOp(
       },
     };
     viaRespond({ type: "handle", id: viaRegister(canvasController) });
+    return true;
+  }
+
+  if (op === "draw_image") {
+    const { handle, dataUrl } = command;
+    const controller = viaGet(handle);
+    if (controller) {
+      const img = new Image();
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        img.src = dataUrl;
+      });
+      const ctx = controller.getContext("2d");
+      ctx.drawImage(img, 0, 0, controller._logicalWidth, controller._logicalHeight);
+    }
+    viaRespond({ type: "value", value: null });
     return true;
   }
 

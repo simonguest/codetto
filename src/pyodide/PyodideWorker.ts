@@ -30,6 +30,18 @@ async function runPythonFile(url: URL) {
   return await pyodide.runPythonAsync(code);
 }
 
+async function mountSampleFiles() {
+  const origin = self.location.origin;
+  const manifest: string[] = await fetch(`${origin}/sample_files/manifest.json`).then(r => r.json());
+  pyodide.FS.mkdir("/sample_files");
+  await Promise.all(
+    manifest.map(async (filename) => {
+      const data = await fetch(`${origin}/sample_files/${filename}`).then(r => r.arrayBuffer());
+      pyodide.FS.writeFile(`/sample_files/${filename}`, new Uint8Array(data));
+    })
+  );
+}
+
 async function initialize() {
   console.log("PyodideWorker: Starting Pyodide initialization...");
 
@@ -131,6 +143,9 @@ async function initialize() {
     });
 
   }
+
+  console.log("PyodideWorker: Mounting sample files");
+  await mountSampleFiles();
 
   console.log("PyodideWorker: Initializing Python environment");
   await runPythonFile(new URL("./python_init.py", import.meta.url));

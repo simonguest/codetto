@@ -2,6 +2,8 @@
 import sys
 import types
 import json
+import base64 as _base64
+import os as _os
 
 
 def _camel(name):
@@ -52,7 +54,24 @@ def canvas(width=0, height=0):
     return _decode(_graphics_create_canvas(width, height))  # type: ignore
 
 
+def draw_image(canvas_proxy, path):
+    """Draw an image file onto a canvas, scaled to fill it.
+
+    canvas_proxy -- a Canvas returned by graphics.canvas()
+    path         -- filesystem path to a PNG or JPEG image
+    """
+    with open(path, "rb") as f:
+        data = f.read()
+    ext = _os.path.splitext(path)[1].lower().lstrip(".")
+    mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif",
+            "webp": "image/webp"}.get(ext, "image/png")
+    data_url = f"data:{mime};base64,{_base64.b64encode(data).decode()}"
+    handle = object.__getattribute__(canvas_proxy, "_handle")
+    _graphics_draw_image(handle, data_url)  # type: ignore
+
+
 _graphics_mod = types.ModuleType("graphics")
 _graphics_mod.canvas = canvas
+_graphics_mod.draw_image = draw_image
 _graphics_mod.DOMProxy = DOMProxy
 sys.modules["graphics"] = _graphics_mod

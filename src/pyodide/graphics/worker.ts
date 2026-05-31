@@ -17,6 +17,9 @@ export async function initializeGraphics(
     pyodide.globals.set("_graphics_create_canvas", (width: number, height: number) =>
       viaSync({ op: "create_canvas", width, height })
     );
+    pyodide.globals.set("_graphics_draw_image", (handle: number, dataUrl: string) =>
+      viaSync({ op: "draw_image", handle, dataUrl })
+    );
   }
 
   await reloadGraphicsPython(runPythonFile);
