@@ -124,6 +124,18 @@ Locale strings live in `src/i18n/labels/`. The active locale is stored in `setti
 - `SharedArrayBuffer` is used for interrupt support when available; the worker gracefully degrades without it.
 - `python_init.py` sets up stdout overrides and async `input()` transforms on worker startup. `python_reset_globals.py` clears Python globals between notebook loads.
 
+### Sample files (`public/sample_files/`)
+
+Static files made available to student Python code via Pyodide's virtual filesystem.
+
+- Files live in `public/sample_files/` and are served statically by Vite.
+- `manifest.json` in the same directory lists every file by name (array of strings).
+- At worker startup, `mountSampleFiles()` in `PyodideWorker.ts` fetches each file and writes it into Pyodide's FS at `/sample_files/<filename>`.
+- Student code accesses them as normal paths: `open('/sample_files/chime.wav', 'rb')`.
+- To add a new file: drop it in `public/sample_files/` and add its name to `manifest.json`.
+
+Current files: `cat.png`, `chime.wav`.
+
 ### via.js bridge
 
 The bridge enables synchronous DOM calls from the Pyodide worker (which has no DOM access) using `SharedArrayBuffer` + `Atomics`.
@@ -186,6 +198,30 @@ Each detection dict has the same shape for both detectors: `{"type": "face"|"<la
 These are served locally to satisfy the `require-corp` COEP header requirement.
 
 **`CanvasResult.vue`** (`src/celltypes/code/results/CanvasResult.vue`) — renders when a cell result contains the MIME type `application/x-via-canvas`. The value is the handle integer for the raw `HTMLCanvasElement`; the component calls `viaGet(handle)` and appends the element to a container div. CSS `max-width: 100%; height: auto` makes the canvas scale responsively on narrow viewports.
+
+### audio module (`src/pyodide/audio/`)
+
+Provides an `audio` Python module for playing sound files from the virtual filesystem.
+
+| File | Purpose |
+|---|---|
+| `audio.py` | Python `audio` module: `play`, `play_async` |
+| `worker.ts` | Registers `_audio_play` / `_audio_play_nowait` bridge globals; loads `audio.py` |
+| `provider.ts` | `handleAudioOp` — creates an `HTMLAudioElement` from a base64 data URL and plays it |
+
+**Python API:**
+```python
+import audio
+
+audio.play('/sample_files/chime.wav')        # blocks until playback ends
+await audio.play_async('/sample_files/chime.wav')  # starts playback, returns immediately
+```
+
+**How it works:** Python reads the file bytes, base64-encodes them into a data URL, and sends it over the via.js bridge. The main thread creates an `HTMLAudioElement`, plays it, and — for `play()` — waits for the `ended` event before responding so the worker stays blocked for the duration. For `play_async()` the main thread responds as soon as `.play()` resolves. A module-level `Set` in `provider.ts` holds references to active `Audio` elements to prevent garbage collection before playback ends.
+
+`play_async` is declared `async def` intentionally — students must `await` it, which is the teaching moment. Do not add an AST auto-transform for it (unlike `input()`), as the explicit `await` is the point of the exercise.
+
+Supported formats: WAV, MP3, OGG, M4A, FLAC (MIME type inferred from file extension).
 
 ### Branches
 

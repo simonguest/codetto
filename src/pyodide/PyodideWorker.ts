@@ -4,6 +4,7 @@ import { additionalPackagesFromCode } from "./additionalPackagesFromCode";
 import { overrides, implementOverride } from "./overrides/implementOverride";
 import { initializeGraphics, reloadGraphicsPython } from "./graphics/worker";
 import { initializeCv, reloadCvPython } from "./cv/worker";
+import { initializeAudio, reloadAudioPython } from "./audio/worker";
 
 let pyodide: any;
 let interruptBuffer: Int32Array | null = null;
@@ -152,6 +153,7 @@ async function initialize() {
 
   await initializeGraphics(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
   await initializeCv(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
+  await initializeAudio(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
 }
 
 self.onmessage = async event => {
@@ -177,6 +179,7 @@ self.onmessage = async event => {
       await runPythonFile(new URL("./python_reset_globals.py", import.meta.url));
       await reloadGraphicsPython(runPythonFile);
       await reloadCvPython(runPythonFile);
+      await reloadAudioPython(runPythonFile);
       self.postMessage({
         type: "reset_completed"
       });

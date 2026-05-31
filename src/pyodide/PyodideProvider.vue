@@ -9,6 +9,7 @@ import { Locale } from "@/i18n";
 import { viaRegister, viaGet, viaClear } from "@/bridge/viaStore";
 import { handleGraphicsOp } from "./graphics/provider";
 import { handleCvOp } from "./cv/provider";
+import { handleAudioOp } from "./audio/provider";
 
 const props = defineProps<{ locale: Locale | null }>();
 let worker: Worker;
@@ -69,6 +70,7 @@ onMounted(async () => {
         const { op, handle, method, prop, args, value } = event.data.command;
         if (await handleGraphicsOp(op, event.data.command, viaRespond)) break;
         if (await handleCvOp(op, event.data.command, viaRespond)) break;
+        if (await handleAudioOp(op, event.data.command, viaRespond)) break;
         if (op === "call") {
           const obj = viaGet(handle);
           if (!obj) { viaRespond({ type: "value", value: null }); break; }
