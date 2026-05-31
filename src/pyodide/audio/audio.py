@@ -6,14 +6,14 @@ import base64 as _base64
 import os as _os
 
 
-def _decode(json_str):
+def _audio_decode(json_str):
     result = json.loads(json_str)
     if result.get("type") == "error":
         raise RuntimeError(result.get("message", "Audio error"))
     return result.get("value")
 
 
-def _to_data_url(path):
+def _audio_to_data_url(path):
     ext = _os.path.splitext(path)[1].lower().lstrip(".")
     mime = {
         "mp3": "audio/mpeg",
@@ -28,12 +28,12 @@ def _to_data_url(path):
 
 def play(path):
     """Play an audio file and block until it finishes."""
-    _decode(_audio_play(_to_data_url(path)))  # type: ignore
+    _audio_decode(_audio_play(_audio_to_data_url(path)))  # type: ignore
 
 
 async def play_async(path):
     """Start playing an audio file without waiting for it to finish."""
-    _decode(_audio_play_nowait(_to_data_url(path)))  # type: ignore
+    _audio_decode(_audio_play_nowait(_audio_to_data_url(path)))  # type: ignore
 
 
 _audio_mod = types.ModuleType("audio")

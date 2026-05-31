@@ -21,6 +21,9 @@ test("sample_files are mounted and cat image displays on canvas", async ({ page 
   const canvas = page.locator(".canvas-output canvas");
   await expect(canvas).toBeVisible({ timeout: 15_000 });
 
+  // Wait for cell 2 to finish before checking stdout (canvas appears before draw_image completes)
+  await expect(runButtons.nth(1)).toBeEnabled({ timeout: 15_000 });
+
   const stdoutTab2 = page.locator('[value="stdout"]').last();
   await stdoutTab2.click();
   const console2 = page.locator("textarea.output-console").last();
