@@ -1,4 +1,5 @@
 ---
+name: test-notebooks
 description: Run the Playwright notebook test suite. Optional argument filters by spec name (e.g. "filesystem" runs only filesystem.spec.ts). The dev server starts automatically via the Playwright webServer config — no manual server start needed.
 ---
 
