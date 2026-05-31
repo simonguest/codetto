@@ -209,5 +209,81 @@ export async function handleCvOp(
     return true;
   }
 
+  if (op === "create_pose_detector") {
+    const camera = viaGet(handle);
+    if (!camera?._video) {
+      viaRespond({ type: "error", message: "Invalid camera handle" });
+      return true;
+    }
+    const requestedDelegate = (command.delegate ?? "CPU") as "CPU" | "GPU";
+    const numPoses = command.numPoses ?? 1;
+    try {
+      const worker = new Worker(
+        new URL("./poseLandmarkWorker.ts", import.meta.url),
+        { type: "module" }
+      );
+
+      const { warning } = await new Promise<{ warning?: string }>((resolve, reject) => {
+        worker.onmessage = (e: MessageEvent) => {
+          if (e.data.type === "ready") resolve({ warning: e.data.warning });
+          else if (e.data.type === "error") reject(new Error(e.data.message));
+        };
+        worker.onerror = (e: ErrorEvent) => reject(new Error(e.message ?? "Pose landmark worker failed"));
+        worker.postMessage({
+          type: "init",
+          modelPath: "/mediapipe/models/pose_landmarker_lite.task",
+          delegate: requestedDelegate,
+          numPoses,
+        });
+      });
+
+      let cachedPoses: any[][] = [];
+      let workerBusy = false;
+
+      // Scale normalized 0-1 coords to logical canvas pixels.
+      worker.onmessage = (e: MessageEvent) => {
+        if (e.data.type !== "result") return;
+        const lw = camera._logicalWidth;
+        const lh = camera._logicalHeight;
+        cachedPoses = (e.data.poses as any[][]).map((pose: any[]) =>
+          pose.map((lm: any) => ({
+            x: Math.round(lm.x * lw),
+            y: Math.round(lm.y * lh),
+            z: lm.z ?? 0,
+            visibility: Math.round((lm.visibility ?? 0) * 100) / 100,
+          }))
+        );
+        workerBusy = false;
+      };
+
+      camera._cameraRef.onFrame = (video: HTMLVideoElement) => {
+        if (workerBusy) return;
+        workerBusy = true;
+        createImageBitmap(video).then((bitmap) => {
+          worker.postMessage(
+            { type: "detect", bitmap, timestamp: performance.now() },
+            [bitmap]
+          );
+        });
+      };
+
+      const controller = {
+        getDetections() { return cachedPoses; },
+        stop() {
+          camera._cameraRef.onFrame = null;
+          worker.terminate();
+          camera.clearOverlay();
+        },
+      };
+
+      const response: any = { type: "handle", id: viaRegister(controller) };
+      if (warning) response.warning = warning;
+      viaRespond(response);
+    } catch (err) {
+      viaRespond({ type: "error", message: String(err) });
+    }
+    return true;
+  }
+
   return false;
 }

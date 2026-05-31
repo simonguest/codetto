@@ -56,6 +56,43 @@ export async function handleGraphicsOp(
       }
     }
 
+    const VISIBILITY_THRESHOLD = 0.5;
+    // MediaPipe's standard skeleton edges between the 33 pose landmarks.
+    const POSE_CONNECTIONS: [number, number][] = [
+      [0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],
+      [9,10],[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],
+      [17,19],[12,14],[14,16],[16,18],[16,20],[16,22],[18,20],
+      [11,23],[12,24],[23,24],[23,25],[24,26],[25,27],[26,28],
+      [27,29],[28,30],[29,31],[30,32],[27,31],[28,32],
+    ];
+
+    function drawPoseLandmarks(ctx: CanvasRenderingContext2D, pose: any[]) {
+      if (!pose?.length) return;
+      const dotRadius = Math.max(4, Math.round(lw / 160));
+      const lineWidth = Math.max(2, Math.round(lw / 320));
+      // Connections first so dots render on top.
+      ctx.strokeStyle = "#00ff88";
+      ctx.lineWidth = lineWidth;
+      for (const [a, b] of POSE_CONNECTIONS) {
+        const la = pose[a];
+        const lb = pose[b];
+        if (!la || !lb) continue;
+        if ((la.visibility ?? 0) < VISIBILITY_THRESHOLD) continue;
+        if ((lb.visibility ?? 0) < VISIBILITY_THRESHOLD) continue;
+        ctx.beginPath();
+        ctx.moveTo(la.x, la.y);
+        ctx.lineTo(lb.x, lb.y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#ff0055";
+      for (const lm of pose) {
+        if (!lm || (lm.visibility ?? 0) < VISIBILITY_THRESHOLD) continue;
+        ctx.beginPath();
+        ctx.arc(lm.x, lm.y, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     let scaledCtx: CanvasRenderingContext2D | null = null;
     const canvasController = {
       _canvas: canvasEl,
@@ -94,6 +131,26 @@ export async function handleGraphicsOp(
         // new video frame (the rAF tick has already applied scale when this runs).
         canvasController._overlayFn = !detections?.length ? null : () =>
           drawBoxes(canvasEl.getContext("2d")!, detections);
+      },
+      drawPose(pose: any[]) {
+        const ctx = canvasEl.getContext("2d")!;
+        ctx.save();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawPoseLandmarks(ctx, pose);
+        ctx.restore();
+        canvasController._overlayFn = !pose?.length ? null : () =>
+          drawPoseLandmarks(canvasEl.getContext("2d")!, pose);
+      },
+      drawPoses(poses: any[][]) {
+        const ctx = canvasEl.getContext("2d")!;
+        ctx.save();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        for (const pose of poses ?? []) drawPoseLandmarks(ctx, pose);
+        ctx.restore();
+        canvasController._overlayFn = !poses?.length ? null : () => {
+          const c = canvasEl.getContext("2d")!;
+          for (const pose of poses) drawPoseLandmarks(c, pose);
+        };
       },
     };
     viaRespond({ type: "handle", id: viaRegister(canvasController) });

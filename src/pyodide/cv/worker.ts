@@ -26,6 +26,9 @@ export async function initializeCv(
     pyodide.globals.set("_cv_start_object_detector", (cameraHandle: number, delegate: string) =>
       viaSync({ op: "create_object_detector", handle: cameraHandle, delegate })
     );
+    pyodide.globals.set("_cv_start_pose_detector", (cameraHandle: number, delegate: string, numPoses: number) =>
+      viaSync({ op: "create_pose_detector", handle: cameraHandle, delegate, numPoses })
+    );
   }
 
   await reloadCvPython(runPythonFile);
