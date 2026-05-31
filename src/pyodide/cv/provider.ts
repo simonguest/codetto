@@ -87,17 +87,33 @@ export async function handleCvOp(
       viaRespond({ type: "error", message: "Invalid camera handle" });
       return true;
     }
+    const requestedFaceDelegate = (command.delegate ?? "GPU") as "CPU" | "GPU";
     try {
       const { FaceDetector, FilesetResolver } = await import("@mediapipe/tasks-vision");
       const vision = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
-      const faceDetector = await FaceDetector.createFromOptions(vision, {
+      const faceOptions = {
         baseOptions: {
           modelAssetPath: "/mediapipe/models/face_detector.tflite",
-          delegate: "CPU",
+          delegate: requestedFaceDelegate,
         },
-        runningMode: "VIDEO",
+        runningMode: "VIDEO" as const,
         minDetectionConfidence: 0.5,
-      });
+      };
+      let faceDetectorWarning: string | undefined;
+      let faceDetector;
+      try {
+        faceDetector = await FaceDetector.createFromOptions(vision, faceOptions);
+      } catch (_) {
+        if (requestedFaceDelegate === "GPU") {
+          faceDetector = await FaceDetector.createFromOptions(vision, {
+            ...faceOptions,
+            baseOptions: { ...faceOptions.baseOptions, delegate: "CPU" },
+          });
+          faceDetectorWarning = "GPU delegate unavailable, falling back to CPU";
+        } else {
+          throw _;
+        }
+      }
       const controller = {
         getDetections() {
           const video = camera._video;
@@ -119,7 +135,9 @@ export async function handleCvOp(
         },
         stop() { faceDetector.close(); camera.clearOverlay(); },
       };
-      viaRespond({ type: "handle", id: viaRegister(controller) });
+      const faceResponse: any = { type: "handle", id: viaRegister(controller) };
+      if (faceDetectorWarning) faceResponse.warning = faceDetectorWarning;
+      viaRespond(faceResponse);
     } catch (err) {
       viaRespond({ type: "error", message: String(err) });
     }
