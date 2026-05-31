@@ -38,6 +38,36 @@ test("cv camera streams to canvas", async ({ page }) => {
   await expect(canvas).toBeVisible({ timeout: 30_000 });
 });
 
+test("cv pose detection draws landmarks and prints detection counts", async ({ page }) => {
+  test.setTimeout(180_000);
+
+  await page.goto("/#/test/cv_pose.ipynb");
+
+  const runButton = page.getByRole("button", { name: "Run code" });
+  await expect(runButton).toBeEnabled({ timeout: 90_000 });
+
+  await runButton.click();
+
+  // Canvas appears once camera starts
+  const canvas = page.locator(".canvas-output canvas");
+  await expect(canvas).toBeVisible({ timeout: 30_000 });
+
+  // Wait for the stdout tab to appear — it shows up as soon as the first
+  // "Poses detected:" line is printed, which happens once the model is loaded.
+  const stdoutTab = page.locator('[value="stdout"]').last();
+  await expect(stdoutTab).toBeVisible({ timeout: 30_000 });
+  await stdoutTab.click();
+
+  const console_ = page.locator("textarea.output-console");
+  await expect(console_).toBeVisible({ timeout: 5_000 });
+  const text = await console_.inputValue();
+  expect(text).toContain("Poses detected:");
+
+  const stopButton = page.getByRole("button", { name: "Stop code" });
+  await stopButton.click();
+  await expect(runButton).toBeEnabled({ timeout: 10_000 });
+});
+
 test("cv face detection prints detection counts", async ({ page }) => {
   await page.goto("/#/test/cv_face.ipynb");
 
