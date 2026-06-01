@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
 import { useTheme } from "vuetify";
+import QrScanner from "qr-scanner";
 
 import { settingsStore } from "@store/settingsStore";
 import { pyodideStore } from "@store/pyodideStore";
@@ -39,6 +40,76 @@ function confirmAddEnvVar() {
 
 function deleteEnvVar(name: string) {
   settingsStore.deleteEnvVar(name);
+}
+
+const showQrScanner = ref(false);
+const videoRef = ref<HTMLVideoElement | null>(null);
+const qrScannerError = ref('');
+const qrScannerSuccess = ref(false);
+let scanner: QrScanner | null = null;
+
+function openQrScanner() {
+  qrScannerError.value = '';
+  showQrScanner.value = true;
+}
+
+async function initScanner() {
+  if (!videoRef.value) return;
+  scanner = new QrScanner(videoRef.value, (result) => onQrResult(result.data), {
+    preferredCamera: 'environment',
+    highlightScanRegion: true,
+  });
+  try {
+    await scanner.start();
+  } catch {
+    qrScannerError.value = settingsLabels.value.envVarScanQrError;
+  }
+}
+
+function closeQrScanner() {
+  scanner?.stop();
+  scanner?.destroy();
+  scanner = null;
+  showQrScanner.value = false;
+}
+
+function onQrResult(data: string) {
+  let imported = 0;
+
+  // Try JSON format: {"KEY": "VALUE", ...}
+  try {
+    const obj = JSON.parse(data);
+    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+      for (const [k, v] of Object.entries(obj)) {
+        if (typeof k === 'string' && typeof v === 'string') {
+          settingsStore.setEnvVar(k, v);
+          imported++;
+        }
+      }
+    }
+  } catch {
+    // not JSON — fall through to KEY=VALUE format
+  }
+
+  // Try KEY=VALUE format (one per line, like a .env file)
+  if (imported === 0) {
+    for (const line of data.split('\n')) {
+      const idx = line.indexOf('=');
+      if (idx > 0) {
+        const key = line.slice(0, idx).trim();
+        const value = line.slice(idx + 1).trim();
+        if (key) {
+          settingsStore.setEnvVar(key, value);
+          imported++;
+        }
+      }
+    }
+  }
+
+  if (imported > 0) {
+    closeQrScanner();
+    qrScannerSuccess.value = true;
+  }
 }
 
 // Get theme instance at setup level
@@ -82,10 +153,11 @@ const updateLocale = (locale: Locale) => {
 
 const currentCodeCompletion = ref(settingsStore.codeCompletion);
 
-const updateCodeCompletion = (enabled: boolean) => {
-  settingsStore.setCodeCompletion(enabled);
-  currentCodeCompletion.value = enabled;
-  if (enabled && jediStore.status === "disabled") {
+const updateCodeCompletion = (enabled: boolean | null) => {
+  const on = enabled ?? false;
+  settingsStore.setCodeCompletion(on);
+  currentCodeCompletion.value = on;
+  if (on && jediStore.status === "disabled") {
     jediStore.initialize();
   }
 };
@@ -183,11 +255,35 @@ const updateCodeCompletion = (enabled: boolean) => {
                 <v-btn color="primary" variant="tonal" @click="confirmAddEnvVar">{{ settingsLabels.envVarAdd }}</v-btn>
                 <v-btn variant="text" @click="cancelAddEnvVar">{{ settingsLabels.envVarCancel }}</v-btn>
               </div>
-              <v-btn v-else color="primary" variant="tonal" size="small" @click="openAddEnvVar">
-                {{ settingsLabels.envVarAdd }}
-              </v-btn>
+              <div v-else class="d-flex ga-2">
+                <v-btn color="primary" variant="tonal" size="small" @click="openAddEnvVar">
+                  {{ settingsLabels.envVarAdd }}
+                </v-btn>
+                <v-btn color="primary" variant="tonal" size="small" prepend-icon="mdi-qrcode-scan" @click="openQrScanner">
+                  {{ settingsLabels.envVarScanQr }}
+                </v-btn>
+              </div>
             </v-card-text>
           </v-card>
+
+          <v-dialog v-model="showQrScanner" max-width="480" @after-enter="initScanner">
+            <v-card>
+              <v-card-title>{{ settingsLabels.envVarScanQrTitle }}</v-card-title>
+              <v-card-text>
+                <p class="text-body-2 text-medium-emphasis mb-3">{{ settingsLabels.envVarScanQrHint }}</p>
+                <video ref="videoRef" style="width: 100%; border-radius: 4px; background: #000;"></video>
+                <p v-if="qrScannerError" class="text-body-2 text-error mt-2">{{ qrScannerError }}</p>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn variant="text" @click="closeQrScanner">{{ settingsLabels.envVarCancel }}</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+
+          <v-snackbar v-model="qrScannerSuccess" :timeout="3000" color="success">
+            {{ settingsLabels.envVarScanQrSuccess }}
+          </v-snackbar>
 
           <v-card>
             <v-card-title>{{ settingsLabels.about }}</v-card-title>

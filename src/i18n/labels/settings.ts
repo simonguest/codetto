@@ -23,6 +23,11 @@ export const SETTINGS_LABELS: Record<Locale, {
   envVarEmpty: string;
   envVarNameRequired: string;
   envVarValueRequired: string;
+  envVarScanQr: string;
+  envVarScanQrTitle: string;
+  envVarScanQrHint: string;
+  envVarScanQrError: string;
+  envVarScanQrSuccess: string;
 }> = {
   'en-US': {
     title: 'Settings',
@@ -47,6 +52,11 @@ export const SETTINGS_LABELS: Record<Locale, {
     envVarEmpty: 'No environment variables set.',
     envVarNameRequired: 'Name is required',
     envVarValueRequired: 'Value is required',
+    envVarScanQr: 'Scan QR Code',
+    envVarScanQrTitle: 'Scan QR Code',
+    envVarScanQrHint: 'Point your camera at a QR code containing KEY=VALUE',
+    envVarScanQrError: 'Camera not available. Check permissions and try again.',
+    envVarScanQrSuccess: 'Imported successfully',
   },
   'ja-JP': {
     title: '設定',
@@ -71,6 +81,11 @@ export const SETTINGS_LABELS: Record<Locale, {
     envVarEmpty: '環境変数が設定されていません。',
     envVarNameRequired: '名前は必須です',
     envVarValueRequired: '値は必須です',
+    envVarScanQr: 'QRコードをスキャン',
+    envVarScanQrTitle: 'QRコードをスキャン',
+    envVarScanQrHint: 'KEY=VALUE形式のQRコードにカメラを向けてください',
+    envVarScanQrError: 'カメラを利用できません。権限を確認して再試行してください。',
+    envVarScanQrSuccess: 'インポートに成功しました',
   },
   'hi-IN': {
     title: 'सेटिंग्स',
@@ -95,6 +110,11 @@ export const SETTINGS_LABELS: Record<Locale, {
     envVarEmpty: 'कोई पर्यावरण चर सेट नहीं है।',
     envVarNameRequired: 'नाम आवश्यक है',
     envVarValueRequired: 'मान आवश्यक है',
+    envVarScanQr: 'QR कोड स्कैन करें',
+    envVarScanQrTitle: 'QR कोड स्कैन करें',
+    envVarScanQrHint: 'KEY=VALUE वाले QR कोड पर कैमरा इंगित करें',
+    envVarScanQrError: 'कैमरा उपलब्ध नहीं है। अनुमतियाँ जाँचें और पुनः प्रयास करें।',
+    envVarScanQrSuccess: 'सफलतापूर्वक आयात किया गया',
   },
   'fa-IR': {
     title: 'تنظیمات',
@@ -119,6 +139,11 @@ export const SETTINGS_LABELS: Record<Locale, {
     envVarEmpty: 'هیچ متغیر محیطی تنظیم نشده است.',
     envVarNameRequired: 'نام الزامی است',
     envVarValueRequired: 'مقدار الزامی است',
+    envVarScanQr: 'اسکن QR کد',
+    envVarScanQrTitle: 'اسکن QR کد',
+    envVarScanQrHint: 'دوربین را به سمت QR کد حاوی KEY=VALUE بگیرید',
+    envVarScanQrError: 'دوربین در دسترس نیست. مجوزها را بررسی کرده و دوباره امتحان کنید.',
+    envVarScanQrSuccess: 'با موفقیت وارد شد',
   },
   'mn-MN': {
     title: 'Тохиргоо',
@@ -143,5 +168,10 @@ export const SETTINGS_LABELS: Record<Locale, {
     envVarEmpty: 'Орчны хувьсагч тохируулаагүй байна.',
     envVarNameRequired: 'Нэр шаардлагатай',
     envVarValueRequired: 'Утга шаардлагатай',
+    envVarScanQr: 'QR Код Уншуулах',
+    envVarScanQrTitle: 'QR Код Уншуулах',
+    envVarScanQrHint: 'KEY=VALUE агуулсан QR код руу камераа чиглүүлнэ үү',
+    envVarScanQrError: 'Камер ажиллахгүй байна. Зөвшөөрлийг шалгаад дахин оролдоно уу.',
+    envVarScanQrSuccess: 'Амжилттай импортлогдлоо',
   }
 } as const;
