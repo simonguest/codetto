@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/#/test/cfu.ipynb");
-  // CFU cells don't need Pyodide — wait for the first card to be visible
+  // networkidle waits for Vite's lazy module cascade and the notebook fetch
+  // to settle before asserting — prevents cold-start flakiness.
+  await page.goto("/#/test/cfu.ipynb", { waitUntil: "networkidle" });
   await expect(page.locator(".cfu-card").first()).toBeVisible();
 });
 
