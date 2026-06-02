@@ -21,5 +21,27 @@ class Context:
     def fill_rect(self, x: float, y: float, width: float, height: float) -> None: ...
     def clear_rect(self, x: float, y: float, width: float, height: float) -> None: ...
 
+class Colors:
+    BLACK: str
+    WHITE: str
+    RED: str
+    GREEN: str
+    BLUE: str
+    YELLOW: str
+    CYAN: str
+    MAGENTA: str
+    ORANGE: str
+    PURPLE: str
+    PINK: str
+    BROWN: str
+    GRAY: str
+    GREY: str
+    LIGHT_GRAY: str
+    LIGHT_GREY: str
+    DARK_GRAY: str
+    DARK_GREY: str
+
+colors: Colors
+
 def canvas(width: int = 0, height: int = 0) -> Canvas: ...
 def draw_image(canvas: Canvas, path: str) -> None: ...

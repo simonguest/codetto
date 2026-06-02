@@ -70,8 +70,32 @@ def draw_image(canvas_proxy, path):
     _graphics_draw_image(handle, data_url)  # type: ignore
 
 
+class _Colors:
+    BLACK = "#000000"
+    WHITE = "#ffffff"
+    RED = "#ff0000"
+    GREEN = "#008000"
+    BLUE = "#0000ff"
+    YELLOW = "#ffff00"
+    CYAN = "#00ffff"
+    MAGENTA = "#ff00ff"
+    ORANGE = "#ffa500"
+    PURPLE = "#800080"
+    PINK = "#ffc0cb"
+    BROWN = "#a52a2a"
+    GRAY = "#808080"
+    GREY = "#808080"
+    LIGHT_GRAY = "#d3d3d3"
+    LIGHT_GREY = "#d3d3d3"
+    DARK_GRAY = "#404040"
+    DARK_GREY = "#404040"
+
+
+colors = _Colors()
+
 _graphics_mod = types.ModuleType("graphics")
 _graphics_mod.canvas = canvas
 _graphics_mod.draw_image = draw_image
 _graphics_mod.DOMProxy = DOMProxy
+_graphics_mod.colors = colors
 sys.modules["graphics"] = _graphics_mod

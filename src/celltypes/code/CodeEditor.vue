@@ -17,6 +17,7 @@ import { Locale } from "@/i18n";
 
 import { basicLight } from "./themes/basicLight";
 import { materialDark } from "./themes/materialDark";
+import { colorPickerExtension, colorPickerTheme } from "./colorPickerExtension";
 
 const JEDI_TYPE_MAP: Record<string, string> = {
   module: "namespace",
@@ -124,6 +125,8 @@ onMounted(() => {
       indentUnit.of("  "),
       EditorView.lineWrapping,
       autocompletion({ override: [jediCompletionSource] }),
+      colorPickerExtension,
+      colorPickerTheme,
       Prec.highest(keymap.of([indentWithTab, {
         key: "Mod-Enter",
         run: () => {
