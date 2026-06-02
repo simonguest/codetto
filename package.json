@@ -14,6 +14,7 @@
   "author": "Simon Guest",
   "license": "MIT",
   "dependencies": {
+    "@babylonjs/core": "^9.10.1",
     "@codemirror/autocomplete": "^6.20.2",
     "@codemirror/commands": "^6.10.0",
     "@codemirror/lang-python": "^6.2.1",

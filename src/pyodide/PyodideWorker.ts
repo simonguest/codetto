@@ -5,6 +5,7 @@ import { overrides, implementOverride } from "./overrides/implementOverride";
 import { initializeGraphics, reloadGraphicsPython } from "./graphics/worker";
 import { initializeCv, reloadCvPython } from "./cv/worker";
 import { initializeAudio, reloadAudioPython } from "./audio/worker";
+import { initializeScene3d, reloadScene3dPython } from "./scene3d/worker";
 
 let pyodide: any;
 let interruptBuffer: Int32Array | null = null;
@@ -22,6 +23,23 @@ function viaSync(command: object): string {
   const len = Atomics.load(viaSignal!, 1);
   const json = viaDecoder.decode(viaData!.slice(0, len)); // slice() copies out of SAB
   Atomics.store(viaSignal!, 0, 0);         // reset for next call
+  return json;
+}
+
+// Like viaSync but with a timeout. On timeout returns {"type":"timeout"} without
+// resetting viaSignal[0] — it's already 0. If the main thread responds after the
+// timeout but before the next call, the next Atomics.wait sees a non-zero value
+// and returns "not-equal" immediately, delivering the deferred response correctly.
+function viaSyncTimed(command: object, timeoutMs: number): string {
+  self.postMessage({ type: "via", command });
+  const result = Atomics.wait(viaSignal!, 0, 0, timeoutMs);
+  if (result === "timed-out") {
+    return JSON.stringify({ type: "timeout" });
+  }
+  // "ok" or "not-equal" — data is available
+  const len = Atomics.load(viaSignal!, 1);
+  const json = viaDecoder.decode(viaData!.slice(0, len));
+  Atomics.store(viaSignal!, 0, 0);
   return json;
 }
 
@@ -154,6 +172,12 @@ async function initialize() {
   await initializeGraphics(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
   await initializeCv(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
   await initializeAudio(pyodide, hasSharedArrayBuffer ? viaSync : null, runPythonFile);
+  await initializeScene3d(
+    pyodide,
+    hasSharedArrayBuffer ? viaSync : null,
+    hasSharedArrayBuffer ? viaSyncTimed : null,
+    runPythonFile
+  );
 }
 
 self.onmessage = async event => {
@@ -180,6 +204,7 @@ self.onmessage = async event => {
       await reloadGraphicsPython(runPythonFile);
       await reloadCvPython(runPythonFile);
       await reloadAudioPython(runPythonFile);
+      await reloadScene3dPython(runPythonFile);
       self.postMessage({
         type: "reset_completed"
       });

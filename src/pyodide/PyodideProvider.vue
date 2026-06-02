@@ -10,6 +10,7 @@ import { viaRegister, viaGet, viaClear } from "@/bridge/viaStore";
 import { handleGraphicsOp } from "./graphics/provider";
 import { handleCvOp } from "./cv/provider";
 import { handleAudioOp } from "./audio/provider";
+import { handleScene3dOp } from "./scene3d/provider";
 
 const props = defineProps<{ locale: Locale | null }>();
 let worker: Worker;
@@ -71,6 +72,7 @@ onMounted(async () => {
         if (await handleGraphicsOp(op, event.data.command, viaRespond)) break;
         if (await handleCvOp(op, event.data.command, viaRespond)) break;
         if (await handleAudioOp(op, event.data.command, viaRespond)) break;
+        if (await handleScene3dOp(op, event.data.command, viaRespond)) break;
         if (op === "call") {
           const obj = viaGet(handle);
           if (!obj) { viaRespond({ type: "value", value: null }); break; }

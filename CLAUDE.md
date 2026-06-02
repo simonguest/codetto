@@ -223,6 +223,63 @@ await audio.play_async('/sample_files/chime.wav')  # starts playback, returns im
 
 Supported formats: WAV, MP3, OGG, M4A, FLAC (MIME type inferred from file extension).
 
+### scene3d module (`src/pyodide/scene3d/`)
+
+Provides a `scene3d` Python module for interactive 3D scenes using BabylonJS.
+
+| File | Purpose |
+|---|---|
+| `scene3d.py` | Python `scene3d` module: `Scene`, `Shapes`, `DOMProxy` |
+| `worker.ts` | Registers `_scene3d_call` and `_scene3d_wait_event` bridge globals; loads `scene3d.py` |
+| `provider.ts` | `handleScene3dOp` — handles all scene/mesh ops and the deferred event loop on the main thread |
+
+**Python API:**
+```python
+import scene3d, math
+
+scene = scene3d.Scene()          # creates canvas + BabylonJS engine, shows output immediately
+scene.set_sky("#87CEEB")         # background colour
+scene.set_ground(length=10, width=10)
+
+box = scene3d.Shapes.Box(width=1, height=1, depth=1)
+box.set_position(0, 0.5, 0)
+box.set_color("#cc4400")
+box.on_click(lambda: box.set_color("#ff0000"))
+scene.add(box)
+
+sphere = scene3d.Shapes.Sphere(diameter=1, segments=16)
+scene.add(sphere)
+
+ctx = scene.get_context('2d')    # 2D overlay canvas for HUD drawing
+
+t = 0.0
+
+@scene.on_frame                  # also callable as scene.on_frame(fn)
+def animate(dt):                 # dt = seconds since last call
+    global t
+    t += dt
+    box.set_position(0, 0.5 + math.sin(t * 2), 0)
+    ctx.clear()
+    ctx.fill_style = '#ffffff'
+    ctx.fill_text(f'Time: {t:.1f}s', 10, 24)
+
+scene.run()                      # blocks Python in event loop; Stop button works
+```
+
+**Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`.
+
+**Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll.
+
+**Event loop (`scene.run()`):** calls `viaSyncTimed(250ms)` in a loop. The 250 ms timeout lets Pyodide check the interrupt buffer so the Stop button works within ~250 ms. On a frame event the loop calls the registered `on_frame` handler; on a click event it calls the mesh's `on_click` handler.
+
+**Frame callbacks:** BabylonJS's `onBeforeRenderObservable` fires each render tick. It dispatches a frame event only when Python is already waiting (i.e. `_pendingRespond` is set). If Python is still processing the previous frame, the tick is silently skipped — no queue buildup.
+
+**2D overlay (`scene.get_context('2d')`):** returns a `DOMProxy` wrapping a JavaScript `Proxy` over the overlay `CanvasRenderingContext2D`. All standard Canvas2D methods and properties work via the generic `_via_call`/`_via_set` bridge ops. `ctx.clear()` is a custom method added by the Proxy that clears the full overlay canvas. The overlay is DPR-scaled and resizes with the BabylonJS canvas.
+
+**BabylonJS:** loaded via `@babylonjs/core` npm package, dynamically imported inside `create_scene` so it only loads when a notebook actually uses `scene3d` (~1.6 MB gzipped, separate lazy chunk).
+
+**Naming discipline:** `scene3d.py` uses `_s3d_decode` and `_s3d_call` (not `_decode`/`_call`) to avoid clobbering the shared Pyodide globals defined by `cv.py` and `graphics.py`. All modules share the same Python global namespace. New modules must use unique prefixes for any helper functions.
+
 ### Branches
 
 - `main` — web app (Vite + Vue + Vuetify, IndexedDB storage)
