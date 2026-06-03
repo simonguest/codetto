@@ -123,7 +123,7 @@ onMounted(async () => {
         pyodideStore.executionCompleted();
         break;
       case "error":
-        if (pyodideStore.runningCellId) {
+        if (pyodideStore.runningCellId && !error.includes("KeyboardInterrupt")) {
           notebookStore.setError(pyodideStore.runningCellId, error);
         }
         pyodideStore.executionCompleted();

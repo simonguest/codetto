@@ -18,5 +18,5 @@ test("graphics canvas renders and drawing methods run without error", async ({ p
 
   const console_ = page.locator("textarea.output-console");
   await expect(console_).toBeVisible({ timeout: 5_000 });
-  await expect(console_).toHaveValue("Canvas drawing OK\n");
+  await expect(console_).toHaveValue("Canvas drawing OK");
 });

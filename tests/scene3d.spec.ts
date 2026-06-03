@@ -18,5 +18,5 @@ test("scene3d: creates scene with canvas output", async ({ page }) => {
   await page.locator('[value="stdout"]').last().click();
   const console_ = page.locator("textarea.output-console");
   await expect(console_).toBeVisible({ timeout: 5_000 });
-  await expect(console_).toHaveValue("scene3d: scene created\n");
+  await expect(console_).toHaveValue("scene3d: scene created");
 });

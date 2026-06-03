@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 
 const props = defineProps<{
   stdout: string;
@@ -7,26 +7,32 @@ const props = defineProps<{
 
 const consoleRef = ref<HTMLTextAreaElement | null>(null);
 
-const adjustHeight = () => {
-  if (!consoleRef.value) return;
-  consoleRef.value.style.height = 'auto';
-  const maxPx = 10 * 1.2 * 16 + 20;
-  consoleRef.value.style.height = Math.min(consoleRef.value.scrollHeight, maxPx) + 'px';
-};
+const LINE_HEIGHT_PX = 16; // matches CSS line-height: 16px (≈ 10pt × 1.2)
+// No top padding so scrollTop is always a multiple of LINE_HEIGHT_PX —
+// prevents the top visible line from being cut when autoscrolling to the bottom.
+const PADDING_BOTTOM_PX = 10;
 
-watch(() => props.stdout, () => {
-  nextTick(adjustHeight);
-}, { immediate: true });
+const rowCount = computed(() => {
+  if (!props.stdout) return 1;
+  const lines = props.stdout.split('\n');
+  if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+  return Math.max(1, Math.min(lines.length, 15));
+});
 
-onMounted(() => {
-  // Vuetify's tab window slides in with a CSS transition, so scrollHeight reads
-  // as 0 inside a plain nextTick. Two rAF passes let the transition settle first.
-  requestAnimationFrame(() => requestAnimationFrame(adjustHeight));
+const heightStyle = computed(() => ({
+  height: `${rowCount.value * LINE_HEIGHT_PX + PADDING_BOTTOM_PX}px`,
+}));
+
+watch(() => props.stdout, async () => {
+  await nextTick();
+  if (consoleRef.value) {
+    consoleRef.value.scrollTop = consoleRef.value.scrollHeight;
+  }
 });
 </script>
 
 <template>
-  <textarea ref="consoleRef" class="output-console" readonly>{{ stdout }}</textarea>
+  <textarea ref="consoleRef" :style="heightStyle" class="output-console" readonly>{{ stdout.replace(/\n$/, '') }}</textarea>
 </template>
 
 <style scoped>
@@ -36,12 +42,14 @@ onMounted(() => {
   border: none;
   width: 100%;
   border-radius: 5px;
-  padding: 10px;
+  padding: 0 10px 10px;
   overflow-y: auto;
   resize: none;
   box-sizing: border-box;
-  line-height: 1.2em;
-  max-height: calc(10em + 20px);
-  min-height: 0;
+  line-height: 16px;
+}
+
+.output-console:focus {
+  outline: none;
 }
 </style>

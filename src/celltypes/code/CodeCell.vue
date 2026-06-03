@@ -69,6 +69,15 @@ const isCodeHidden = computed(() => {
   return notebookStore.hasTag(props.cell.id, "hide_code");
 });
 
+const hasOutputs = computed(() => {
+  const cell = notebookStore.findCell(props.cell.id);
+  return (cell?.outputs?.length ?? 0) > 0;
+});
+
+const clearOutputs = () => {
+  notebookStore.clearOutputs(props.cell.id);
+};
+
 // Process source with localization and globals
 const processedSource = computed(() => {
   // Force reactivity by accessing props.locale in the computed
@@ -100,48 +109,57 @@ const processedSource = computed(() => {
       </v-card-text>
       <v-card-actions class="pl-4 pr-4 d-flex justify-space-between">
         <CodeControls :id="cell.id" />
-        <v-tabs v-model="outputTab" class="ml-auto">
-          <v-tab
-            value="result"
-            v-if="outputTypes.indexOf('result') !== -1"
-            icon
+        <div class="d-flex align-center ml-auto">
+          <v-tabs v-model="outputTab">
+            <v-tab
+              value="result"
+              v-if="outputTypes.indexOf('result') !== -1"
+              icon
+              size="32"
+              rounded="lg"
+              min-width="48"
+              ><v-icon icon="mdi-monitor"
+            /></v-tab>
+            <v-tab
+              value="stdout"
+              v-if="outputTypes.indexOf('stdout') !== -1"
+              icon
+              size="32"
+              min-width="48"
+              rounded="lg"
+              ><v-icon icon="mdi-console"
+            /></v-tab>
+            <v-tab
+              value="error"
+              v-if="outputTypes.indexOf('error') !== -1"
+              icon
+              size="32"
+              min-width="48"
+              rounded="lg"
+              ><v-icon icon="mdi-alert-circle-outline"
+            /></v-tab>
+          </v-tabs>
+          <v-btn
+            v-if="hasOutputs"
             size="32"
-            rounded="lg"
-            min-width="48"
-            ><v-icon icon="mdi-monitor"
-          /></v-tab>
-          <v-tab
-            value="stdout"
-            v-if="outputTypes.indexOf('stdout') !== -1"
-            icon
-            size="32"
-            min-width="48"
-            rounded="lg"
-            ><v-icon icon="mdi-console"
-          /></v-tab>
-          <v-tab
-            value="error"
-            v-if="outputTypes.indexOf('error') !== -1"
-            icon
-            size="32"
-            min-width="48"
-            rounded="lg"
-            ><v-icon icon="mdi-alert-circle-outline"
-          /></v-tab>
-        </v-tabs>
+            icon="mdi-broom"
+            @click="clearOutputs"
+            class="ml-1 align-self-start"
+          />
+        </div>
       </v-card-actions>
 
       <v-card-text v-show="props.cell.outputs? props.cell.outputs.length > 0 : false">
-        <v-tabs-window v-model="outputTab" direction="vertical">
+        <v-tabs-window v-model="outputTab" :transition="false" :reverse-transition="false">
           <v-tabs-window-item value="result">
             <Result :value="notebookStore.getResult(cell.id)" :locale="props.locale" />
           </v-tabs-window-item>
 
-          <v-tabs-window-item value="stdout" direction="vertical">
+          <v-tabs-window-item value="stdout">
             <Console :stdout="notebookStore.getStdout(cell.id)" />
           </v-tabs-window-item>
 
-          <v-tabs-window-item value="error" direction="vertical">
+          <v-tabs-window-item value="error">
             <Error :stderr="notebookStore.getError(cell.id)" />
           </v-tabs-window-item>
         </v-tabs-window>
@@ -149,3 +167,14 @@ const processedSource = computed(() => {
     </v-card>
   </div>
 </template>
+
+<style scoped>
+/* Kill the Vuetify v-window slide animation entirely */
+:deep(.v-window-item) {
+  transition: none !important;
+  animation: none !important;
+}
+:deep(.v-window__container) {
+  transition: none !important;
+}
+</style>

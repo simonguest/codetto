@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, nextTick } from 'vue';
+import { computed } from 'vue';
 import { ansiToHtml } from './ansiToHtml';
 
 const props = defineProps<{
@@ -7,28 +7,10 @@ const props = defineProps<{
 }>();
 
 const rendered = computed(() => ansiToHtml(props.stderr));
-
-const errorRef = ref<HTMLPreElement | null>(null);
-
-const adjustHeight = () => {
-  if (!errorRef.value) return;
-  errorRef.value.style.height = 'auto';
-  const maxPx = 10 * 1.2 * 16 + 20;
-  errorRef.value.style.height = Math.min(errorRef.value.scrollHeight, maxPx) + 'px';
-};
-
-watch(() => props.stderr, () => {
-  nextTick(adjustHeight);
-}, { immediate: true });
-
-onMounted(async () => {
-  await nextTick();
-  adjustHeight();
-});
 </script>
 
 <template>
-  <pre ref="errorRef" class="output-error" v-html="rendered"></pre>
+  <pre class="output-error" v-html="rendered"></pre>
 </template>
 
 <style scoped>
@@ -44,8 +26,7 @@ onMounted(async () => {
   resize: none;
   box-sizing: border-box;
   line-height: 1.2em;
-  max-height: calc(10em + 20px);
-  min-height: 0;
+  max-height: calc(15 * 1.2em + 20px);
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;

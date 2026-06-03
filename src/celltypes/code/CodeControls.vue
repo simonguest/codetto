@@ -13,10 +13,6 @@ const runCode = () => {
   pyodideStore.executeCell(props.id);
 };
 
-const clearOutputs = () => {
-  notebookStore.clearOutputs(props.id);
-};
-
 const interruptCode = () => {
   pyodideStore.interruptExecution();
 };
@@ -55,9 +51,6 @@ const toggleHideCode = () => {
         />
       </v-btn-group>
       <v-btn-group rounded="lg" class="pl-4">
-        <v-btn size="32" icon="mdi-broom" @click="clearOutputs" />
-      </v-btn-group>
-      <v-btn-group rounded="lg" class="pl-2">
         <v-btn 
           size="32" 
           :icon="isCodeHidden ? 'mdi-eye-off' : 'mdi-eye'" 
