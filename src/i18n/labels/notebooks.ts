@@ -42,6 +42,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   urlDialogError: string;
   urlDialogErrorMessage: string;
   urlDialogInvalidUrl: string;
+  editMode: string;
+  exitEditMode: string;
 }> = {
   'en-US': {
     title: 'Notebooks',
@@ -84,7 +86,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogCancel: 'Close',
     urlDialogError: 'Error',
     urlDialogErrorMessage: 'Failed to fetch notebook from URL',
-    urlDialogInvalidUrl: 'Please enter a valid URL (must start with http:// or https://)'
+    urlDialogInvalidUrl: 'Please enter a valid URL (must start with http:// or https://)',
+    editMode: 'Edit Mode',
+    exitEditMode: 'Exit Edit Mode',
   },
   'ja-JP': {
     title: 'ノートブック',
@@ -127,7 +131,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogCancel: '閉じる',
     urlDialogError: 'エラー',
     urlDialogErrorMessage: 'URLからノートブックを取得できませんでした',
-    urlDialogInvalidUrl: '有効なURLを入力してください（http://またはhttps://で始まる必要があります）'
+    urlDialogInvalidUrl: '有効なURLを入力してください（http://またはhttps://で始まる必要があります）',
+    editMode: 'Edit Mode',
+    exitEditMode: 'Exit Edit Mode',
   },
   'hi-IN': {
     title: 'नोटबुक',
@@ -170,7 +176,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogCancel: 'बंद करें',
     urlDialogError: 'त्रुटि',
     urlDialogErrorMessage: 'URL से नोटबुक प्राप्त करने में विफल',
-    urlDialogInvalidUrl: 'कृपया एक वैध URL दर्ज करें (http:// या https:// से शुरू होना चाहिए)'
+    urlDialogInvalidUrl: 'कृपया एक वैध URL दर्ज करें (http:// या https:// से शुरू होना चाहिए)',
+    editMode: 'Edit Mode',
+    exitEditMode: 'Exit Edit Mode',
   },
   'fa-IR': {
     title: 'دفترچه‌ها',
@@ -213,7 +221,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogCancel: 'بستن',
     urlDialogError: 'خطا',
     urlDialogErrorMessage: 'دریافت دفترچه از URL ناموفق بود',
-    urlDialogInvalidUrl: 'لطفاً یک URL معتبر وارد کنید (باید با http:// یا https:// شروع شود)'
+    urlDialogInvalidUrl: 'لطفاً یک URL معتبر وارد کنید (باید با http:// یا https:// شروع شود)',
+    editMode: 'Edit Mode',
+    exitEditMode: 'Exit Edit Mode',
   },
   'mn-MN': {
     title: 'Дэвтэрүүд',
@@ -256,6 +266,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogCancel: 'Хаах',
     urlDialogError: 'Алдаа',
     urlDialogErrorMessage: 'URL-аас дэвтэр авахад алдаа гарлаа',
-    urlDialogInvalidUrl: 'Зөв URL оруулна уу (http:// эсвэл https://-ээр эхэлсэн байх ёстой)'
+    urlDialogInvalidUrl: 'Зөв URL оруулна уу (http:// эсвэл https://-ээр эхэлсэн байх ёстой)',
+    editMode: 'Edit Mode',
+    exitEditMode: 'Exit Edit Mode',
   }
 } as const;

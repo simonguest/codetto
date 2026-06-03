@@ -25,6 +25,16 @@ export const RENDERER_LABELS: Record<Locale, {
   cfuCorrectAnswer: string;
   cfuTrue: string;
   cfuFalse: string;
+  editMode: string;
+  addCell: string;
+  insertMarkdown: string;
+  insertCode: string;
+  insertJournal: string;
+  insertCfu: string;
+  deleteCellTitle: string;
+  deleteCellMessage: string;
+  deleteConfirm: string;
+  editJson: string;
 }> = {
   'en-US': {
     notebookStarting: 'The notebook is starting up...',
@@ -51,6 +61,16 @@ export const RENDERER_LABELS: Record<Locale, {
     cfuCorrectAnswer: 'The correct answer is',
     cfuTrue: 'True',
     cfuFalse: 'False',
+    editMode: 'Edit Mode',
+    addCell: 'Add cell',
+    insertMarkdown: 'Markdown',
+    insertCode: 'Code',
+    insertJournal: 'Journal',
+    insertCfu: 'Check for Understanding',
+    deleteCellTitle: 'Delete cell?',
+    deleteCellMessage: 'This cannot be undone.',
+    deleteConfirm: 'Delete',
+    editJson: 'Edit JSON',
   },
   'ja-JP': {
     notebookStarting: 'ノートブックを起動中...',
@@ -77,6 +97,16 @@ export const RENDERER_LABELS: Record<Locale, {
     cfuCorrectAnswer: '正しい答えは',
     cfuTrue: '真',
     cfuFalse: '偽',
+    editMode: 'Edit Mode',
+    addCell: 'Add cell',
+    insertMarkdown: 'Markdown',
+    insertCode: 'Code',
+    insertJournal: 'Journal',
+    insertCfu: 'Check for Understanding',
+    deleteCellTitle: 'Delete cell?',
+    deleteCellMessage: 'This cannot be undone.',
+    deleteConfirm: 'Delete',
+    editJson: 'Edit JSON',
   },
   'hi-IN': {
     notebookStarting: 'नोटबुक शुरू हो रहा है...',
@@ -103,6 +133,16 @@ export const RENDERER_LABELS: Record<Locale, {
     cfuCorrectAnswer: 'सही उत्तर है',
     cfuTrue: 'सच',
     cfuFalse: 'झूठ',
+    editMode: 'Edit Mode',
+    addCell: 'Add cell',
+    insertMarkdown: 'Markdown',
+    insertCode: 'Code',
+    insertJournal: 'Journal',
+    insertCfu: 'Check for Understanding',
+    deleteCellTitle: 'Delete cell?',
+    deleteCellMessage: 'This cannot be undone.',
+    deleteConfirm: 'Delete',
+    editJson: 'Edit JSON',
   },
   'fa-IR': {
     notebookStarting: 'دفترچه در حال راه‌اندازی است...',
@@ -129,6 +169,16 @@ export const RENDERER_LABELS: Record<Locale, {
     cfuCorrectAnswer: 'جواب درست',
     cfuTrue: 'درست',
     cfuFalse: 'نادرست',
+    editMode: 'Edit Mode',
+    addCell: 'Add cell',
+    insertMarkdown: 'Markdown',
+    insertCode: 'Code',
+    insertJournal: 'Journal',
+    insertCfu: 'Check for Understanding',
+    deleteCellTitle: 'Delete cell?',
+    deleteCellMessage: 'This cannot be undone.',
+    deleteConfirm: 'Delete',
+    editJson: 'Edit JSON',
   },
   'mn-MN': {
     notebookStarting: 'Дэвтэр эхэлж байна...',
@@ -155,5 +205,15 @@ export const RENDERER_LABELS: Record<Locale, {
     cfuCorrectAnswer: 'Зөв хариулт нь',
     cfuTrue: 'Үнэн',
     cfuFalse: 'Худал',
+    editMode: 'Edit Mode',
+    addCell: 'Add cell',
+    insertMarkdown: 'Markdown',
+    insertCode: 'Code',
+    insertJournal: 'Journal',
+    insertCfu: 'Check for Understanding',
+    deleteCellTitle: 'Delete cell?',
+    deleteCellMessage: 'This cannot be undone.',
+    deleteConfirm: 'Delete',
+    editJson: 'Edit JSON',
   }
 } as const;

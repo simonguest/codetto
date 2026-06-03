@@ -23,12 +23,14 @@ const notebookId = computed(() => route.params.id as string);
 const notebook = ref<Notebook | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const editMode = ref(false);
 
 const showResources = ref(false);
 
 const { saveStatus, stopWatcher } = useNotebookAutoSave(notebookId.value);
 
 onMounted(async () => {
+  editMode.value = route.query.edit === 'true';
   try {
     loading.value = true;
     error.value = null;
@@ -103,6 +105,18 @@ onUnmounted(() => {
       </v-chip>
 
       <v-btn
+        variant="text"
+        size="small"
+        :color="editMode ? 'primary' : 'default'"
+        @click="editMode = !editMode"
+      >
+        <v-icon>{{ editMode ? 'mdi-pencil-off' : 'mdi-pencil' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ editMode ? notebookLabels.exitEditMode : notebookLabels.editMode }}
+        </v-tooltip>
+      </v-btn>
+
+      <v-btn
         icon="mdi-paperclip"
         variant="text"
         size="small"
@@ -124,6 +138,7 @@ onUnmounted(() => {
           :id="notebookId"
           :theme="settingsStore.theme"
           :locale="settingsStore.locale"
+          :edit-mode="editMode"
         />
 
         <!-- Loading state -->

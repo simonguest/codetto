@@ -10,6 +10,7 @@ import type { CfuConfig } from './types';
 const props = defineProps<{
   cell: Cell;
   locale: Locale | null;
+  editMode?: boolean;
 }>();
 
 const labels = computed(() => RENDERER_LABELS[props.locale ?? 'en-US']);
@@ -19,6 +20,14 @@ const parseError = ref<string | null>(null);
 const localAnswer = ref('');
 const hasSubmitted = ref(false);
 const isCorrect = ref(false);
+
+// JSON editor state
+const isEditing = ref(false);
+const editJson = ref('');
+
+watch(() => props.editMode, newVal => {
+  if (!newVal && isEditing.value) closeEdit();
+});
 
 const displayConfig = computed(() => {
   if (!config.value) return null;
@@ -55,6 +64,18 @@ function parse() {
     parseError.value = err instanceof Error ? err.message : 'Invalid CFU configuration';
     config.value = null;
   }
+}
+
+function enterEdit() {
+  if (!props.editMode) return;
+  editJson.value = (props.cell.source ?? []).join('').trim();
+  isEditing.value = true;
+}
+
+function closeEdit() {
+  notebookStore.setSource(props.cell.id, [editJson.value]);
+  isEditing.value = false;
+  parse();
 }
 
 function submit() {
@@ -102,105 +123,139 @@ watch(() => props.locale, () => parse());
 
 <template>
   <v-card max-width="800" class="cfu-card ma-auto my-2" variant="outlined">
-    <v-alert
-      v-if="parseError"
-      type="error"
-      variant="tonal"
-      :text="parseError"
-      class="ma-4"
-    />
 
-    <template v-else-if="config && displayConfig">
-      <v-card-text class="cfu-question">
-        <v-icon size="18" class="cfu-icon mr-2">mdi-help-circle-outline</v-icon>
-        <span class="text-body-1 font-weight-medium">{{ displayConfig.question }}</span>
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-text class="pb-0">
-        <!-- Freeform -->
-        <v-text-field
-          v-if="config.question_type === 'freeform'"
-          v-model="localAnswer"
-          :disabled="hasSubmitted"
+    <!-- JSON editor (edit mode) -->
+    <template v-if="isEditing">
+      <v-card-text>
+        <v-textarea
+          v-model="editJson"
+          auto-grow
           variant="outlined"
-          density="compact"
           hide-details
-          @keyup.enter="!hasSubmitted && submit()"
+          rows="6"
+          autofocus
+          density="compact"
+          class="cfu-json-editor"
         />
-
-        <!-- Multiple choice -->
-        <v-radio-group
-          v-else-if="config.question_type === 'multiple_choice'"
-          v-model="localAnswer"
-          :disabled="hasSubmitted"
-          hide-details
-          class="mt-0"
-        >
-          <v-radio
-            v-for="opt in displayConfig.options"
-            :key="opt.key"
-            :label="`${opt.key.toUpperCase()}. ${opt.text}`"
-            :value="opt.key"
-          />
-        </v-radio-group>
-
-        <!-- True / False -->
-        <v-radio-group
-          v-else-if="config.question_type === 'true_false'"
-          v-model="localAnswer"
-          :disabled="hasSubmitted"
-          hide-details
-          class="mt-0"
-        >
-          <v-radio :label="labels.cfuTrue" value="True" />
-          <v-radio :label="labels.cfuFalse" value="False" />
-        </v-radio-group>
       </v-card-text>
-
-      <!-- Result feedback -->
-      <v-card-text v-if="hasSubmitted" class="pt-3 pb-0">
-        <v-alert
-          v-if="isCorrect"
-          type="success"
-          variant="tonal"
-          :text="labels.cfuCorrect"
-          density="compact"
-        />
-        <v-alert
-          v-else
-          type="error"
-          variant="tonal"
-          density="compact"
-        >
-          {{ labels.cfuIncorrect }}&nbsp;
-          {{ labels.cfuCorrectAnswer }}:
-          <strong>{{ displayConfig.answer }}</strong>
-        </v-alert>
-      </v-card-text>
-
-      <!-- Actions -->
-      <v-card-actions class="px-4 pb-4 pt-3">
-        <v-btn
-          v-if="!hasSubmitted"
-          color="primary"
-          variant="elevated"
-          size="small"
-          :disabled="!localAnswer.trim()"
-          @click="submit"
-        >
-          {{ labels.cfuSubmit }}
-        </v-btn>
-        <v-btn
-          v-else
-          variant="tonal"
-          size="small"
-          @click="reset"
-        >
-          {{ labels.cfuReset }}
-        </v-btn>
+      <v-card-actions class="pt-0 px-4 pb-3">
+        <v-spacer />
+        <v-btn variant="tonal" size="small" @click="closeEdit">{{ labels.close }}</v-btn>
       </v-card-actions>
+    </template>
+
+    <!-- Normal CFU widget -->
+    <template v-else>
+      <!-- Edit icon (visible in edit mode) -->
+      <v-icon
+        v-if="editMode"
+        class="cfu-edit-icon"
+        size="small"
+        @click.stop="enterEdit"
+      >
+        mdi-pencil-outline
+      </v-icon>
+
+      <v-alert
+        v-if="parseError"
+        type="error"
+        variant="tonal"
+        :text="parseError"
+        class="ma-4"
+      />
+
+      <template v-else-if="config && displayConfig">
+        <v-card-text class="cfu-question">
+          <v-icon size="18" class="cfu-icon mr-2">mdi-help-circle-outline</v-icon>
+          <span class="text-body-1 font-weight-medium">{{ displayConfig.question }}</span>
+        </v-card-text>
+
+        <v-divider />
+
+        <v-card-text class="pb-0">
+          <!-- Freeform -->
+          <v-text-field
+            v-if="config.question_type === 'freeform'"
+            v-model="localAnswer"
+            :disabled="hasSubmitted"
+            variant="outlined"
+            density="compact"
+            hide-details
+            @keyup.enter="!hasSubmitted && submit()"
+          />
+
+          <!-- Multiple choice -->
+          <v-radio-group
+            v-else-if="config.question_type === 'multiple_choice'"
+            v-model="localAnswer"
+            :disabled="hasSubmitted"
+            hide-details
+            class="mt-0"
+          >
+            <v-radio
+              v-for="opt in displayConfig.options"
+              :key="opt.key"
+              :label="`${opt.key.toUpperCase()}. ${opt.text}`"
+              :value="opt.key"
+            />
+          </v-radio-group>
+
+          <!-- True / False -->
+          <v-radio-group
+            v-else-if="config.question_type === 'true_false'"
+            v-model="localAnswer"
+            :disabled="hasSubmitted"
+            hide-details
+            class="mt-0"
+          >
+            <v-radio :label="labels.cfuTrue" value="True" />
+            <v-radio :label="labels.cfuFalse" value="False" />
+          </v-radio-group>
+        </v-card-text>
+
+        <!-- Result feedback -->
+        <v-card-text v-if="hasSubmitted" class="pt-3 pb-0">
+          <v-alert
+            v-if="isCorrect"
+            type="success"
+            variant="tonal"
+            :text="labels.cfuCorrect"
+            density="compact"
+          />
+          <v-alert
+            v-else
+            type="error"
+            variant="tonal"
+            density="compact"
+          >
+            {{ labels.cfuIncorrect }}&nbsp;
+            {{ labels.cfuCorrectAnswer }}:
+            <strong>{{ displayConfig.answer }}</strong>
+          </v-alert>
+        </v-card-text>
+
+        <!-- Actions -->
+        <v-card-actions class="px-4 pb-4 pt-3">
+          <v-btn
+            v-if="!hasSubmitted"
+            color="primary"
+            variant="elevated"
+            size="small"
+            :disabled="!localAnswer.trim()"
+            @click="submit"
+          >
+            {{ labels.cfuSubmit }}
+          </v-btn>
+          <v-btn
+            v-else
+            variant="tonal"
+            size="small"
+            @click="reset"
+          >
+            {{ labels.cfuReset }}
+          </v-btn>
+        </v-card-actions>
+      </template>
     </template>
   </v-card>
 </template>
@@ -209,6 +264,7 @@ watch(() => props.locale, () => parse());
 .cfu-card {
   border-color: rgba(var(--v-theme-primary), 0.3);
   border-left: 4px solid rgb(var(--v-theme-primary));
+  position: relative;
 }
 
 .cfu-question {
@@ -222,5 +278,25 @@ watch(() => props.locale, () => parse());
   color: rgb(var(--v-theme-primary));
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+.cfu-edit-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.cfu-card:hover .cfu-edit-icon {
+  opacity: 0.8;
+}
+
+.cfu-json-editor :deep(textarea) {
+  font-family: monospace;
+  font-size: 0.85rem;
 }
 </style>

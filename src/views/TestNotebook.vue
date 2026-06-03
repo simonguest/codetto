@@ -10,6 +10,7 @@ import Renderer from "@/Renderer.vue";
 
 const route = useRoute();
 const filename = computed(() => route.params.filename as string);
+const editMode = computed(() => route.query.edit === 'true');
 
 const notebook = ref<Notebook | null>(null);
 const loading = ref(true);
@@ -45,6 +46,7 @@ onUnmounted(() => {
           :id="filename"
           :theme="settingsStore.theme"
           :locale="settingsStore.locale"
+          :edit-mode="editMode"
         />
 
         <div v-else-if="loading" class="loading">

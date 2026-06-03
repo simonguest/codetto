@@ -1,7 +1,7 @@
 import { reactive } from "vue";
 import { v4 as uuidv4 } from "uuid";
 
-import { Notebook, Output, NOTEBOOK_SKELETON } from "@schemas/notebook";
+import { Notebook, Cell, Output, NOTEBOOK_SKELETON } from "@schemas/notebook";
 import { Locale } from "@/i18n";
 
 export type OutputType = "result" | "stdout" | "error";
@@ -267,6 +267,55 @@ export const notebookStore = reactive({
         cell.metadata.tags.splice(index, 1);
         this.updated = Date.now();
       }
+    }
+  },
+  addCell(cellType: string, insertAfterCellId: string | null): string {
+    if (!this.content.cells) this.content.cells = [];
+    const id = uuidv4();
+    let cell: Cell;
+    if (cellType === 'code') {
+      cell = { id, cell_type: 'code', metadata: {}, source: [''], outputs: [], execution_count: null };
+    } else if (cellType === 'journal') {
+      cell = { id, cell_type: 'markdown', metadata: { tags: ['journal'] }, source: [''] };
+    } else if (cellType === 'cfu') {
+      const defaultCfu = { question_type: 'freeform', question: 'Enter your question here', answer: 'Enter the answer here' };
+      cell = { id, cell_type: 'raw', metadata: { tags: ['cfu'] }, source: [JSON.stringify(defaultCfu, null, 2)] };
+    } else {
+      cell = { id, cell_type: 'markdown', metadata: {}, source: ['New cell'] };
+    }
+    if (insertAfterCellId === null) {
+      this.content.cells.unshift(cell);
+    } else {
+      const idx = this.content.cells.findIndex(c => c.id === insertAfterCellId);
+      this.content.cells.splice(idx !== -1 ? idx + 1 : this.content.cells.length, 0, cell);
+    }
+    this.updated = Date.now();
+    return id;
+  },
+  deleteCell(cellId: string) {
+    if (!this.content.cells) return;
+    const idx = this.content.cells.findIndex(c => c.id === cellId);
+    if (idx !== -1) {
+      this.content.cells.splice(idx, 1);
+      this.updated = Date.now();
+    }
+  },
+  moveCellUp(cellId: string) {
+    if (!this.content.cells) return;
+    const idx = this.content.cells.findIndex(c => c.id === cellId);
+    if (idx > 0) {
+      const cell = this.content.cells.splice(idx, 1)[0];
+      this.content.cells.splice(idx - 1, 0, cell);
+      this.updated = Date.now();
+    }
+  },
+  moveCellDown(cellId: string) {
+    if (!this.content.cells) return;
+    const idx = this.content.cells.findIndex(c => c.id === cellId);
+    if (idx !== -1 && idx < this.content.cells.length - 1) {
+      const cell = this.content.cells.splice(idx, 1)[0];
+      this.content.cells.splice(idx + 1, 0, cell);
+      this.updated = Date.now();
     }
   },
   toggleTag(cellId: string, tag: string) {
