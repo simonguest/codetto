@@ -7,7 +7,7 @@ import { NOTEBOOK_LABELS, LOCALE_METADATA } from "@/i18n";
 import NotebookCard from "@components/NotebookCard.vue";
 import FolderCard from "@components/FolderCard.vue";
 
-import { listNotebooks, deleteNotebook as deleteNotebookFromStorage, renameNotebook as renameNotebookInStorage, importNotebookFromFile, importNotebookFromUrl, type NotebookInfo } from "@storage/notebookStorage";
+import { listNotebooks, deleteNotebook as deleteNotebookFromStorage, renameNotebook as renameNotebookInStorage, createNotebook, importNotebookFromFile, importNotebookFromUrl, type NotebookInfo } from "@storage/notebookStorage";
 import UrlInputDialog from "@components/UrlInputDialog.vue";
 
 const route = useRoute();
@@ -18,6 +18,22 @@ const isRTL = computed(() => LOCALE_METADATA[settingsStore.locale].direction ===
 
 const allNotebooks = ref<NotebookInfo[]>([]);
 const showUrlDialog = ref(false);
+const showNewNotebookDialog = ref(false);
+const newNotebookName = ref('');
+
+const openNewNotebookDialog = () => {
+  newNotebookName.value = '';
+  showNewNotebookDialog.value = true;
+};
+
+const confirmCreateNotebook = async () => {
+  const title = newNotebookName.value.trim();
+  if (!title) return;
+  showNewNotebookDialog.value = false;
+  const id = await createNotebook(title, currentFolder.value || undefined);
+  router.push({ name: 'notebook', params: { id }, query: { edit: 'true' } });
+};
+
 const errorDialog = ref({
   show: false,
   title: '',
@@ -215,6 +231,10 @@ const closeErrorDialog = () => {
             <v-list-item @click="importFromUrl">
               <v-list-item-title>{{ notebookLabels.fromUrl }}</v-list-item-title>
             </v-list-item>
+            <v-divider />
+            <v-list-item @click="openNewNotebookDialog">
+              <v-list-item-title>{{ notebookLabels.newNotebook }}</v-list-item-title>
+            </v-list-item>
           </v-list>
         </v-menu>
       </div>
@@ -278,6 +298,41 @@ const closeErrorDialog = () => {
         <p class="text-body-2 text-medium-emphasis">Create your first notebook to get started</p>
       </div>
     </v-container>
+
+    <!-- New Notebook Dialog -->
+    <v-dialog v-model="showNewNotebookDialog" max-width="400">
+      <v-card>
+        <v-card-title class="text-body-1 font-weight-medium pt-5 px-5">
+          {{ notebookLabels.newNotebook }}
+        </v-card-title>
+        <v-card-text class="px-5 pb-2">
+          <v-text-field
+            v-model="newNotebookName"
+            :label="notebookLabels.newNotebookNameLabel"
+            variant="outlined"
+            density="compact"
+            hide-details
+            autofocus
+            @keyup.enter="confirmCreateNotebook"
+          />
+        </v-card-text>
+        <v-card-actions class="px-4 pb-4">
+          <v-spacer />
+          <v-btn variant="text" @click="showNewNotebookDialog = false">
+            {{ notebookLabels.deleteCancel }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            size="small"
+            :disabled="!newNotebookName.trim()"
+            @click="confirmCreateNotebook"
+          >
+            {{ notebookLabels.newNotebookCreate }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- URL Input Dialog -->
     <UrlInputDialog

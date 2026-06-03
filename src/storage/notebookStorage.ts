@@ -235,6 +235,20 @@ export const listNotebooks = async (): Promise<NotebookInfo[]> => {
   });
 };
 
+export const createNotebook = async (title: string, folder?: string): Promise<string> => {
+  const id = uuidv4();
+  const notebook: Notebook = {
+    nbformat: 4,
+    nbformat_minor: 2,
+    metadata: { title, ...(folder ? { folder } : {}) },
+    cells: [
+      { id: uuidv4(), cell_type: 'markdown', metadata: {}, source: [`# ${title}`] },
+    ],
+  };
+  await saveNotebook(id, notebook);
+  return id;
+};
+
 export const renameNotebook = async (id: string, title: string): Promise<void> => {
   const notebook = await getNotebook(id);
   if (!notebook.metadata) {

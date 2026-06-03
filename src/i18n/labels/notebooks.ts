@@ -44,6 +44,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   urlDialogInvalidUrl: string;
   editMode: string;
   exitEditMode: string;
+  newNotebook: string;
+  newNotebookNameLabel: string;
+  newNotebookCreate: string;
 }> = {
   'en-US': {
     title: 'Notebooks',
@@ -89,6 +92,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: 'Please enter a valid URL (must start with http:// or https://)',
     editMode: 'Edit Mode',
     exitEditMode: 'Exit Edit Mode',
+    newNotebook: 'New Notebook',
+    newNotebookNameLabel: 'Notebook name',
+    newNotebookCreate: 'Create',
   },
   'ja-JP': {
     title: 'ノートブック',
@@ -134,6 +140,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: '有効なURLを入力してください（http://またはhttps://で始まる必要があります）',
     editMode: 'Edit Mode',
     exitEditMode: 'Exit Edit Mode',
+    newNotebook: 'New Notebook',
+    newNotebookNameLabel: 'Notebook name',
+    newNotebookCreate: 'Create',
   },
   'hi-IN': {
     title: 'नोटबुक',
@@ -179,6 +188,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: 'कृपया एक वैध URL दर्ज करें (http:// या https:// से शुरू होना चाहिए)',
     editMode: 'Edit Mode',
     exitEditMode: 'Exit Edit Mode',
+    newNotebook: 'New Notebook',
+    newNotebookNameLabel: 'Notebook name',
+    newNotebookCreate: 'Create',
   },
   'fa-IR': {
     title: 'دفترچه‌ها',
@@ -224,6 +236,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: 'لطفاً یک URL معتبر وارد کنید (باید با http:// یا https:// شروع شود)',
     editMode: 'Edit Mode',
     exitEditMode: 'Exit Edit Mode',
+    newNotebook: 'New Notebook',
+    newNotebookNameLabel: 'Notebook name',
+    newNotebookCreate: 'Create',
   },
   'mn-MN': {
     title: 'Дэвтэрүүд',
@@ -269,5 +284,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     urlDialogInvalidUrl: 'Зөв URL оруулна уу (http:// эсвэл https://-ээр эхэлсэн байх ёстой)',
     editMode: 'Edit Mode',
     exitEditMode: 'Exit Edit Mode',
+    newNotebook: 'New Notebook',
+    newNotebookNameLabel: 'Notebook name',
+    newNotebookCreate: 'Create',
   }
 } as const;
