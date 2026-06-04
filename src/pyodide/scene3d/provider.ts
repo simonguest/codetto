@@ -292,6 +292,15 @@ export async function handleScene3dOp(
         );
       }
 
+      // Apply scale
+      if (cfg.scale) {
+        mesh.scaling = new Vector3(
+          cfg.scale.x ?? 1,
+          cfg.scale.y ?? 1,
+          cfg.scale.z ?? 1
+        );
+      }
+
       // Apply material / color
       const mat = new StandardMaterial("mat_" + mesh.uniqueId, controller.scene);
       mat.diffuseColor = hexToColor3(cfg.color ?? "#888888", Color3);
@@ -312,6 +321,18 @@ export async function handleScene3dOp(
       mesh.position.x = command.x ?? 0;
       mesh.position.y = command.y ?? 0;
       mesh.position.z = command.z ?? 0;
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── set_scale ────────────────────────────────────────────────────────────────
+  if (cmd === "set_scale") {
+    const mesh = viaGet(command.mesh);
+    if (mesh) {
+      mesh.scaling.x = command.x ?? 1;
+      mesh.scaling.y = command.y ?? 1;
+      mesh.scaling.z = command.z ?? 1;
     }
     viaRespond({ type: "value", value: null });
     return true;
