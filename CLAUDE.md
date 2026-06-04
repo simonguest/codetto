@@ -52,6 +52,9 @@ The `/test/:filename` route (`src/views/TestNotebook.vue`) fetches the notebook 
 - **Run button** — `page.getByRole('button', { name: 'Run code' })`; disabled while Pyodide is initialising, enabled when ready
 - **stdout output** — `page.locator('textarea.output-console')`; only in the DOM when the stdout tab is active (Vuetify tab window items use `v-if`)
 - **Pyodide ready** — inferred from the run button becoming enabled (no direct DOM indicator)
+- **Edit mode active** — `page.locator('.cell-toolbar').first()` visible; use `?edit=true` on the test URL to activate
+- **Textarea value** — use `toHaveValue()` not `toContainText()` for `<textarea>` elements; `toContainText` reads innerHTML, not the input value
+- **Multi-element locators** — Playwright strict mode rejects `.toBeVisible()` when a locator matches more than one element; use `.first()` or `.nth(n)` to disambiguate
 
 ### Testing camera / cv features
 
@@ -98,10 +101,46 @@ This is a Jupyter notebook client for K-12 students. It runs as either a web app
 
 Each cell type is a self-contained directory with an `index.ts` export:
 - `code` — CodeMirror editor + execution controls + result/stdout/error display
-- `markdown` — rendered markdown via `marked`
+- `markdown` — rendered markdown via `marked`; double-click (or pencil icon) to edit when notebook edit mode is active
 - `video` — video player via `video.js`; triggered by `raw` cells tagged with `"video"` in `cell.metadata.tags`; cell source is a JSON payload `{ "url": "...", "controls": true }`
 - `chat` — LLM chat interface
 - `journal` — student-editable note cell; triggered by `markdown` cells tagged with `"journal"` in `cell.metadata.tags`; double-click (or click the pencil icon) to enter edit mode, Close to save. See `docs/cell-types/journal.md`.
+- `cfu` — "Check for Understanding" quiz cell; triggered by `raw` cells tagged with `"cfu"` in `cell.metadata.tags`; cell source is a JSON payload (see below).
+
+**CFU JSON schema:**
+```json
+{
+  "question_type": "freeform" | "multiple_choice" | "true_false",
+  "question": "Question text shown to the student",
+  "answer": "correct answer (string, case-insensitive match)",
+  "options": [{ "key": "a", "text": "Option text" }],
+  "submitted_answer": "",
+  "animation": true,
+  "i18n": { "ja-JP": { "question": "...", "answer": "...", "options": [...] } }
+}
+```
+
+- `options` is required for `multiple_choice`; omit for other types
+- `submitted_answer` is written back to the cell source when the student submits, so their answer persists across reloads
+- `animation` defaults to `true`; set to `false` to disable the confetti on a correct answer
+- `i18n` per-locale overrides work the same as for other cell types
+- In notebook edit mode, a pencil icon on the CFU card opens a raw JSON textarea editor
+
+### Edit mode
+
+Notebooks open in read-only mode by default. Edit mode is toggled via the pencil icon in the notebook header, or activated from a deep link with `?edit=true` (useful for CMS integration).
+
+**What edit mode enables:**
+- **Markdown cells** — double-click or click the pencil icon to open an inline textarea editor; Close saves and re-renders
+- **CFU cells** — pencil icon opens a raw JSON textarea; Close saves and re-parses
+- **All cells** — a toolbar appears above each cell with ↑ ↓ (reorder) and 🗑 (delete with confirmation dialog) buttons
+- **Insert bars** — a centered "+ Add cell" bar appears between every pair of cells (and at the top/bottom); clicking it opens a menu to insert a `markdown`, `code`, `journal`, or `cfu` cell
+
+**Implementation:**
+- `editMode` is a `ref<boolean>` in `Notebook.vue`, read from `route.query.edit` on mount and passed as a prop down to `Renderer.vue` and then to `MarkdownCell` and `CfuCell`
+- `TestNotebook.vue` also reads `?edit=true` so the test route supports edit mode
+- `notebookStore` exposes `addCell(cellType, insertAfterCellId)`, `deleteCell(cellId)`, `moveCellUp(cellId)`, `moveCellDown(cellId)`
+- New notebooks created from the index ("Add → New Notebook") are saved to IndexedDB and immediately opened with `?edit=true`; they start with a single markdown cell pre-populated with `# {title}`
 
 ### Notebook metadata extensions
 
