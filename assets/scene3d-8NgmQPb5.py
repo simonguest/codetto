@@ -68,6 +68,7 @@ class Scene:
         config = {
             "type": mesh._type,
             "position": mesh._position,
+            "scale": mesh._scale,
             "color": mesh._color,
             **mesh._params,
         }
@@ -123,6 +124,7 @@ class _Mesh:
         self._type = mesh_type
         self._params = params
         self._position = {"x": 0, "y": 0, "z": 0}
+        self._scale = {"x": 1, "y": 1, "z": 1}
         self._color = "#888888"
         self._click_handler = None
         self._handle = None
@@ -137,6 +139,12 @@ class _Mesh:
         self._color = color
         if self._handle is not None:
             _s3d_call("set_color", mesh=self._handle, color=color)
+        return self
+
+    def set_scale(self, x=1, y=1, z=1):
+        self._scale = {"x": x, "y": y, "z": z}
+        if self._handle is not None:
+            _s3d_call("set_scale", mesh=self._handle, x=x, y=y, z=z)
         return self
 
     def on_click(self, fn):
