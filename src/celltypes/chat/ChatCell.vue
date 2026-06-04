@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, nextTick, watch } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/utils/markdown';
 
 import type { Cell } from '@schemas/notebook';
 import type { Locale } from '@/i18n';
@@ -118,17 +118,12 @@ const processMessageContent = (content: string): ProcessedMessage => {
 /**
  * Render markdown content to HTML
  */
-const renderMarkdown = (content: string): string => {
+const renderMarkdownContent = (content: string): string => {
   try {
-    const result = marked(content, {
-      breaks: true,
-      gfm: true
-    });
-    // Handle both sync and async returns from marked
-    return typeof result === 'string' ? result : content;
+    return renderMarkdown(content);
   } catch (err) {
     console.error('Failed to render markdown:', err);
-    return content; // Fallback to plain text
+    return content;
   }
 };
 
@@ -140,8 +135,8 @@ const processMessage = (message: ChatMessage): ProcessedMessage & { renderedMain
   
   return {
     ...processed,
-    renderedMain: message.role === 'assistant' ? renderMarkdown(processed.mainContent) : processed.mainContent,
-    renderedThinking: processed.thinkingContent ? renderMarkdown(processed.thinkingContent) : null
+    renderedMain: message.role === 'assistant' ? renderMarkdownContent(processed.mainContent) : processed.mainContent,
+    renderedThinking: processed.thinkingContent ? renderMarkdownContent(processed.thinkingContent) : null
   };
 };
 

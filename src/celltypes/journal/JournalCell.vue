@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { marked } from "marked";
+import { renderMarkdown } from "@/utils/markdown";
 import type { Cell } from "@schemas/notebook";
 import type { Locale } from "@/i18n";
 import { RENDERER_LABELS } from "@/i18n";
@@ -22,7 +22,7 @@ const processedSource = computed(() => {
 });
 
 const renderedContent = computed(() => {
-  return marked.parse(processedSource.value.join("")) as string;
+  return renderMarkdown(processedSource.value.join(""));
 });
 
 const hasContent = computed(() => {

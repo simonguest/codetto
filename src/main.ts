@@ -2,6 +2,10 @@ import { createApp } from "vue";
 
 // Vuetify
 import "vuetify/styles";
+
+// KaTeX styles (for math rendering in markdown cells)
+import "katex/dist/katex.min.css";
+
 import { createVuetify } from "vuetify";
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
 

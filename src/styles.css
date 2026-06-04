@@ -157,3 +157,132 @@ body {
   height: 100%;
   -webkit-overflow-scrolling: touch;
 }
+
+/* =============================================================
+   Highlight.js — matched to the CodeMirror themes
+   Dark  → Material Dark  (materialDark.ts)
+   Light → Basic Light / Nord  (basicLight.ts)
+   ============================================================= */
+
+/* --- Dark (default) — Material Dark palette --- */
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+  border-radius: 6px;
+  font-family: "JetBrainsMono", monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+  background: #2e3235;   /* base00 */
+  color: #bdbdbd;        /* base05 */
+}
+
+/* keywords: def, class, if, for, return … */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-template-tag         { color: #cf6edf; }  /* base_purple */
+
+/* strings */
+.hljs-string,
+.hljs-meta .hljs-string    { color: #99d066; }  /* base_lightgreen */
+
+/* numbers, booleans (True/False/None), constants */
+.hljs-number,
+.hljs-literal              { color: #ffad42; }  /* base_orange */
+
+/* function and class names at call / definition sites */
+.hljs-title.function_,
+.hljs-title.function_.invoke__,
+.hljs-built_in             { color: #56c8d8; }  /* base_cyan */
+
+.hljs-title.class_,
+.hljs-title.class_.inherited__ { color: #ffad42; } /* base_orange */
+
+/* HTML/JSON attributes, dict keys */
+.hljs-attr,
+.hljs-attribute,
+.hljs-property             { color: #facf4e; }  /* base_yellow */
+
+/* variable names */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-variable.language_   { color: #bdbdbd; }  /* base05 */
+
+/* operators */
+.hljs-operator             { color: #7186f0; }  /* base_indigo */
+
+/* type/class names (e.g. int, str, MyClass in type hints) */
+.hljs-type                 { color: #ffad42; }  /* base_orange */
+
+/* decorators / meta (@dataclass, #!/usr/bin/env …) */
+.hljs-meta,
+.hljs-meta .hljs-keyword   { color: #707d8b; font-style: italic; } /* base03 */
+
+/* comments */
+.hljs-comment,
+.hljs-code,
+.hljs-formula              { color: #707d8b; font-style: italic; }  /* base03 */
+
+/* punctuation / generic text */
+.hljs-punctuation,
+.hljs-subst,
+.hljs-tag                  { color: #bdbdbd; }  /* base05 */
+
+/* tags in HTML/XML */
+.hljs-name                 { color: #ff6e40; }  /* base_deeporange */
+
+/* diff */
+.hljs-addition             { color: #6abf69; background: rgba(106,191,105,.15); }
+.hljs-deletion             { color: #ff5f52; background: rgba(255, 95, 82,.15); }
+
+
+/* --- Light — Basic Light / Nord palette --- */
+.v-theme--light .hljs {
+  background: #eceff4;   /* Nord base06 — matches basicLightTheme background */
+  color:      #2e3440;   /* Nord base00 */
+}
+
+.v-theme--light .hljs-keyword,
+.v-theme--light .hljs-selector-tag,
+.v-theme--light .hljs-template-tag    { color: #5e81ac; }  /* base0A deep-blue */
+
+.v-theme--light .hljs-string,
+.v-theme--light .hljs-meta .hljs-string { color: #d08770; } /* base0C orange */
+
+.v-theme--light .hljs-number,
+.v-theme--light .hljs-literal          { color: #88c0d0; }  /* base08 ice-blue */
+
+.v-theme--light .hljs-title.function_,
+.v-theme--light .hljs-title.function_.invoke__,
+.v-theme--light .hljs-built_in         { color: #5e81ac; }  /* base0A */
+
+.v-theme--light .hljs-title.class_,
+.v-theme--light .hljs-title.class_.inherited__ { color: #ebcb8b; } /* base0D yellow */
+
+.v-theme--light .hljs-attr,
+.v-theme--light .hljs-attribute,
+.v-theme--light .hljs-property         { color: #ebcb8b; }  /* base0D */
+
+.v-theme--light .hljs-variable,
+.v-theme--light .hljs-template-variable,
+.v-theme--light .hljs-variable.language_ { color: #d08770; } /* base0C */
+
+.v-theme--light .hljs-operator         { color: #a3be8c; }  /* base0E green */
+
+.v-theme--light .hljs-type             { color: #ebcb8b; }  /* base0D */
+
+.v-theme--light .hljs-meta,
+.v-theme--light .hljs-meta .hljs-keyword { color: #88c0d0; font-style: italic; } /* base08 */
+
+.v-theme--light .hljs-comment,
+.v-theme--light .hljs-code,
+.v-theme--light .hljs-formula          { color: #4c566a; font-style: italic; }  /* base03 */
+
+.v-theme--light .hljs-punctuation,
+.v-theme--light .hljs-subst,
+.v-theme--light .hljs-tag              { color: #2e3440; }  /* base00 */
+
+.v-theme--light .hljs-name             { color: #b48ead; }  /* base0F purple */
+
+.v-theme--light .hljs-addition  { color: #a3be8c; background: rgba(163,190,140,.15); }
+.v-theme--light .hljs-deletion  { color: #bf616a; background: rgba(191, 97,106,.15); }

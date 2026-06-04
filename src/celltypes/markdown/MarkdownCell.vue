@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { marked } from "marked";
+import { renderMarkdown } from "@/utils/markdown";
 
 import { Locale, RENDERER_LABELS } from "@/i18n";
 import type { Cell } from "@schemas/notebook";
@@ -23,7 +23,7 @@ watch(() => props.editMode, newVal => {
 
 const toMarkdown = (source: string[] | undefined) => {
   if (!source) return "";
-  return marked.parse(source.join(""));
+  return renderMarkdown(source.join(""));
 };
 
 const processedSource = computed(() => {
@@ -151,5 +151,98 @@ function closeEdit() {
 .markdown-content :deep(ul:last-child),
 .markdown-content :deep(ol:last-child) {
   margin-block-end: 0;
+}
+
+/* Lists */
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
+  padding-inline-start: 2em;
+}
+
+.markdown-content :deep(ul) {
+  list-style-type: disc;
+}
+
+.markdown-content :deep(ol) {
+  list-style-type: decimal;
+}
+
+.markdown-content :deep(li) {
+  margin-block-end: 0.25em;
+}
+
+/* Tables */
+.markdown-content :deep(table) {
+  width: auto;
+  border-collapse: collapse;
+  margin-block-end: 1em;
+  font-size: 0.95em;
+}
+
+.markdown-content :deep(th),
+.markdown-content :deep(td) {
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.2);
+  padding: 0.45em 0.85em;
+  text-align: left;
+}
+
+.markdown-content :deep(th) {
+  background: rgba(var(--v-theme-on-surface), 0.06);
+  font-weight: 600;
+}
+
+.markdown-content :deep(tbody tr:nth-child(even)) {
+  background: rgba(var(--v-theme-on-surface), 0.03);
+}
+
+/* Blockquotes */
+.markdown-content :deep(blockquote) {
+  margin-inline: 0;
+  margin-block-end: 1em;
+  padding: 0.5em 1em;
+  border-inline-start: 4px solid rgba(var(--v-theme-primary), 0.6);
+  color: rgba(var(--v-theme-on-surface), 0.7);
+}
+
+/* Inline code */
+.markdown-content :deep(code) {
+  font-family: "JetBrainsMono", monospace;
+  font-size: 0.88em;
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  background: rgba(var(--v-theme-on-surface), 0.08);
+}
+
+/* Fenced code blocks — spacing/overflow only; hljs CSS owns background+padding */
+.markdown-content :deep(pre) {
+  margin-block-end: 1em;
+  overflow-x: auto;
+}
+
+/* Plain <pre> blocks (no hljs) get the generic background */
+.markdown-content :deep(pre:not(.hljs)) {
+  padding: 1em;
+  border-radius: 6px;
+  background: rgba(var(--v-theme-on-surface), 0.08);
+}
+
+/* Inside fenced blocks the <code> tag needs no extra styling */
+.markdown-content :deep(pre code) {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+/* Horizontal rule */
+.markdown-content :deep(hr) {
+  border: none;
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.15);
+  margin-block: 1.25em;
+}
+
+/* KaTeX math */
+.markdown-content :deep(.katex-display) {
+  margin-block: 1em;
+  overflow-x: auto;
 }
 </style>
