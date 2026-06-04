@@ -244,9 +244,9 @@ Provides an `audio` Python module for playing sound files from the virtual files
 
 | File | Purpose |
 |---|---|
-| `audio.py` | Python `audio` module: `play`, `play_async` |
-| `worker.ts` | Registers `_audio_play` / `_audio_play_nowait` bridge globals; loads `audio.py` |
-| `provider.ts` | `handleAudioOp` — creates an `HTMLAudioElement` from a base64 data URL and plays it |
+| `audio.py` | Python `audio` module: `play`, `play_async`, `speak`, `speak_async`, `Voice` |
+| `worker.ts` | Registers `_audio_play` / `_audio_play_nowait` / `_tts_speak` bridge globals; loads `audio.py` |
+| `provider.ts` | `handleAudioOp` — handles `audio_play` (HTMLAudioElement) and `tts_speak` (Web Speech API) ops |
 
 **Python API:**
 ```python
@@ -254,11 +254,22 @@ import audio
 
 audio.play('/sample_files/chime.wav')        # blocks until playback ends
 await audio.play_async('/sample_files/chime.wav')  # starts playback, returns immediately
+
+audio.speak("Hello, world!")                          # blocks until speech finishes
+audio.speak("G'day!", voice=audio.Voice.EN_AU.FEMALE) # with a specific voice
+await audio.speak_async("This doesn't block.")        # fire and forget
+
+# Available Voice constants (all have .FEMALE and .MALE):
+# Voice.EN_US  Voice.EN_GB  Voice.EN_AU
+# Voice.FR_FR  Voice.DE_DE  Voice.ES_ES  Voice.IT_IT  Voice.PT_BR
+# Voice.JA_JP  Voice.ZH_CN  Voice.KO_KR  Voice.HI_IN  Voice.AR_SA
 ```
 
-**How it works:** Python reads the file bytes, base64-encodes them into a data URL, and sends it over the via.js bridge. The main thread creates an `HTMLAudioElement`, plays it, and — for `play()` — waits for the `ended` event before responding so the worker stays blocked for the duration. For `play_async()` the main thread responds as soon as `.play()` resolves. A module-level `Set` in `provider.ts` holds references to active `Audio` elements to prevent garbage collection before playback ends.
+**How file playback works:** Python reads the file bytes, base64-encodes them into a data URL, and sends it over the via.js bridge. The main thread creates an `HTMLAudioElement`, plays it, and — for `play()` — waits for the `ended` event before responding so the worker stays blocked for the duration. For `play_async()` the main thread responds as soon as `.play()` resolves. A module-level `Set` in `provider.ts` holds references to active `Audio` elements to prevent garbage collection before playback ends.
 
-`play_async` is declared `async def` intentionally — students must `await` it, which is the teaching moment. Do not add an AST auto-transform for it (unlike `input()`), as the explicit `await` is the point of the exercise.
+**How TTS works:** `speak()` / `speak_async()` send the text and a serialised `VoiceSpec` (`{lang, gender}`) over the via.js bridge. The main thread resolves the voice using a priority-ordered name list in `TTS_VOICE_PRIORITY` (keyed by `"lang/gender"`), falling back to any voice whose lang code matches, then calls the browser's `SpeechSynthesis` API. `speak()` blocks until the `onend` event; `speak_async()` responds immediately after `speechSynthesis.speak()`. Voices are loaded via `speechSynthesis.getVoices()` with an `onvoiceschanged` fallback — on a cold browser start, the first call may find no voices; a page refresh resolves this.
+
+`play_async` and `speak_async` are declared `async def` intentionally — students must `await` them, which is the teaching moment.
 
 Supported formats: WAV, MP3, OGG, M4A, FLAC (MIME type inferred from file extension).
 
