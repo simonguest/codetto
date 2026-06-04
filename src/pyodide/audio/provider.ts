@@ -2,6 +2,9 @@
 // before playback ends.
 const activeAudio = new Set<HTMLAudioElement>();
 
+// null = untested, true = confirmed working, false = confirmed unavailable
+let ttsSupported: boolean | null = null;
+
 // Known voice names ordered by preference for each "lang/gender" pair.
 // Picks the first name present in speechSynthesis.getVoices(); falls back to
 // any voice whose lang code matches if none are found.
@@ -98,7 +101,8 @@ export async function handleAudioOp(
   }
 
   if (op === "tts_speak") {
-    if (typeof speechSynthesis === "undefined") {
+    if (ttsSupported === false || typeof speechSynthesis === "undefined" || typeof SpeechSynthesisUtterance === "undefined") {
+      ttsSupported = false;
       viaRespond({ type: "unavailable" });
       return true;
     }
@@ -115,8 +119,15 @@ export async function handleAudioOp(
 
       if (wait) {
         await new Promise<void>((resolve, reject) => {
-          utterance.onend = () => resolve();
-          utterance.onerror = (e) => reject(new Error(e.error));
+          // If onstart doesn't fire within 3s the API is present but non-functional.
+          const startTimeout = setTimeout(() => {
+            speechSynthesis.cancel();
+            ttsSupported = false;
+            reject(new Error("tts-unavailable"));
+          }, 3000);
+          utterance.onstart = () => { ttsSupported = true; clearTimeout(startTimeout); };
+          utterance.onend = () => { clearTimeout(startTimeout); resolve(); };
+          utterance.onerror = (e) => { clearTimeout(startTimeout); reject(new Error(e.error)); };
           speechSynthesis.speak(utterance);
         });
       } else {
@@ -124,7 +135,11 @@ export async function handleAudioOp(
       }
       viaRespond({ type: "value", value: null });
     } catch (err) {
-      viaRespond({ type: "error", message: String(err) });
+      if (err instanceof Error && err.message === "tts-unavailable") {
+        viaRespond({ type: "unavailable" });
+      } else {
+        viaRespond({ type: "error", message: String(err) });
+      }
     }
     return true;
   }
