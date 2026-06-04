@@ -1,12 +1,27 @@
 <script setup lang="ts">
 import { onMounted, watch, computed, ref } from "vue";
-import { EditorState, Prec } from "@codemirror/state";
-import { EditorView, basicSetup } from "codemirror";
-import { keymap } from "@codemirror/view";
-import { indentWithTab } from "@codemirror/commands";
-import { indentUnit } from "@codemirror/language";
+import { EditorState, Prec, StateEffect, StateField } from "@codemirror/state";
+import { EditorView } from "codemirror";
+import {
+  keymap, showTooltip, type Tooltip,
+  lineNumbers, highlightActiveLineGutter, highlightSpecialChars,
+  drawSelection, dropCursor, rectangularSelection, crosshairCursor,
+  highlightActiveLine,
+} from "@codemirror/view";
+import {
+  indentWithTab, history,
+  defaultKeymap, historyKeymap,
+} from "@codemirror/commands";
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import {
+  indentUnit, foldGutter, foldKeymap, indentOnInput,
+  syntaxHighlighting, defaultHighlightStyle,
+} from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
-import { autocompletion, CompletionContext, CompletionResult, CompletionSource } from "@codemirror/autocomplete";
+import {
+  autocompletion, CompletionContext, CompletionResult, CompletionSource, completionKeymap,
+} from "@codemirror/autocomplete";
+import { renderMarkdown } from "@/utils/markdown";
 
 import { notebookStore } from "@store/notebookStore";
 import { settingsStore } from "@store/settingsStore";
@@ -19,6 +34,31 @@ import { basicLight } from "./themes/basicLight";
 import { materialDark } from "./themes/materialDark";
 import { colorPickerExtension, colorPickerTheme } from "./colorPickerExtension";
 
+const customSetup = [
+  lineNumbers(),
+  highlightActiveLineGutter(),
+  highlightSpecialChars(),
+  history(),
+  foldGutter(),
+  drawSelection(),
+  dropCursor(),
+  EditorState.allowMultipleSelections.of(true),
+  indentOnInput(),
+  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  // bracketMatching() and closeBrackets() omitted — distracting/confusing for students
+  rectangularSelection(),
+  crosshairCursor(),
+  highlightActiveLine(),
+  highlightSelectionMatches(),
+  keymap.of([
+    ...defaultKeymap,
+    ...searchKeymap,
+    ...historyKeymap,
+    ...foldKeymap,
+    ...completionKeymap,
+  ]),
+];
+
 const JEDI_TYPE_MAP: Record<string, string> = {
   module: "namespace",
   class: "class",
@@ -29,6 +69,54 @@ const JEDI_TYPE_MAP: Record<string, string> = {
   path: "text",
   property: "property",
 };
+
+// --- Signature help ---
+
+const setSignatureTooltip = StateEffect.define<Tooltip | null>();
+
+function isInsideParens(state: EditorState, pos: number): boolean {
+  const text = state.sliceDoc(0, pos);
+  let depth = 0;
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (text[i] === ")") depth++;
+    else if (text[i] === "(") {
+      if (depth === 0) return true;
+      depth--;
+    }
+  }
+  return false;
+}
+
+function findOpenParenPos(state: EditorState, pos: number): number | null {
+  const text = state.sliceDoc(0, pos);
+  let depth = 0;
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (text[i] === ")") depth++;
+    else if (text[i] === "(") {
+      if (depth === 0) return i;
+      depth--;
+    }
+  }
+  return null;
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+const signatureTooltipField = StateField.define<Tooltip | null>({
+  create: () => null,
+  update(tooltip, tr) {
+    for (const e of tr.effects) {
+      if (e.is(setSignatureTooltip)) return e.value;
+    }
+    if (tooltip && (tr.docChanged || tr.selection)) {
+      if (!isInsideParens(tr.state, tr.state.selection.main.head)) return null;
+    }
+    return tooltip;
+  },
+  provide: f => showTooltip.from(f),
+});
 
 const props = defineProps<{
   metadata: any;
@@ -68,6 +156,60 @@ async function delegateToBuiltins(context: CompletionContext): Promise<Completio
     if (result) return result;
   }
   return null;
+}
+
+async function triggerSignatureHelp(view: EditorView) {
+  if (!settingsStore.codeCompletion || jediStore.status !== "ready") return;
+
+  const pos = view.state.selection.main.head;
+  const openParenPos = findOpenParenPos(view.state, pos);
+  if (openParenPos === null) return;
+
+  const currentCellContent = view.state.doc.toString();
+  const priorCode = buildPriorCode();
+  const fullScript = priorCode + currentCellContent;
+  const priorLineCount = (priorCode.match(/\n/g) ?? []).length;
+  const cmLine = view.state.doc.lineAt(pos);
+  const fullLine = priorLineCount + cmLine.number;
+  const fullCol = pos - cmLine.from;
+
+  const sigs = await jediStore.signatures(fullScript, fullLine, fullCol);
+
+  // Re-check: cursor may have left parens while fetching
+  const currentPos = view.state.selection.main.head;
+  const currentOpenParen = findOpenParenPos(view.state, currentPos);
+  if (currentOpenParen === null || !sigs.length) return;
+
+  const sig = sigs[0];
+
+  const dom = document.createElement("div");
+  dom.className = "cm-signature-help";
+  // Prevent mousedown from moving focus away from the editor
+  dom.addEventListener("mousedown", e => e.preventDefault());
+
+  const header = document.createElement("code");
+  header.className = "cm-sig-header";
+  const paramHtml = sig.params.map((p, i) => {
+    const ep = escapeHtml(p);
+    return i === sig.index ? `<strong>${ep}</strong>` : ep;
+  }).join(", ");
+  header.innerHTML = `${escapeHtml(sig.name)}(${paramHtml})`;
+  dom.appendChild(header);
+
+  if (sig.docstring) {
+    const docDiv = document.createElement("div");
+    docDiv.className = "cm-sig-doc";
+    docDiv.innerHTML = renderMarkdown(sig.docstring);
+    dom.appendChild(docDiv);
+  }
+
+  view.dispatch({
+    effects: setSignatureTooltip.of({
+      pos: currentOpenParen,
+      above: true,
+      create: () => ({ dom }),
+    }),
+  });
 }
 
 async function jediCompletionSource(context: CompletionContext): Promise<CompletionResult | null> {
@@ -120,7 +262,7 @@ onMounted(() => {
   const startState = EditorState.create({
     doc: source.value ? source.value.join("") : "",
     extensions: [
-      basicSetup,
+      ...customSetup,
       python(),
       theme,
       indentUnit.of("  "),
@@ -128,6 +270,34 @@ onMounted(() => {
       autocompletion({ override: [jediCompletionSource] }),
       colorPickerExtension,
       colorPickerTheme,
+      signatureTooltipField,
+      EditorView.baseTheme({
+        ".cm-signature-help": {
+          padding: "6px 10px",
+          maxHeight: "260px",
+          overflowY: "auto",
+          maxWidth: "500px",
+        },
+        ".cm-sig-header": {
+          display: "block",
+          fontFamily: "monospace",
+          fontSize: "0.88em",
+          lineHeight: "1.5",
+          marginBottom: "4px",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-all",
+        },
+        ".cm-sig-doc": {
+          fontSize: "0.82em",
+          lineHeight: "1.5",
+          borderTop: "1px solid rgba(128,128,128,0.3)",
+          paddingTop: "6px",
+          marginTop: "4px",
+          "& p": { margin: "0 0 4px 0" },
+          "& pre": { overflowX: "auto", padding: "4px" },
+          "& code": { fontSize: "0.9em" },
+        },
+      }),
       Prec.highest(keymap.of([indentWithTab, {
         key: "Mod-Enter",
         run: () => {
@@ -137,7 +307,32 @@ onMounted(() => {
           }
           return true;
         },
+      }, {
+        key: "Ctrl-Space",
+        run: (view) => {
+          if (isInsideParens(view.state, view.state.selection.main.head)) {
+            triggerSignatureHelp(view);
+            return true;
+          }
+          return false;
+        },
+      }, {
+        key: "Escape",
+        run: (view) => {
+          if (view.state.field(signatureTooltipField)) {
+            view.dispatch({ effects: setSignatureTooltip.of(null) });
+            return true;
+          }
+          return false;
+        },
       }])),
+      EditorView.domEventHandlers({
+        blur: (_e, view) => {
+          if (view.state.field(signatureTooltipField)) {
+            view.dispatch({ effects: setSignatureTooltip.of(null) });
+          }
+        },
+      }),
       EditorView.updateListener.of(update => {
         if (update.docChanged && !isUpdatingFromStore) {
           const newSource = update.state.doc.toString();
@@ -145,6 +340,11 @@ onMounted(() => {
             props.id,
             newSource.includes("\n") ? newSource.split("\n") : [newSource]
           );
+          // Auto-trigger on ( insertion
+          const pos = update.state.selection.main.head;
+          if (update.state.sliceDoc(pos - 1, pos) === "(") {
+            triggerSignatureHelp(update.view);
+          }
         }
       }),
     ],

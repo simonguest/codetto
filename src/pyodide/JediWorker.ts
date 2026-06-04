@@ -31,6 +31,24 @@ def _get_completions(source, line, column):
         ])
     except Exception:
         return '[]'
+
+def _get_signatures(source, line, column):
+    try:
+        script = jedi.Script(source)
+        sigs = script.get_signatures(line, column)
+        if not sigs:
+            return '[]'
+        return json.dumps([
+            {
+                'name': s.name,
+                'params': [p.description for p in s.params],
+                'docstring': s.docstring(raw=True),
+                'index': s.index,
+            }
+            for s in sigs
+        ])
+    except Exception:
+        return '[]'
 `;
 
 async function initialize() {
@@ -96,6 +114,22 @@ self.onmessage = (event: MessageEvent) => {
         } catch (error) {
           console.warn("JediWorker: Failed to sync packages:", error);
         }
+      });
+      break;
+
+    case "signatures":
+      enqueue(async () => {
+        if (!pyodide) {
+          self.postMessage({ type: "sig_results", requestId: data.requestId, signatures: [] });
+          return;
+        }
+        let json = "[]";
+        try {
+          json = await pyodide.runPythonAsync(
+            `_get_signatures(${JSON.stringify(data.script)}, ${data.line}, ${data.column})`
+          );
+        } catch { }
+        self.postMessage({ type: "sig_results", requestId: data.requestId, signatures: JSON.parse(json) });
       });
       break;
 

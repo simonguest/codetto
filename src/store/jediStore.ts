@@ -9,6 +9,13 @@ export interface JediCompletion {
   docstring: string;
 }
 
+export interface JediSignature {
+  name: string;
+  params: string[];
+  docstring: string;
+  index: number | null;
+}
+
 export const jediStore = reactive({
   status: "disabled" as JediStatus,
   _worker: null as Worker | null,
@@ -43,6 +50,24 @@ export const jediStore = reactive({
     if (this._worker && this.status === "ready") {
       this._worker.postMessage({ type: "sync_packages", code });
     }
+  },
+
+  signatures(script: string, line: number, column: number): Promise<JediSignature[]> {
+    return new Promise(resolve => {
+      if (!this._worker || this.status !== "ready") {
+        resolve([]);
+        return;
+      }
+      const requestId = ++this._lastRequestId;
+      const handler = (event: MessageEvent) => {
+        if (event.data.type === "sig_results" && event.data.requestId === requestId) {
+          this._worker!.removeEventListener("message", handler);
+          resolve(event.data.signatures ?? []);
+        }
+      };
+      this._worker.addEventListener("message", handler);
+      this._worker.postMessage({ type: "signatures", script, line, column, requestId });
+    });
   },
 
   complete(script: string, line: number, column: number): Promise<JediCompletion[]> {
