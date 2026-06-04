@@ -103,7 +103,7 @@ async function jediCompletionSource(context: CompletionContext): Promise<Complet
       type: JEDI_TYPE_MAP[c.type] ?? "text",
       detail: c.type,
       info: c.docstring || undefined,
-      boost: c.name.startsWith("__") && c.name.endsWith("__") ? -99 : 0,
+      boost: c.name.startsWith("_") ? -99 : 0,
     })),
     validFor: /^\w*$/,
   };
