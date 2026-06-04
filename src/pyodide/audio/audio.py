@@ -10,6 +10,9 @@ def _audio_decode(json_str):
     result = json.loads(json_str)
     if result.get("type") == "error":
         raise RuntimeError(result.get("message", "Audio error"))
+    if result.get("type") == "unavailable":
+        print("Speech synthesis is not supported in this browser.")
+        return None
     return result.get("value")
 
 

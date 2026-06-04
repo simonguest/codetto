@@ -98,6 +98,11 @@ export async function handleAudioOp(
   }
 
   if (op === "tts_speak") {
+    if (typeof speechSynthesis === "undefined") {
+      viaRespond({ type: "unavailable" });
+      return true;
+    }
+
     const { text, voiceJson, wait } = command;
     const { lang, gender } = JSON.parse(voiceJson);
 
