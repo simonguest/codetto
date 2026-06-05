@@ -66,3 +66,31 @@ def _patched_sleep(secs):
         remaining_ms -= chunk_ms
 
 _time.sleep = _patched_sleep
+
+# Pyodide's httpx yields memoryview chunks instead of bytes in streaming mode,
+# which breaks the OpenAI SDK's SSE parser. Patch iter_bytes once on first import.
+_real_import = builtins.__import__
+
+def _patching_import(name, *args, **kwargs):
+    module = _real_import(name, *args, **kwargs)
+    if name == 'httpx' and not getattr(module.Response, '_iter_bytes_patched', False):
+        _orig_iter_bytes = module.Response.iter_bytes
+        def _fixed_iter_bytes(self, chunk_size=None):
+            for chunk in _orig_iter_bytes(self, chunk_size):
+                yield bytes(chunk) if isinstance(chunk, memoryview) else chunk
+        module.Response.iter_bytes = _fixed_iter_bytes
+        module.Response._iter_bytes_patched = True
+
+        def _strip_stainless(request):
+            for k in [k for k in request.headers if k.startswith('x-stainless')]:
+                del request.headers[k]
+
+        _orig_client_init = module.Client.__init__
+        def _fixed_client_init(self, *args, **kwargs):
+            hooks = kwargs.get('event_hooks') or {}
+            kwargs['event_hooks'] = {**hooks, 'request': [_strip_stainless] + list(hooks.get('request', []))}
+            _orig_client_init(self, *args, **kwargs)
+        module.Client.__init__ = _fixed_client_init
+    return module
+
+builtins.__import__ = _patching_import
