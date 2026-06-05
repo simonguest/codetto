@@ -145,7 +145,7 @@ async function initialize() {
   if (hasSharedArrayBuffer) {
     console.log("PyodideWorker: Setting up via.js bridge");
     const viaSignalSAB = new SharedArrayBuffer(8);  // two Int32 slots
-    const viaDataSAB = new SharedArrayBuffer(65536); // 64 KB result buffer
+    const viaDataSAB = new SharedArrayBuffer(4 * 1024 * 1024); // 4 MB — large enough for capture_frame JPEG payloads
     viaSignal = new Int32Array(viaSignalSAB);
     viaData = new Uint8Array(viaDataSAB);
     self.postMessage({ type: "via_init", viaSignalSAB, viaDataSAB });
