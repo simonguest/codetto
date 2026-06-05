@@ -41,6 +41,9 @@ export async function initializeCv(
     pyodide.globals.set("_cv_apply_image_to_segment", (canvasHandle: number, segmenterHandle: number, className: string, imagePath: string, opacity: number) =>
       viaSync({ op: "apply_image_to_segment", canvasHandle, segmenterHandle, className, imagePath, opacity })
     );
+    pyodide.globals.set("_cv_capture_frame", (cameraHandle: number) =>
+      viaSync({ op: "capture_frame", handle: cameraHandle })
+    );
   }
 
   await reloadCvPython(runPythonFile);

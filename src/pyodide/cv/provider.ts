@@ -564,5 +564,28 @@ export async function handleCvOp(
     return true;
   }
 
+  if (op === "capture_frame") {
+    const camera = viaGet(handle);
+    if (!camera?._video) {
+      viaRespond({ type: "error", message: "Invalid camera handle" });
+      return true;
+    }
+    const video = camera._video as HTMLVideoElement;
+    if (video.readyState < video.HAVE_CURRENT_DATA) {
+      viaRespond({ type: "error", message: "Camera not ready — no frame available yet" });
+      return true;
+    }
+    const w = camera._logicalWidth;
+    const h = camera._logicalHeight;
+    const offscreen = new OffscreenCanvas(w, h);
+    offscreen.getContext("2d")!.drawImage(video, 0, 0, w, h);
+    const blob = await offscreen.convertToBlob({ type: "image/jpeg", quality: 0.85 });
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    viaRespond({ type: "value", value: `data:image/jpeg;base64,${btoa(binary)}` });
+    return true;
+  }
+
   return false;
 }

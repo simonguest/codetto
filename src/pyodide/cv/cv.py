@@ -50,6 +50,17 @@ class DOMProxy:
             _via_set(handle, _camel(name), value)  # type: ignore
 
 
+def capture_frame(camera):
+    """Capture a still image from a running camera.
+
+    Returns a JPEG data URL string: "data:image/jpeg;base64,..."
+    Suitable for passing directly to a VLM API as an image input.
+    The camera must have produced at least one frame before calling this.
+    """
+    camera_handle = object.__getattribute__(camera, "_handle")
+    return _decode(_cv_capture_frame(camera_handle))  # type: ignore
+
+
 def start_camera(canvas=None):
     """Start a webcam stream.
 
@@ -243,6 +254,7 @@ class _PoseLandmarks:
 POSE = _PoseLandmarks()
 
 _cv_mod = types.ModuleType("cv")
+_cv_mod.capture_frame = capture_frame
 _cv_mod.start_camera = start_camera
 _cv_mod.start_face_detector = start_face_detector
 _cv_mod.start_object_detector = start_object_detector

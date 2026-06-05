@@ -241,6 +241,8 @@ export async function handleGraphicsOp(
             : null
         );
       },
+      getWidth() { return lw; },
+      getHeight() { return lh; },
       drawHands(hands: any[]) {
         drawToVideoLayer(
           (ctx) => { for (const hand of hands ?? []) drawHandLandmarks(ctx, hand); },
