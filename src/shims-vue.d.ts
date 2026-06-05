@@ -6,3 +6,8 @@ declare module '*.vue' {
 
 declare module '*.css'
 declare module 'vuetify/styles'
+
+declare module '*?raw' {
+  const content: string
+  export default content
+}

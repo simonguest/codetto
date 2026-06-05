@@ -1,5 +1,9 @@
 /// <reference lib="webworker" />
 
+import cvPyi from "./cv/cv.pyi?raw";
+import audioPyi from "./audio/audio.pyi?raw";
+import graphicsPyi from "./graphics/graphics.pyi?raw";
+
 let pyodide: any;
 
 const JEDI_INIT = `
@@ -68,13 +72,12 @@ async function initialize() {
   await pyodide.loadPackage(["jedi", "parso"]);
 
   pyodide.FS.mkdirTree("/stubs");
-  for (const [module, path] of [
-    ["cv", "./cv/cv.pyi"],
-    ["audio", "./audio/audio.pyi"],
-    ["graphics", "./graphics/graphics.pyi"],
+  for (const [module, content] of [
+    ["cv", cvPyi],
+    ["audio", audioPyi],
+    ["graphics", graphicsPyi],
   ]) {
-    const res = await fetch(new URL(path, import.meta.url));
-    pyodide.FS.writeFile(`/stubs/${module}.pyi`, await res.text());
+    pyodide.FS.writeFile(`/stubs/${module}.pyi`, content);
   }
   await pyodide.runPythonAsync(`import sys\nif '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`);
 
