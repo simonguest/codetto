@@ -92,7 +92,7 @@ def start_gesture_detector(camera: Camera, delegate: str = "GPU", num_hands: int
 def start_segmenter(camera: Camera, delegate: str = "GPU") -> Segmenter: ...
 def color_segment(canvas: Canvas, segmenter: Segmenter, class_name: str, color: str, opacity: float = 0.5) -> None: ...
 def apply_image_to_segment(canvas: Canvas, segmenter: Segmenter, class_name: str, image_path: str, opacity: float = 0.8) -> None: ...
-`,c=`from typing import Optional
+`,c=`from typing import Optional, Union
 
 class _VoiceSpec: ...
 
@@ -115,6 +115,39 @@ class Voice:
     KO_KR: _VoiceLocale
     HI_IN: _VoiceLocale
     AR_SA: _VoiceLocale
+
+Note = Union[str, list[str]]
+NoteSequence = list[tuple[Note, float]]
+
+def play_note(note: Note, duration: float) -> None:
+    """Play a note or chord and block until it finishes.
+
+    note: note name like "C4", "F#3", "Bb5", or a list of note names for a chord
+    duration: length in seconds
+    """
+    ...
+
+async def play_note_async(note: Note, duration: float) -> None:
+    """Play a note or chord without blocking.
+
+    note: note name like "C4", "F#3", "Bb5", or a list of note names for a chord
+    duration: length in seconds
+    """
+    ...
+
+def play_notes(notes: NoteSequence) -> None:
+    """Play a sequence of notes/chords and block until finished.
+
+    notes: list of (note, duration) tuples, e.g. [("C4", 0.5), (["C4","E4","G4"], 1.0)]
+    """
+    ...
+
+async def play_notes_async(notes: NoteSequence) -> None:
+    """Play a sequence of notes/chords without blocking.
+
+    notes: list of (note, duration) tuples, e.g. [("C4", 0.5), (["C4","E4","G4"], 1.0)]
+    """
+    ...
 
 def play(path: str) -> None:
     """Play an audio file and block until it finishes.
@@ -196,7 +229,7 @@ colors: Colors
 
 def canvas(width: int = 0, height: int = 0) -> Canvas: ...
 def draw_image(canvas: Canvas, path: str) -> None: ...
-`;let e;const _=`
+`;let n;const _=`
 import jedi
 import json
 
@@ -243,5 +276,5 @@ def _get_signatures(source, line, column):
         ])
     except Exception:
         return '[]'
-`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());e=await s()}await e.loadPackage(["jedi","parso"]),e.FS.mkdirTree("/stubs");for(const[s,i]of[["cv",r],["audio",c],["graphics",l]])e.FS.writeFile(`/stubs/${s}.pyi`,i);await e.runPythonAsync(`import sys
-if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await e.runPythonAsync(_)}let o=Promise.resolve();function a(s){o=o.then(s).catch(()=>{})}self.onmessage=s=>{const{type:i,...n}=s.data;switch(i){case"initialize":a(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":a(async()=>{try{e&&n.code&&await e.loadPackagesFromImports(n.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":a(async()=>{if(!e){self.postMessage({type:"sig_results",requestId:n.requestId,signatures:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_signatures(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"sig_results",requestId:n.requestId,signatures:JSON.parse(t)})});break;case"complete":a(async()=>{if(!e){self.postMessage({type:"completions",requestId:n.requestId,completions:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_completions(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"completions",requestId:n.requestId,completions:JSON.parse(t)})}),a(async()=>{try{e&&await e.loadPackagesFromImports(n.script)}catch{}});break}};
+`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());n=await s()}await n.loadPackage(["jedi","parso"]),n.FS.mkdirTree("/stubs");for(const[s,a]of[["cv",r],["audio",c],["graphics",l]])n.FS.writeFile(`/stubs/${s}.pyi`,a);await n.runPythonAsync(`import sys
+if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await n.runPythonAsync(_)}let i=Promise.resolve();function o(s){i=i.then(s).catch(()=>{})}self.onmessage=s=>{const{type:a,...e}=s.data;switch(a){case"initialize":o(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":o(async()=>{try{n&&e.code&&await n.loadPackagesFromImports(e.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":o(async()=>{if(!n){self.postMessage({type:"sig_results",requestId:e.requestId,signatures:[]});return}let t="[]";try{t=await n.runPythonAsync(`_get_signatures(${JSON.stringify(e.script)}, ${e.line}, ${e.column})`)}catch{}self.postMessage({type:"sig_results",requestId:e.requestId,signatures:JSON.parse(t)})});break;case"complete":o(async()=>{if(!n){self.postMessage({type:"completions",requestId:e.requestId,completions:[]});return}let t="[]";try{t=await n.runPythonAsync(`_get_completions(${JSON.stringify(e.script)}, ${e.line}, ${e.column})`)}catch{}self.postMessage({type:"completions",requestId:e.requestId,completions:JSON.parse(t)})}),o(async()=>{try{n&&await n.loadPackagesFromImports(e.script)}catch{}});break}};
