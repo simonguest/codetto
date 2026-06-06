@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 class _VoiceSpec: ...
 
@@ -21,6 +21,39 @@ class Voice:
     KO_KR: _VoiceLocale
     HI_IN: _VoiceLocale
     AR_SA: _VoiceLocale
+
+Note = Union[str, list[str]]
+NoteSequence = list[tuple[Note, float]]
+
+def play_note(note: Note, duration: float) -> None:
+    """Play a note or chord and block until it finishes.
+
+    note: note name like "C4", "F#3", "Bb5", or a list of note names for a chord
+    duration: length in seconds
+    """
+    ...
+
+async def play_note_async(note: Note, duration: float) -> None:
+    """Play a note or chord without blocking.
+
+    note: note name like "C4", "F#3", "Bb5", or a list of note names for a chord
+    duration: length in seconds
+    """
+    ...
+
+def play_notes(notes: NoteSequence) -> None:
+    """Play a sequence of notes/chords and block until finished.
+
+    notes: list of (note, duration) tuples, e.g. [("C4", 0.5), (["C4","E4","G4"], 1.0)]
+    """
+    ...
+
+async def play_notes_async(notes: NoteSequence) -> None:
+    """Play a sequence of notes/chords without blocking.
+
+    notes: list of (note, duration) tuples, e.g. [("C4", 0.5), (["C4","E4","G4"], 1.0)]
+    """
+    ...
 
 def play(path: str) -> None:
     """Play an audio file and block until it finishes.

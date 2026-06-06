@@ -1,6 +1,41 @@
-// Holds references to playing Audio elements so they are not garbage collected
-// before playback ends.
 const activeAudio = new Set<HTMLAudioElement>();
+
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext {
+  if (!audioCtx || audioCtx.state === "closed") {
+    audioCtx = new AudioContext();
+  }
+  return audioCtx;
+}
+
+const NOTE_RELEASE = 0.15;
+
+function scheduleNote(ctx: AudioContext, freq: number, startTime: number, duration: number): void {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.type = "triangle";
+  osc.frequency.value = freq;
+
+  const peak = 0.8;
+  const sustain = 0.4;
+  const attack = 0.005;
+  const decay = 0.12;
+  const releaseStart = Math.max(startTime + attack + decay, startTime + duration - NOTE_RELEASE);
+  const noteEnd = startTime + duration + NOTE_RELEASE;
+
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(peak, startTime + attack);
+  gain.gain.linearRampToValueAtTime(sustain * peak, startTime + attack + decay);
+  gain.gain.setValueAtTime(sustain * peak, releaseStart);
+  gain.gain.linearRampToValueAtTime(0, noteEnd);
+
+  osc.start(startTime);
+  osc.stop(noteEnd);
+}
 
 // null = untested, true = confirmed working, false = confirmed unavailable
 let ttsSupported: boolean | null = null;
@@ -141,6 +176,28 @@ export async function handleAudioOp(
         viaRespond({ type: "error", message: String(err) });
       }
     }
+    return true;
+  }
+
+  if (op === "note_play") {
+    const { notesJson, wait } = command;
+    const notes: Array<{ freqs: number[]; duration: number }> = JSON.parse(notesJson);
+    const ctx = getAudioContext();
+    await ctx.resume();
+
+    let t = ctx.currentTime;
+    for (const { freqs, duration } of notes) {
+      for (const freq of freqs) {
+        scheduleNote(ctx, freq, t, duration);
+      }
+      t += duration;
+    }
+
+    if (wait) {
+      const waitMs = Math.max(0, (t + NOTE_RELEASE - ctx.currentTime) * 1000);
+      await new Promise<void>(resolve => setTimeout(resolve, waitMs));
+    }
+    viaRespond({ type: "value", value: null });
     return true;
   }
 

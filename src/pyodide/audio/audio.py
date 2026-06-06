@@ -16,6 +16,28 @@ def _audio_decode(json_str):
     return result.get("value")
 
 
+_NOTE_OFFSETS = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+
+
+def _note_to_freq(note):
+    n = note.strip()
+    letter = n[0].upper()
+    i = 1
+    accidental = 0
+    if i < len(n) and n[i] in ("#", "b"):
+        accidental = 1 if n[i] == "#" else -1
+        i += 1
+    octave = int(n[i:])
+    midi = (octave + 1) * 12 + _NOTE_OFFSETS[letter] + accidental
+    return 440.0 * (2.0 ** ((midi - 69) / 12.0))
+
+
+def _note_or_chord_to_freqs(note):
+    if isinstance(note, (list, tuple)):
+        return [_note_to_freq(n) for n in note]
+    return [_note_to_freq(note)]
+
+
 def _audio_to_data_url(path):
     ext = _os.path.splitext(path)[1].lower().lstrip(".")
     mime = {
@@ -27,6 +49,30 @@ def _audio_to_data_url(path):
     with open(path, "rb") as f:
         data = f.read()
     return f"data:{mime};base64,{_base64.b64encode(data).decode()}"
+
+
+def play_note(note, duration):
+    """Play a note or chord and block until it finishes."""
+    notes_json = json.dumps([{"freqs": _note_or_chord_to_freqs(note), "duration": duration}])
+    _audio_decode(_audio_note_play(notes_json, True))  # type: ignore
+
+
+async def play_note_async(note, duration):
+    """Play a note or chord without blocking."""
+    notes_json = json.dumps([{"freqs": _note_or_chord_to_freqs(note), "duration": duration}])
+    _audio_decode(_audio_note_play(notes_json, False))  # type: ignore
+
+
+def play_notes(notes):
+    """Play a sequence of notes/chords and block until finished."""
+    items = [{"freqs": _note_or_chord_to_freqs(n), "duration": d} for n, d in notes]
+    _audio_decode(_audio_note_play(json.dumps(items), True))  # type: ignore
+
+
+async def play_notes_async(notes):
+    """Play a sequence of notes/chords without blocking."""
+    items = [{"freqs": _note_or_chord_to_freqs(n), "duration": d} for n, d in notes]
+    _audio_decode(_audio_note_play(json.dumps(items), False))  # type: ignore
 
 
 def play(path):
@@ -89,6 +135,10 @@ async def speak_async(text, voice=None):
 _audio_mod = types.ModuleType("audio")
 _audio_mod.play = play
 _audio_mod.play_async = play_async
+_audio_mod.play_note = play_note
+_audio_mod.play_note_async = play_note_async
+_audio_mod.play_notes = play_notes
+_audio_mod.play_notes_async = play_notes_async
 _audio_mod.speak = speak
 _audio_mod.speak_async = speak_async
 _audio_mod.Voice = Voice

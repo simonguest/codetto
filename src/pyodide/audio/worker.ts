@@ -13,6 +13,9 @@ export async function initializeAudio(
     pyodide.globals.set("_tts_speak", (text: string, voiceJson: string, wait: boolean) =>
       viaSync({ op: "tts_speak", text, voiceJson, wait })
     );
+    pyodide.globals.set("_audio_note_play", (notesJson: string, wait: boolean) =>
+      viaSync({ op: "note_play", notesJson, wait })
+    );
   }
 
   await reloadAudioPython(runPythonFile);

@@ -244,9 +244,9 @@ Provides an `audio` Python module for playing sound files from the virtual files
 
 | File | Purpose |
 |---|---|
-| `audio.py` | Python `audio` module: `play`, `play_async`, `speak`, `speak_async`, `Voice` |
-| `worker.ts` | Registers `_audio_play` / `_audio_play_nowait` / `_tts_speak` bridge globals; loads `audio.py` |
-| `provider.ts` | `handleAudioOp` — handles `audio_play` (HTMLAudioElement) and `tts_speak` (Web Speech API) ops |
+| `audio.py` | Python `audio` module: `play`, `play_async`, `play_note`, `play_note_async`, `play_notes`, `play_notes_async`, `speak`, `speak_async`, `Voice` |
+| `worker.ts` | Registers `_audio_play` / `_audio_play_nowait` / `_audio_note_play` / `_tts_speak` bridge globals; loads `audio.py` |
+| `provider.ts` | `handleAudioOp` — handles `audio_play` (HTMLAudioElement), `note_play` (Web Audio API), and `tts_speak` (Web Speech API) ops |
 
 **Python API:**
 ```python
@@ -254,6 +254,17 @@ import audio
 
 audio.play('/sample_files/chime.wav')        # blocks until playback ends
 await audio.play_async('/sample_files/chime.wav')  # starts playback, returns immediately
+
+# Note names: letter + optional accidental (# or b) + octave, e.g. "C4", "F#3", "Bb5"
+audio.play_note('C4', 0.5)                   # single note, blocks until done
+audio.play_note(['C4', 'E4', 'G4'], 1.0)     # chord (list of note names)
+await audio.play_note_async('A4', 0.25)      # non-blocking
+
+audio.play_notes([                           # sequence of (note, duration) tuples
+    ('C4', 0.4), ('E4', 0.4), ('G4', 0.4),
+    (['C4', 'E4', 'G4'], 1.0),               # chord in a sequence
+])
+await audio.play_notes_async(melody)         # non-blocking sequence
 
 audio.speak("Hello, world!")                          # blocks until speech finishes
 audio.speak("G'day!", voice=audio.Voice.EN_AU.FEMALE) # with a specific voice
@@ -267,9 +278,11 @@ await audio.speak_async("This doesn't block.")        # fire and forget
 
 **How file playback works:** Python reads the file bytes, base64-encodes them into a data URL, and sends it over the via.js bridge. The main thread creates an `HTMLAudioElement`, plays it, and — for `play()` — waits for the `ended` event before responding so the worker stays blocked for the duration. For `play_async()` the main thread responds as soon as `.play()` resolves. A module-level `Set` in `provider.ts` holds references to active `Audio` elements to prevent garbage collection before playback ends.
 
+**How note playback works:** Python parses note names to Hz (`440 * 2^((midi-69)/12)`), serialises the full sequence as JSON, and makes a single `_audio_note_play` via bridge call. The main thread schedules all notes up-front using `AudioContext` time offsets so the sequence plays gaplessly with no per-note round trips. Each note uses a triangle-wave oscillator with a piano-like ADSR envelope (5ms attack, 120ms decay, 0.4 sustain, 150ms release). The `AudioContext` is a lazy singleton. For `play_notes()` the main thread `setTimeout`-waits for the full sequence duration before responding; for `play_notes_async()` it responds immediately after scheduling.
+
 **How TTS works:** `speak()` / `speak_async()` send the text and a serialised `VoiceSpec` (`{lang, gender}`) over the via.js bridge. The main thread resolves the voice using a priority-ordered name list in `TTS_VOICE_PRIORITY` (keyed by `"lang/gender"`), falling back to any voice whose lang code matches, then calls the browser's `SpeechSynthesis` API. `speak()` blocks until the `onend` event; `speak_async()` responds immediately after `speechSynthesis.speak()`. Voices are loaded via `speechSynthesis.getVoices()` with an `onvoiceschanged` fallback — on a cold browser start, the first call may find no voices; a page refresh resolves this.
 
-`play_async` and `speak_async` are declared `async def` intentionally — students must `await` them, which is the teaching moment.
+`play_async`, `play_note_async`, `play_notes_async`, and `speak_async` are declared `async def` intentionally — students must `await` them, which is the teaching moment.
 
 Supported formats: WAV, MP3, OGG, M4A, FLAC (MIME type inferred from file extension).
 
