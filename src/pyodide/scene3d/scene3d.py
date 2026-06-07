@@ -48,6 +48,97 @@ class DOMProxy:
             _via_set(handle, _camel(name), value)  # type: ignore
 
 
+class _MatBricks:
+    Bricks057 = "mat:bricks/Bricks057"
+    Bricks075A = "mat:bricks/Bricks075A"
+
+class _MatCarpet:
+    Carpet006 = "mat:carpet/Carpet006"
+    Carpet008 = "mat:carpet/Carpet008"
+
+class _MatChip:
+    Chip001 = "mat:chip/Chip001"
+    Chip002 = "mat:chip/Chip002"
+    Chip004 = "mat:chip/Chip004"
+    Chip005 = "mat:chip/Chip005"
+
+class _MatFabric:
+    Fabric026 = "mat:fabric/Fabric026"
+    Fabric046 = "mat:fabric/Fabric046"
+    Fabric051 = "mat:fabric/Fabric051"
+    Fabric057 = "mat:fabric/Fabric057"
+    Fabric069 = "mat:fabric/Fabric069"
+
+class _MatGrass:
+    Grass001 = "mat:grass/Grass001"
+    Grass002 = "mat:grass/Grass002"
+    Grass003 = "mat:grass/Grass003"
+
+class _MatGravel:
+    Gravel026 = "mat:gravel/Gravel026"
+    Gravel035 = "mat:gravel/Gravel035"
+
+class _MatMarble:
+    Marble008 = "mat:marble/Marble008"
+    Marble012 = "mat:marble/Marble012"
+    Marble017 = "mat:marble/Marble017"
+    Marble023 = "mat:marble/Marble023"
+
+class _MatPlanets:
+    Earth = "mat-simple:planets/earth.jpg"
+    Jupiter = "mat-simple:planets/jupiter.jpg"
+    Mars = "mat-simple:planets/mars.jpg"
+    Mercury = "mat-simple:planets/mercury.jpg"
+    Neptune = "mat-simple:planets/neptune.jpg"
+    Saturn = "mat-simple:planets/saturn.jpg"
+    Uranus = "mat-simple:planets/uranus.jpg"
+    Venus = "mat-simple:planets/venus.jpg"
+
+class _MatRoad:
+    Road003 = "mat:road/Road003"
+    Road006 = "mat:road/Road006"
+    Road007 = "mat:road/Road007"
+
+class _MatRoofingTiles:
+    RoofingTiles003 = "mat:roofingtiles/RoofingTiles003"
+
+class _MatSnow:
+    Snow004 = "mat:snow/Snow004"
+
+class _MatSports:
+    Soccerball = "mat-simple:sports/soccerball.png"
+    Tennis = "mat-simple:sports/tennis.png"
+
+class _MatTiles:
+    Tiles033 = "mat:tiles/Tiles033"
+    Tiles053 = "mat:tiles/Tiles053"
+    Tiles065 = "mat:tiles/Tiles065"
+    Tiles074 = "mat:tiles/Tiles074"
+
+class _MatWood:
+    Wood048 = "mat:wood/Wood048"
+
+class _MatWoodFloor:
+    WoodFloor042 = "mat:woodfloor/WoodFloor042"
+
+class Material:
+    Bricks = _MatBricks()
+    Carpet = _MatCarpet()
+    Chip = _MatChip()
+    Fabric = _MatFabric()
+    Grass = _MatGrass()
+    Gravel = _MatGravel()
+    Marble = _MatMarble()
+    Planets = _MatPlanets()
+    Road = _MatRoad()
+    RoofingTiles = _MatRoofingTiles()
+    Snow = _MatSnow()
+    Sports = _MatSports()
+    Tiles = _MatTiles()
+    Wood = _MatWood()
+    WoodFloor = _MatWoodFloor()
+
+
 class Sky:
     CLOUDS = "env:clouds"
     DEEP_SPACE = "env:deep_space"
@@ -83,6 +174,7 @@ class Scene:
             "scale": mesh._scale,
             "color": mesh._color,
             "texture": mesh._texture,
+            "material": mesh._material,
             **mesh._params,
         }
         handle = _s3d_call("create_mesh", scene=self._handle, config=config)
@@ -140,6 +232,7 @@ class _Mesh:
         self._scale = {"x": 1, "y": 1, "z": 1}
         self._color = "#888888"
         self._texture = None
+        self._material = None
         self._rotation = {"x": 0, "y": 0, "z": 0}
         self._click_handler = None
         self._handle = None
@@ -188,6 +281,12 @@ class _Mesh:
             _s3d_call("set_scale", mesh=self._handle, x=x, y=y, z=z)
         return self
 
+    def set_material(self, material):
+        self._material = material
+        if self._handle is not None:
+            _s3d_call("set_material", mesh=self._handle, material=material)
+        return self
+
     def on_click(self, fn):
         self._click_handler = fn
         return self
@@ -213,4 +312,5 @@ _scene3d_mod = types.ModuleType("scene3d")
 _scene3d_mod.Scene = Scene
 _scene3d_mod.Shapes = Shapes
 _scene3d_mod.Sky = Sky
+_scene3d_mod.Material = Material
 sys.modules["scene3d"] = _scene3d_mod

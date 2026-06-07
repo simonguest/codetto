@@ -23,6 +23,33 @@ interface SceneController {
   _skybox: any | null;
 }
 
+const MATERIALS_BASE = "/3dassets/materials";
+
+async function createMaterial(matConst: string, scene: any): Promise<any> {
+  if (matConst.startsWith("mat-simple:")) {
+    const path = matConst.slice("mat-simple:".length);
+    const { StandardMaterial, Texture } = await import("@babylonjs/core");
+    const mat = new StandardMaterial("mat_" + path, scene);
+    mat.diffuseTexture = new Texture(`${MATERIALS_BASE}/${path}`, scene);
+    return mat;
+  }
+  if (matConst.startsWith("mat:")) {
+    const path = matConst.slice("mat:".length);
+    const [folder, name] = path.split("/");
+    const { PBRMaterial, Texture } = await import("@babylonjs/core");
+    const mat = new PBRMaterial("mat_" + name, scene);
+    mat.albedoTexture = new Texture(`${MATERIALS_BASE}/${folder}/${name}_1K_Color.jpg`, scene);
+    mat.bumpTexture = new Texture(`${MATERIALS_BASE}/${folder}/${name}_1K_NormalDX.jpg`, scene);
+    mat.invertNormalMapY = true; // DX normal maps have Y inverted vs OpenGL
+    mat.metallicTexture = new Texture(`${MATERIALS_BASE}/${folder}/${name}_1K_Roughness.jpg`, scene);
+    mat.useRoughnessFromMetallicTextureGreen = true;
+    mat.metallic = 0;
+    mat.roughness = 1;
+    return mat;
+  }
+  return null;
+}
+
 function hexToColor3(hex: string, BabylonColor3: any) {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16) / 255;
@@ -334,16 +361,20 @@ export async function handleScene3dOp(
         );
       }
 
-      // Apply material / color / texture
-      const mat = new StandardMaterial("mat_" + mesh.uniqueId, controller.scene);
-      if (cfg.texture) {
-        const { Texture } = await import("@babylonjs/core");
-        mat.diffuseTexture = new Texture(cfg.texture, controller.scene);
-        mat.diffuseColor = new Color3(1, 1, 1);
+      // Apply material / color / texture (material constant takes priority)
+      if (cfg.material) {
+        mesh.material = await createMaterial(cfg.material, controller.scene);
       } else {
-        mat.diffuseColor = hexToColor3(cfg.color ?? "#888888", Color3);
+        const mat = new StandardMaterial("mat_" + mesh.uniqueId, controller.scene);
+        if (cfg.texture) {
+          const { Texture } = await import("@babylonjs/core");
+          mat.diffuseTexture = new Texture(cfg.texture, controller.scene);
+          mat.diffuseColor = new Color3(1, 1, 1);
+        } else {
+          mat.diffuseColor = hexToColor3(cfg.color ?? "#888888", Color3);
+        }
+        mesh.material = mat;
       }
-      mesh.material = mat;
 
       const meshHandle = viaRegister(mesh);
       viaRespond({ type: "value", value: meshHandle });
@@ -399,6 +430,20 @@ export async function handleScene3dOp(
         (command.y ?? 0) * toRad,
         (command.z ?? 0) * toRad
       );
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── set_material ─────────────────────────────────────────────────────────────
+  if (cmd === "set_material") {
+    const mesh = viaGet(command.mesh);
+    if (mesh) {
+      const newMat = await createMaterial(command.material, mesh.getScene());
+      if (newMat) {
+        if (mesh.material) mesh.material.dispose();
+        mesh.material = newMat;
+      }
     }
     viaRespond({ type: "value", value: null });
     return true;
