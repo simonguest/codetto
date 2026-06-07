@@ -56,6 +56,9 @@ class Scene:
         self._frame_handler = None
         self._frame_registered = False
 
+    def __repr__(self):
+        return ""
+
     def set_sky(self, color="#87CEEB"):
         _s3d_call("set_sky", scene=self._handle, color=color)
         return self
@@ -68,8 +71,10 @@ class Scene:
         config = {
             "type": mesh._type,
             "position": mesh._position,
+            "rotation": mesh._rotation,
             "scale": mesh._scale,
             "color": mesh._color,
+            "texture": mesh._texture,
             **mesh._params,
         }
         handle = _s3d_call("create_mesh", scene=self._handle, config=config)
@@ -126,8 +131,13 @@ class _Mesh:
         self._position = {"x": 0, "y": 0, "z": 0}
         self._scale = {"x": 1, "y": 1, "z": 1}
         self._color = "#888888"
+        self._texture = None
+        self._rotation = {"x": 0, "y": 0, "z": 0}
         self._click_handler = None
         self._handle = None
+
+    def __repr__(self):
+        return ""
 
     def set_position(self, x=0, y=0, z=0):
         self._position = {"x": x, "y": y, "z": z}
@@ -139,6 +149,29 @@ class _Mesh:
         self._color = color
         if self._handle is not None:
             _s3d_call("set_color", mesh=self._handle, color=color)
+        return self
+
+    def set_texture(self, source):
+        if source.startswith("data:"):
+            data_url = source
+        elif source.startswith("/"):
+            ext = source.rsplit(".", 1)[-1].lower() if "." in source else "png"
+            mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                    "gif": "image/gif", "webp": "image/webp"}.get(ext, "image/png")
+            import base64
+            with open(source, "rb") as f:
+                data_url = f"data:{mime};base64," + base64.b64encode(f.read()).decode()
+        else:
+            data_url = "data:image/png;base64," + source
+        self._texture = data_url
+        if self._handle is not None:
+            _s3d_call("set_texture", mesh=self._handle, texture=data_url)
+        return self
+
+    def set_rotation(self, x=0, y=0, z=0):
+        self._rotation = {"x": x, "y": y, "z": z}
+        if self._handle is not None:
+            _s3d_call("set_rotation", mesh=self._handle, x=x, y=y, z=z)
         return self
 
     def set_scale(self, x=1, y=1, z=1):

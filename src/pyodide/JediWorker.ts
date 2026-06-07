@@ -3,6 +3,7 @@
 import cvPyi from "./cv/cv.pyi?raw";
 import audioPyi from "./audio/audio.pyi?raw";
 import graphicsPyi from "./graphics/graphics.pyi?raw";
+import scene3dPyi from "./scene3d/scene3d.pyi?raw";
 
 let pyodide: any;
 
@@ -76,6 +77,7 @@ async function initialize() {
     ["cv", cvPyi],
     ["audio", audioPyi],
     ["graphics", graphicsPyi],
+    ["scene3d", scene3dPyi],
   ]) {
     pyodide.FS.writeFile(`/stubs/${module}.pyi`, content);
   }

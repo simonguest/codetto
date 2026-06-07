@@ -293,6 +293,7 @@ Provides a `scene3d` Python module for interactive 3D scenes using BabylonJS.
 | File | Purpose |
 |---|---|
 | `scene3d.py` | Python `scene3d` module: `Scene`, `Shapes`, `DOMProxy` |
+| `scene3d.pyi` | Type stubs for editor autocompletion |
 | `worker.ts` | Registers `_scene3d_call` and `_scene3d_wait_event` bridge globals; loads `scene3d.py` |
 | `provider.ts` | `handleScene3dOp` — handles all scene/mesh ops and the deferred event loop on the main thread |
 
@@ -306,7 +307,10 @@ scene.set_ground(length=10, width=10)
 
 box = scene3d.Shapes.Box(width=1, height=1, depth=1)
 box.set_position(0, 0.5, 0)
+box.set_rotation(y=45)           # degrees; any combination of x, y, z
 box.set_color("#cc4400")
+box.set_texture('/sample_files/cat.png')   # file path from Pyodide FS
+box.set_texture('data:image/png;base64,…') # data URL (e.g. from AI model)
 box.on_click(lambda: box.set_color("#ff0000"))
 scene.add(box)
 
@@ -315,21 +319,25 @@ scene.add(sphere)
 
 ctx = scene.get_context('2d')    # 2D overlay canvas for HUD drawing
 
-t = 0.0
+angle = 0.0
 
 @scene.on_frame                  # also callable as scene.on_frame(fn)
-def animate(dt):                 # dt = seconds since last call
-    global t
-    t += dt
-    box.set_position(0, 0.5 + math.sin(t * 2), 0)
+def animate(dt):                 # dt = seconds since last frame
+    global angle
+    angle += 90 * dt
+    box.set_rotation(y=angle)
     ctx.clear()
     ctx.fill_style = '#ffffff'
-    ctx.fill_text(f'Time: {t:.1f}s', 10, 24)
+    ctx.fill_text(f'Angle: {angle:.1f}°', 10, 24)
 
 scene.run()                      # blocks Python in event loop; Stop button works
 ```
 
 **Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`.
+
+**Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `on_click(fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid.
+
+**`set_texture(source)`:** accepts a file path (reads from Pyodide FS, base64-encodes internally), a `data:` URL, or a raw base64 string (assumed PNG). Setting a texture resets `diffuseColor` to white; call `set_color` after `set_texture` to apply a tint.
 
 **Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll.
 

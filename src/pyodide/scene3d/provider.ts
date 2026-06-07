@@ -292,6 +292,16 @@ export async function handleScene3dOp(
         );
       }
 
+      // Apply rotation (degrees → radians)
+      if (cfg.rotation) {
+        const toRad = Math.PI / 180;
+        mesh.rotation = new Vector3(
+          (cfg.rotation.x ?? 0) * toRad,
+          (cfg.rotation.y ?? 0) * toRad,
+          (cfg.rotation.z ?? 0) * toRad
+        );
+      }
+
       // Apply scale
       if (cfg.scale) {
         mesh.scaling = new Vector3(
@@ -301,9 +311,15 @@ export async function handleScene3dOp(
         );
       }
 
-      // Apply material / color
+      // Apply material / color / texture
       const mat = new StandardMaterial("mat_" + mesh.uniqueId, controller.scene);
-      mat.diffuseColor = hexToColor3(cfg.color ?? "#888888", Color3);
+      if (cfg.texture) {
+        const { Texture } = await import("@babylonjs/core");
+        mat.diffuseTexture = new Texture(cfg.texture, controller.scene);
+        mat.diffuseColor = new Color3(1, 1, 1);
+      } else {
+        mat.diffuseColor = hexToColor3(cfg.color ?? "#888888", Color3);
+      }
       mesh.material = mat;
 
       const meshHandle = viaRegister(mesh);
@@ -344,6 +360,34 @@ export async function handleScene3dOp(
     if (mesh?.material) {
       const { Color3 } = await import("@babylonjs/core");
       mesh.material.diffuseColor = hexToColor3(command.color, Color3);
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── set_rotation ─────────────────────────────────────────────────────────────
+  if (cmd === "set_rotation") {
+    const mesh = viaGet(command.mesh);
+    if (mesh) {
+      const { Vector3 } = await import("@babylonjs/core");
+      const toRad = Math.PI / 180;
+      mesh.rotation = new Vector3(
+        (command.x ?? 0) * toRad,
+        (command.y ?? 0) * toRad,
+        (command.z ?? 0) * toRad
+      );
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── set_texture ──────────────────────────────────────────────────────────────
+  if (cmd === "set_texture") {
+    const mesh = viaGet(command.mesh);
+    if (mesh?.material) {
+      const { Texture, Color3 } = await import("@babylonjs/core");
+      mesh.material.diffuseTexture = new Texture(command.texture, mesh.material.getScene());
+      mesh.material.diffuseColor = new Color3(1, 1, 1);
     }
     viaRespond({ type: "value", value: null });
     return true;
