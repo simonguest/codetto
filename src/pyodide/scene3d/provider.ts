@@ -50,6 +50,15 @@ async function createMaterial(matConst: string, scene: any): Promise<any> {
   return null;
 }
 
+function applyTiling(material: any, u: number, v: number) {
+  for (const tex of (material.getActiveTextures?.() ?? [])) {
+    if (tex.uScale !== undefined) {
+      tex.uScale = u;
+      tex.vScale = v;
+    }
+  }
+}
+
 function hexToColor3(hex: string, BabylonColor3: any) {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16) / 255;
@@ -255,13 +264,17 @@ export async function handleScene3dOp(
       if (typeof command.color === "string" && command.color.startsWith("env:")) {
         const envName = command.color.slice(4);
         const { CubeTexture, MeshBuilder, StandardMaterial, Color3, Texture } = await import("@babylonjs/core");
-        const skybox = MeshBuilder.CreateBox("skyBox", { size: 1000 }, controller.scene);
-        const mat = new StandardMaterial("skyBoxMat", controller.scene);
-        mat.backFaceCulling = false;
-        mat.reflectionTexture = CubeTexture.CreateFromPrefilteredData(
+        // One CubeTexture instance shared between the skybox material and the scene
+        // environment so PBR materials automatically pick up IBL reflections.
+        const envTexture = CubeTexture.CreateFromPrefilteredData(
           `/3dassets/environments/${envName}.env`,
           controller.scene
         );
+        controller.scene.environmentTexture = envTexture;
+        const skybox = MeshBuilder.CreateBox("skyBox", { size: 1000 }, controller.scene);
+        const mat = new StandardMaterial("skyBoxMat", controller.scene);
+        mat.backFaceCulling = false;
+        mat.reflectionTexture = envTexture;
         mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         mat.diffuseColor = new Color3(0, 0, 0);
         mat.specularColor = new Color3(0, 0, 0);
@@ -274,6 +287,7 @@ export async function handleScene3dOp(
         const g = parseInt(h.slice(2, 4), 16) / 255;
         const b = parseInt(h.slice(4, 6), 16) / 255;
         controller.scene.clearColor = new Color4(r, g, b, 1.0);
+        controller.scene.environmentTexture = null;
       }
     }
     viaRespond({ type: "value", value: null });
@@ -283,19 +297,21 @@ export async function handleScene3dOp(
   // ── set_ground ───────────────────────────────────────────────────────────────
   if (cmd === "set_ground") {
     const controller = viaGet(command.scene) as SceneController | undefined;
-    if (controller) {
-      const { MeshBuilder, StandardMaterial, Color3 } = await import("@babylonjs/core");
-      const ground = MeshBuilder.CreateGround(
-        "ground",
-        { width: command.width ?? 10, height: command.length ?? 10, subdivisions: 2 },
-        controller.scene
-      );
-      const mat = new StandardMaterial("ground_mat", controller.scene);
-      mat.diffuseColor = new Color3(0.4, 0.6, 0.3);
-      mat.specularColor = new Color3(0.1, 0.1, 0.1);
-      ground.material = mat;
+    if (!controller) {
+      viaRespond({ type: "value", value: null });
+      return true;
     }
-    viaRespond({ type: "value", value: null });
+    const { MeshBuilder, StandardMaterial, Color3 } = await import("@babylonjs/core");
+    const ground = MeshBuilder.CreateGround(
+      "ground",
+      { width: command.width ?? 10, height: command.length ?? 10, subdivisions: 2 },
+      controller.scene
+    );
+    const mat = new StandardMaterial("ground_mat", controller.scene);
+    mat.diffuseColor = new Color3(0.4, 0.6, 0.3);
+    mat.specularColor = new Color3(0.1, 0.1, 0.1);
+    ground.material = mat;
+    viaRespond({ type: "value", value: viaRegister(ground) });
     return true;
   }
 
@@ -376,6 +392,20 @@ export async function handleScene3dOp(
         mesh.material = mat;
       }
 
+      // Apply glossiness if pre-set before scene.add()
+      if (cfg.glossiness != null && mesh.material?.roughness !== undefined) {
+        mesh.material.roughness = 1 - Math.max(0, Math.min(1, cfg.glossiness));
+      }
+
+      // Apply tiling if pre-set before scene.add()
+      if (cfg.tiling != null && mesh.material) {
+        const u = cfg.tiling.u ?? 1;
+        const v = cfg.tiling.v ?? u;
+        if (!mesh.metadata) mesh.metadata = {};
+        mesh.metadata.tiling = { u, v };
+        applyTiling(mesh.material, u, v);
+      }
+
       const meshHandle = viaRegister(mesh);
       viaRespond({ type: "value", value: meshHandle });
     } catch (err) {
@@ -435,6 +465,30 @@ export async function handleScene3dOp(
     return true;
   }
 
+  // ── set_glossiness ───────────────────────────────────────────────────────────
+  if (cmd === "set_glossiness") {
+    const mesh = viaGet(command.mesh);
+    if (mesh?.material?.roughness !== undefined) {
+      mesh.material.roughness = 1 - Math.max(0, Math.min(1, command.value ?? 0));
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── set_tiling ───────────────────────────────────────────────────────────────
+  if (cmd === "set_tiling") {
+    const mesh = viaGet(command.mesh);
+    if (mesh) {
+      const u = command.u ?? 1;
+      const v = command.v ?? u;
+      if (!mesh.metadata) mesh.metadata = {};
+      mesh.metadata.tiling = { u, v };
+      if (mesh.material) applyTiling(mesh.material, u, v);
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
   // ── set_material ─────────────────────────────────────────────────────────────
   if (cmd === "set_material") {
     const mesh = viaGet(command.mesh);
@@ -443,6 +497,8 @@ export async function handleScene3dOp(
       if (newMat) {
         if (mesh.material) mesh.material.dispose();
         mesh.material = newMat;
+        const t = mesh.metadata?.tiling;
+        if (t) applyTiling(newMat, t.u, t.v);
       }
     }
     viaRespond({ type: "value", value: null });

@@ -49,40 +49,40 @@ class DOMProxy:
 
 
 class _MatBricks:
-    Bricks057 = "mat:bricks/Bricks057"
-    Bricks075A = "mat:bricks/Bricks075A"
+    DarkClay = "mat:bricks/Bricks057"
+    RoughStone = "mat:bricks/Bricks075A"
 
 class _MatCarpet:
-    Carpet006 = "mat:carpet/Carpet006"
-    Carpet008 = "mat:carpet/Carpet008"
+    BlueCheckerboard = "mat:carpet/Carpet006"
+    BeigePattern = "mat:carpet/Carpet008"
 
 class _MatChip:
-    Chip001 = "mat:chip/Chip001"
-    Chip002 = "mat:chip/Chip002"
-    Chip004 = "mat:chip/Chip004"
-    Chip005 = "mat:chip/Chip005"
+    CircuitGreen = "mat:chip/Chip001"
+    CircuitRed = "mat:chip/Chip002"
+    CircuitOrange = "mat:chip/Chip004"
+    CircuitBlue = "mat:chip/Chip005"
 
 class _MatFabric:
-    Fabric026 = "mat:fabric/Fabric026"
-    Fabric046 = "mat:fabric/Fabric046"
-    Fabric051 = "mat:fabric/Fabric051"
-    Fabric057 = "mat:fabric/Fabric057"
-    Fabric069 = "mat:fabric/Fabric069"
+    BurgundyRibbed = "mat:fabric/Fabric026"
+    BlueQuilted = "mat:fabric/Fabric046"
+    BlackTartan = "mat:fabric/Fabric051"
+    RedBlueCheck = "mat:fabric/Fabric057"
+    Denim = "mat:fabric/Fabric069"
 
 class _MatGrass:
-    Grass001 = "mat:grass/Grass001"
-    Grass002 = "mat:grass/Grass002"
-    Grass003 = "mat:grass/Grass003"
+    Bright = "mat:grass/Grass001"
+    Dark = "mat:grass/Grass002"
+    Olive = "mat:grass/Grass003"
 
 class _MatGravel:
-    Gravel026 = "mat:gravel/Gravel026"
-    Gravel035 = "mat:gravel/Gravel035"
+    LightGray = "mat:gravel/Gravel026"
+    DarkGray = "mat:gravel/Gravel035"
 
 class _MatMarble:
-    Marble008 = "mat:marble/Marble008"
-    Marble012 = "mat:marble/Marble012"
-    Marble017 = "mat:marble/Marble017"
-    Marble023 = "mat:marble/Marble023"
+    Brown = "mat:marble/Marble008"
+    Gray = "mat:marble/Marble012"
+    Black = "mat:marble/Marble017"
+    Charcoal = "mat:marble/Marble023"
 
 class _MatPlanets:
     Earth = "mat-simple:planets/earth.jpg"
@@ -95,31 +95,31 @@ class _MatPlanets:
     Venus = "mat-simple:planets/venus.jpg"
 
 class _MatRoad:
-    Road003 = "mat:road/Road003"
-    Road006 = "mat:road/Road006"
-    Road007 = "mat:road/Road007"
+    PatchedAsphalt = "mat:road/Road003"
+    AsphaltEdges = "mat:road/Road006"
+    Highway = "mat:road/Road007"
 
 class _MatRoofingTiles:
-    RoofingTiles003 = "mat:roofingtiles/RoofingTiles003"
+    DarkSlate = "mat:roofingtiles/RoofingTiles003"
 
 class _MatSnow:
-    Snow004 = "mat:snow/Snow004"
+    Fresh = "mat:snow/Snow004"
 
 class _MatSports:
     Soccerball = "mat-simple:sports/soccerball.png"
     Tennis = "mat-simple:sports/tennis.png"
 
 class _MatTiles:
-    Tiles033 = "mat:tiles/Tiles033"
-    Tiles053 = "mat:tiles/Tiles053"
-    Tiles065 = "mat:tiles/Tiles065"
-    Tiles074 = "mat:tiles/Tiles074"
+    LimeGreen = "mat:tiles/Tiles033"
+    GreenMosaic = "mat:tiles/Tiles053"
+    WoodHexagon = "mat:tiles/Tiles065"
+    Checkerboard = "mat:tiles/Tiles074"
 
 class _MatWood:
-    Wood048 = "mat:wood/Wood048"
+    Oak = "mat:wood/Wood048"
 
 class _MatWoodFloor:
-    WoodFloor042 = "mat:woodfloor/WoodFloor042"
+    PinePlanks = "mat:woodfloor/WoodFloor042"
 
 class Material:
     Bricks = _MatBricks()
@@ -163,8 +163,10 @@ class Scene:
         return self
 
     def set_ground(self, length=10, width=10):
-        _s3d_call("set_ground", scene=self._handle, length=length, width=width)
-        return self
+        handle = _s3d_call("set_ground", scene=self._handle, length=length, width=width)
+        ground = _Mesh("ground")
+        ground._handle = handle
+        return ground
 
     def add(self, mesh):
         config = {
@@ -175,6 +177,8 @@ class Scene:
             "color": mesh._color,
             "texture": mesh._texture,
             "material": mesh._material,
+            "glossiness": mesh._glossiness,
+            "tiling": mesh._tiling,
             **mesh._params,
         }
         handle = _s3d_call("create_mesh", scene=self._handle, config=config)
@@ -233,6 +237,8 @@ class _Mesh:
         self._color = "#888888"
         self._texture = None
         self._material = None
+        self._glossiness = None
+        self._tiling = None
         self._rotation = {"x": 0, "y": 0, "z": 0}
         self._click_handler = None
         self._handle = None
@@ -285,6 +291,20 @@ class _Mesh:
         self._material = material
         if self._handle is not None:
             _s3d_call("set_material", mesh=self._handle, material=material)
+        return self
+
+    def set_glossiness(self, value):
+        self._glossiness = value
+        if self._handle is not None:
+            _s3d_call("set_glossiness", mesh=self._handle, value=value)
+        return self
+
+    def set_tiling(self, u, v=None):
+        if v is None:
+            v = u
+        self._tiling = {"u": u, "v": v}
+        if self._handle is not None:
+            _s3d_call("set_tiling", mesh=self._handle, u=u, v=v)
         return self
 
     def on_click(self, fn):

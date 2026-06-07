@@ -292,7 +292,7 @@ Provides a `scene3d` Python module for interactive 3D scenes using BabylonJS.
 
 | File | Purpose |
 |---|---|
-| `scene3d.py` | Python `scene3d` module: `Scene`, `Shapes`, `Sky`, `DOMProxy` |
+| `scene3d.py` | Python `scene3d` module: `Scene`, `Shapes`, `Sky`, `Material`, `DOMProxy` |
 | `scene3d.pyi` | Type stubs for editor autocompletion |
 | `worker.ts` | Registers `_scene3d_call` and `_scene3d_wait_event` bridge globals; loads `scene3d.py` |
 | `provider.ts` | `handleScene3dOp` — handles all scene/mesh ops and the deferred event loop on the main thread |
@@ -303,8 +303,11 @@ import scene3d, math
 
 scene = scene3d.Scene()          # creates canvas + BabylonJS engine, shows output immediately
 scene.set_sky("#87CEEB")         # background colour
-scene.set_sky(scene3d.Sky.CLOUDS)  # HDR environment skybox
-scene.set_ground(length=10, width=10)
+scene.set_sky(scene3d.Sky.CLOUDS)  # HDR environment skybox (also drives PBR reflections)
+
+ground = scene.set_ground(length=20, width=20)  # returns a Mesh
+ground.set_material(scene3d.Material.Grass.Bright)
+ground.set_tiling(10)            # repeat texture 10× across the ground
 
 box = scene3d.Shapes.Box(width=1, height=1, depth=1)
 box.set_position(0, 0.5, 0)
@@ -312,6 +315,8 @@ box.set_rotation(y=45)           # degrees; any combination of x, y, z
 box.set_color("#cc4400")
 box.set_texture('/sample_files/cat.png')   # file path from Pyodide FS
 box.set_texture('data:image/png;base64,…') # data URL (e.g. from AI model)
+box.set_material(scene3d.Material.Bricks.DarkClay)  # PBR material with normal + roughness maps
+box.set_glossiness(0.3)          # 0.0 = matte, 1.0 = mirror-like (PBR materials only)
 box.on_click(lambda: box.set_color("#ff0000"))
 scene.add(box)
 
@@ -336,11 +341,32 @@ scene.run()                      # blocks Python in event loop; Stop button work
 
 **Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`.
 
-**Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `on_click(fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid.
+**Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `set_material(constant)`, `set_glossiness(value)`, `set_tiling(u, v=None)`, `on_click(fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid. `set_ground` also returns a `Mesh` so all these methods apply to the ground too.
 
 **`set_texture(source)`:** accepts a file path (reads from Pyodide FS, base64-encodes internally), a `data:` URL, or a raw base64 string (assumed PNG). Setting a texture resets `diffuseColor` to white; call `set_color` after `set_texture` to apply a tint.
 
-**`set_sky(color)`:** accepts a hex colour string (e.g. `"#87CEEB"`) or a `Sky` constant for an HDR environment skybox. Available constants: `Sky.CLOUDS`, `Sky.DEEP_SPACE`, `Sky.MODERN_BUILDINGS`, `Sky.ORLANDO_STADIUM`, `Sky.PURE_SKY`. Environment files live at `public/3dassets/environments/`. Switching from an env skybox back to a flat colour (or to a different env) disposes the previous skybox mesh cleanly.
+**`set_material(constant)`:** applies a PBR material (colour + normal + roughness maps) or simple diffuse texture from the `Material` class. HDR material files live at `public/3dassets/materials/`. Categories and constants:
+- `Material.Bricks` — `DarkClay`, `RoughStone`
+- `Material.Carpet` — `BlueCheckerboard`, `BeigePattern`
+- `Material.Chip` — `CircuitGreen`, `CircuitRed`, `CircuitOrange`, `CircuitBlue`
+- `Material.Fabric` — `BurgundyRibbed`, `BlueQuilted`, `BlackTartan`, `RedBlueCheck`, `Denim`
+- `Material.Grass` — `Bright`, `Dark`, `Olive`
+- `Material.Gravel` — `LightGray`, `DarkGray`
+- `Material.Marble` — `Brown`, `Gray`, `Black`, `Charcoal`
+- `Material.Planets` — `Earth`, `Jupiter`, `Mars`, `Mercury`, `Neptune`, `Saturn`, `Uranus`, `Venus` (simple diffuse)
+- `Material.Road` — `PatchedAsphalt`, `AsphaltEdges`, `Highway`
+- `Material.RoofingTiles` — `DarkSlate`
+- `Material.Snow` — `Fresh`
+- `Material.Sports` — `Soccerball`, `Tennis` (simple diffuse)
+- `Material.Tiles` — `LimeGreen`, `GreenMosaic`, `WoodHexagon`, `Checkerboard`
+- `Material.Wood` — `Oak`
+- `Material.WoodFloor` — `PinePlanks`
+
+**`set_glossiness(value)`:** sets PBR surface glossiness; `0.0` = completely matte, `1.0` = mirror-like. Maps to `roughness = 1 - value` in BabylonJS `PBRMaterial`. No-ops on plain colour/texture meshes (which use `StandardMaterial`).
+
+**`set_tiling(u, v=None)`:** repeats the texture `u` times horizontally and `v` times vertically (`v` defaults to `u`). Stored in the mesh's BabylonJS `metadata` so it survives a subsequent `set_material` call.
+
+**`set_sky(color)`:** accepts a hex colour string (e.g. `"#87CEEB"`) or a `Sky` constant for an HDR environment skybox. Available constants: `Sky.CLOUDS`, `Sky.DEEP_SPACE`, `Sky.MODERN_BUILDINGS`, `Sky.ORLANDO_STADIUM`, `Sky.PURE_SKY`. Environment files live at `public/3dassets/environments/`. When an env skybox is set, the same `CubeTexture` is also assigned to `scene.environmentTexture` so PBR materials automatically receive Image-Based Lighting (IBL) reflections. Cleared when switching back to a flat colour.
 
 **Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll.
 

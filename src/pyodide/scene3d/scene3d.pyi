@@ -1,40 +1,40 @@
 from typing import Any, Callable
 
 class _MatBricks:
-    Bricks057: str
-    Bricks075A: str
+    DarkClay: str
+    RoughStone: str
 
 class _MatCarpet:
-    Carpet006: str
-    Carpet008: str
+    BlueCheckerboard: str
+    BeigePattern: str
 
 class _MatChip:
-    Chip001: str
-    Chip002: str
-    Chip004: str
-    Chip005: str
+    CircuitGreen: str
+    CircuitRed: str
+    CircuitOrange: str
+    CircuitBlue: str
 
 class _MatFabric:
-    Fabric026: str
-    Fabric046: str
-    Fabric051: str
-    Fabric057: str
-    Fabric069: str
+    BurgundyRibbed: str
+    BlueQuilted: str
+    BlackTartan: str
+    RedBlueCheck: str
+    Denim: str
 
 class _MatGrass:
-    Grass001: str
-    Grass002: str
-    Grass003: str
+    Bright: str
+    Dark: str
+    Olive: str
 
 class _MatGravel:
-    Gravel026: str
-    Gravel035: str
+    LightGray: str
+    DarkGray: str
 
 class _MatMarble:
-    Marble008: str
-    Marble012: str
-    Marble017: str
-    Marble023: str
+    Brown: str
+    Gray: str
+    Black: str
+    Charcoal: str
 
 class _MatPlanets:
     Earth: str
@@ -47,31 +47,31 @@ class _MatPlanets:
     Venus: str
 
 class _MatRoad:
-    Road003: str
-    Road006: str
-    Road007: str
+    PatchedAsphalt: str
+    AsphaltEdges: str
+    Highway: str
 
 class _MatRoofingTiles:
-    RoofingTiles003: str
+    DarkSlate: str
 
 class _MatSnow:
-    Snow004: str
+    Fresh: str
 
 class _MatSports:
     Soccerball: str
     Tennis: str
 
 class _MatTiles:
-    Tiles033: str
-    Tiles053: str
-    Tiles065: str
-    Tiles074: str
+    LimeGreen: str
+    GreenMosaic: str
+    WoodHexagon: str
+    Checkerboard: str
 
 class _MatWood:
-    Wood048: str
+    Oak: str
 
 class _MatWoodFloor:
-    WoodFloor042: str
+    PinePlanks: str
 
 class _Material:
     Bricks: _MatBricks
@@ -107,7 +107,13 @@ class Mesh:
     def set_color(self, color: str) -> "Mesh": ...
     def set_texture(self, source: str) -> "Mesh": ...
     def set_material(self, material: str) -> "Mesh":
-        """Apply a PBR material or simple texture (e.g. scene3d.Material.Bricks.Bricks057 or scene3d.Material.Planets.Earth)."""
+        """Apply a PBR material or simple texture (e.g. scene3d.Material.Bricks.DarkClay or scene3d.Material.Planets.Earth)."""
+        ...
+    def set_glossiness(self, value: float) -> "Mesh":
+        """Set surface glossiness for PBR materials: 0.0 = completely matte, 1.0 = mirror-like. Has no effect on plain colour or texture meshes."""
+        ...
+    def set_tiling(self, u: float, v: float = ...) -> "Mesh":
+        """Set how many times the texture repeats across the mesh. u = horizontal repeats, v = vertical (defaults to u). Persists across set_material calls."""
         ...
     def set_scale(self, x: float = 1, y: float = 1, z: float = 1) -> "Mesh": ...
     def on_click(self, fn: Callable[[], None]) -> "Mesh": ...
@@ -116,7 +122,7 @@ class Scene:
     def set_sky(self, color: str = "#87CEEB") -> "Scene":
         """Set the sky to a hex colour (e.g. "#87CEEB") or an environment map (e.g. scene3d.Sky.CLOUDS)."""
         ...
-    def set_ground(self, length: float = 10, width: float = 10) -> "Scene": ...
+    def set_ground(self, length: float = 10, width: float = 10) -> Mesh: ...
     def add(self, mesh: Mesh) -> "Scene": ...
     def get_context(self, ctx_type: str = "2d") -> DOMProxy: ...
     def on_frame(self, fn: Callable[[float], None]) -> Callable[[float], None]: ...
