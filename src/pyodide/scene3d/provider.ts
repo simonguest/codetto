@@ -20,6 +20,7 @@ interface SceneController {
   _pendingRespond: ((result: any) => void) | null;
   _eventQueue: any[];
   _overlayHandle: number;
+  _skybox: any | null;
 }
 
 function hexToColor3(hex: string, BabylonColor3: any) {
@@ -188,6 +189,7 @@ export async function handleScene3dOp(
         _pendingRespond: null,
         _eventQueue: [],
         _overlayHandle: overlayHandle,
+        _skybox: null,
       };
 
       // Wrapper div registers as the display element for CanvasResult.vue.
@@ -219,12 +221,33 @@ export async function handleScene3dOp(
   if (cmd === "set_sky") {
     const controller = viaGet(command.scene) as SceneController | undefined;
     if (controller) {
-      const { Color4 } = await import("@babylonjs/core");
-      const h = command.color.replace("#", "");
-      const r = parseInt(h.slice(0, 2), 16) / 255;
-      const g = parseInt(h.slice(2, 4), 16) / 255;
-      const b = parseInt(h.slice(4, 6), 16) / 255;
-      controller.scene.clearColor = new Color4(r, g, b, 1.0);
+      if (controller._skybox) {
+        controller._skybox.dispose();
+        controller._skybox = null;
+      }
+      if (typeof command.color === "string" && command.color.startsWith("env:")) {
+        const envName = command.color.slice(4);
+        const { CubeTexture, MeshBuilder, StandardMaterial, Color3, Texture } = await import("@babylonjs/core");
+        const skybox = MeshBuilder.CreateBox("skyBox", { size: 1000 }, controller.scene);
+        const mat = new StandardMaterial("skyBoxMat", controller.scene);
+        mat.backFaceCulling = false;
+        mat.reflectionTexture = CubeTexture.CreateFromPrefilteredData(
+          `/3dassets/environments/${envName}.env`,
+          controller.scene
+        );
+        mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+        mat.diffuseColor = new Color3(0, 0, 0);
+        mat.specularColor = new Color3(0, 0, 0);
+        skybox.material = mat;
+        controller._skybox = skybox;
+      } else {
+        const { Color4 } = await import("@babylonjs/core");
+        const h = (command.color as string).replace("#", "");
+        const r = parseInt(h.slice(0, 2), 16) / 255;
+        const g = parseInt(h.slice(2, 4), 16) / 255;
+        const b = parseInt(h.slice(4, 6), 16) / 255;
+        controller.scene.clearColor = new Color4(r, g, b, 1.0);
+      }
     }
     viaRespond({ type: "value", value: null });
     return true;

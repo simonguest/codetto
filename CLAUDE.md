@@ -292,7 +292,7 @@ Provides a `scene3d` Python module for interactive 3D scenes using BabylonJS.
 
 | File | Purpose |
 |---|---|
-| `scene3d.py` | Python `scene3d` module: `Scene`, `Shapes`, `DOMProxy` |
+| `scene3d.py` | Python `scene3d` module: `Scene`, `Shapes`, `Sky`, `DOMProxy` |
 | `scene3d.pyi` | Type stubs for editor autocompletion |
 | `worker.ts` | Registers `_scene3d_call` and `_scene3d_wait_event` bridge globals; loads `scene3d.py` |
 | `provider.ts` | `handleScene3dOp` — handles all scene/mesh ops and the deferred event loop on the main thread |
@@ -303,6 +303,7 @@ import scene3d, math
 
 scene = scene3d.Scene()          # creates canvas + BabylonJS engine, shows output immediately
 scene.set_sky("#87CEEB")         # background colour
+scene.set_sky(scene3d.Sky.CLOUDS)  # HDR environment skybox
 scene.set_ground(length=10, width=10)
 
 box = scene3d.Shapes.Box(width=1, height=1, depth=1)
@@ -338,6 +339,8 @@ scene.run()                      # blocks Python in event loop; Stop button work
 **Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `on_click(fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid.
 
 **`set_texture(source)`:** accepts a file path (reads from Pyodide FS, base64-encodes internally), a `data:` URL, or a raw base64 string (assumed PNG). Setting a texture resets `diffuseColor` to white; call `set_color` after `set_texture` to apply a tint.
+
+**`set_sky(color)`:** accepts a hex colour string (e.g. `"#87CEEB"`) or a `Sky` constant for an HDR environment skybox. Available constants: `Sky.CLOUDS`, `Sky.DEEP_SPACE`, `Sky.MODERN_BUILDINGS`, `Sky.ORLANDO_STADIUM`, `Sky.PURE_SKY`. Environment files live at `public/3dassets/environments/`. Switching from an env skybox back to a flat colour (or to a different env) disposes the previous skybox mesh cleanly.
 
 **Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll.
 

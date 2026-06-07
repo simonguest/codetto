@@ -48,6 +48,14 @@ class DOMProxy:
             _via_set(handle, _camel(name), value)  # type: ignore
 
 
+class Sky:
+    CLOUDS = "env:clouds"
+    DEEP_SPACE = "env:deep_space"
+    MODERN_BUILDINGS = "env:modern_buildings"
+    ORLANDO_STADIUM = "env:orlando_stadium"
+    PURE_SKY = "env:puresky"
+
+
 class Scene:
     def __init__(self):
         handle = _s3d_call("create_scene")
@@ -204,4 +212,5 @@ Shapes = _Shapes()
 _scene3d_mod = types.ModuleType("scene3d")
 _scene3d_mod.Scene = Scene
 _scene3d_mod.Shapes = Shapes
+_scene3d_mod.Sky = Sky
 sys.modules["scene3d"] = _scene3d_mod
