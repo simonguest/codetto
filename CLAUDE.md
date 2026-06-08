@@ -345,6 +345,27 @@ scene.run()                      # blocks Python in event loop; Stop button work
 
 **Mesh getters:** `get_position()` → `(x, y, z)` tuple, `get_rotation()` → `(x, y, z)` tuple in degrees, `get_scale()` → `(x, y, z)` tuple, `get_color()` → hex string. All read Python-side state (no bridge round-trip); values are always in sync because every `set_*` call updates the local state immediately. Note: once physics is added, `get_position()` and `get_rotation()` will need to read live BabylonJS state via the bridge instead.
 
+**`Group`:** groups multiple meshes under a shared `TransformNode` so they move and rotate as a single unit. Create a `Group`, add meshes to it with `group.add(mesh)`, then pass the group to `scene.add()`. Child mesh positions and rotations are relative to the group origin. The group supports `set_position`, `set_rotation`, `set_scale`, `get_position`, `get_rotation`, `get_scale` — identical signatures to `_Mesh`. Groups have no appearance of their own (`set_color`, `set_material`, etc. are not available on a `Group`). This is the correct foundation for physics: a future physics pass will attach a compound impostor to the `TransformNode`, keeping the assembly together as a single rigid body.
+
+```python
+car = scene3d.Group()
+
+body = scene3d.Shapes.Box(width=2, height=0.5, depth=1)
+body.set_color('#cc2200')
+
+wheel = scene3d.Shapes.Cylinder(diameter=0.4, height=0.15, tessellation=16)
+wheel.set_rotation(z=90)
+wheel.set_position(0.8, 0, 0.5)
+wheel.set_color('#222222')
+
+car.add(body)
+car.add(wheel)
+car.set_position(0, 0.5, 0)
+scene.add(car)                   # adds the TransformNode + all children in one call
+
+car.set_rotation(y=45)           # rotates the whole group; individual meshes stay intact
+```
+
 **`set_texture(source)`:** accepts a file path (reads from Pyodide FS, base64-encodes internally), a `data:` URL, or a raw base64 string (assumed PNG). Setting a texture resets `diffuseColor` to white; call `set_color` after `set_texture` to apply a tint.
 
 **`set_material(constant)`:** applies a PBR material (colour + normal + roughness maps) or simple diffuse texture from the `Material` class. HDR material files live at `public/3dassets/materials/`. Categories and constants:

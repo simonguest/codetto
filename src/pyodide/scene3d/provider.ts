@@ -315,6 +315,41 @@ export async function handleScene3dOp(
     return true;
   }
 
+  // ── create_group ─────────────────────────────────────────────────────────────
+  if (cmd === "create_group") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (!controller) {
+      viaRespond({ type: "error", message: "Invalid scene handle" });
+      return true;
+    }
+    const { TransformNode, Vector3 } = await import("@babylonjs/core");
+    const node = new TransformNode("group", controller.scene);
+    if (command.position) {
+      node.position = new Vector3(
+        command.position.x ?? 0,
+        command.position.y ?? 0,
+        command.position.z ?? 0
+      );
+    }
+    if (command.rotation) {
+      const toRad = Math.PI / 180;
+      node.rotation = new Vector3(
+        (command.rotation.x ?? 0) * toRad,
+        (command.rotation.y ?? 0) * toRad,
+        (command.rotation.z ?? 0) * toRad
+      );
+    }
+    if (command.scale) {
+      node.scaling = new Vector3(
+        command.scale.x ?? 1,
+        command.scale.y ?? 1,
+        command.scale.z ?? 1
+      );
+    }
+    viaRespond({ type: "value", value: viaRegister(node) });
+    return true;
+  }
+
   // ── create_mesh ──────────────────────────────────────────────────────────────
   if (cmd === "create_mesh") {
     const controller = viaGet(command.scene) as SceneController | undefined;
@@ -404,6 +439,11 @@ export async function handleScene3dOp(
         if (!mesh.metadata) mesh.metadata = {};
         mesh.metadata.tiling = { u, v };
         applyTiling(mesh.material, u, v);
+      }
+
+      if (command.parent != null) {
+        const parentNode = viaGet(command.parent);
+        if (parentNode) mesh.parent = parentNode;
       }
 
       const meshHandle = viaRegister(mesh);
