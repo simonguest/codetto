@@ -307,6 +307,18 @@ class _Mesh:
             _s3d_call("set_tiling", mesh=self._handle, u=u, v=v)
         return self
 
+    def get_position(self):
+        return (self._position["x"], self._position["y"], self._position["z"])
+
+    def get_rotation(self):
+        return (self._rotation["x"], self._rotation["y"], self._rotation["z"])
+
+    def get_scale(self):
+        return (self._scale["x"], self._scale["y"], self._scale["z"])
+
+    def get_color(self):
+        return self._color
+
     def on_click(self, fn):
         self._click_handler = fn
         return self

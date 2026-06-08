@@ -347,6 +347,10 @@ class Mesh:
         """Set how many times the texture repeats across the mesh. u = horizontal repeats, v = vertical (defaults to u). Persists across set_material calls."""
         ...
     def set_scale(self, x: float = 1, y: float = 1, z: float = 1) -> "Mesh": ...
+    def get_position(self) -> tuple[float, float, float]: ...
+    def get_rotation(self) -> tuple[float, float, float]: ...
+    def get_scale(self) -> tuple[float, float, float]: ...
+    def get_color(self) -> str: ...
     def on_click(self, fn: Callable[[], None]) -> "Mesh": ...
 
 class Scene:
@@ -369,7 +373,7 @@ class _Shapes:
 
 Shapes: _Shapes
 Material: _Material
-`;let n;const f=`
+`;let e;const f=`
 import jedi
 import json
 
@@ -416,5 +420,5 @@ def _get_signatures(source, line, column):
         ])
     except Exception:
         return '[]'
-`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());n=await s()}await n.loadPackage(["jedi","parso"]),n.FS.mkdirTree("/stubs");for(const[s,o]of[["cv",i],["audio",l],["graphics",c],["scene3d",_]])n.FS.writeFile(`/stubs/${s}.pyi`,o);await n.runPythonAsync(`import sys
-if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await n.runPythonAsync(f)}let r=Promise.resolve();function a(s){r=r.then(s).catch(()=>{})}self.onmessage=s=>{const{type:o,...e}=s.data;switch(o){case"initialize":a(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":a(async()=>{try{n&&e.code&&await n.loadPackagesFromImports(e.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":a(async()=>{if(!n){self.postMessage({type:"sig_results",requestId:e.requestId,signatures:[]});return}let t="[]";try{t=await n.runPythonAsync(`_get_signatures(${JSON.stringify(e.script)}, ${e.line}, ${e.column})`)}catch{}self.postMessage({type:"sig_results",requestId:e.requestId,signatures:JSON.parse(t)})});break;case"complete":a(async()=>{if(!n){self.postMessage({type:"completions",requestId:e.requestId,completions:[]});return}let t="[]";try{t=await n.runPythonAsync(`_get_completions(${JSON.stringify(e.script)}, ${e.line}, ${e.column})`)}catch{}self.postMessage({type:"completions",requestId:e.requestId,completions:JSON.parse(t)})}),a(async()=>{try{n&&await n.loadPackagesFromImports(e.script)}catch{}});break}};
+`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());e=await s()}await e.loadPackage(["jedi","parso"]),e.FS.mkdirTree("/stubs");for(const[s,o]of[["cv",i],["audio",l],["graphics",c],["scene3d",_]])e.FS.writeFile(`/stubs/${s}.pyi`,o);await e.runPythonAsync(`import sys
+if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await e.runPythonAsync(f)}let r=Promise.resolve();function a(s){r=r.then(s).catch(()=>{})}self.onmessage=s=>{const{type:o,...n}=s.data;switch(o){case"initialize":a(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":a(async()=>{try{e&&n.code&&await e.loadPackagesFromImports(n.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":a(async()=>{if(!e){self.postMessage({type:"sig_results",requestId:n.requestId,signatures:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_signatures(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"sig_results",requestId:n.requestId,signatures:JSON.parse(t)})});break;case"complete":a(async()=>{if(!e){self.postMessage({type:"completions",requestId:n.requestId,completions:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_completions(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"completions",requestId:n.requestId,completions:JSON.parse(t)})}),a(async()=>{try{e&&await e.loadPackagesFromImports(n.script)}catch{}});break}};
