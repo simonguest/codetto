@@ -343,6 +343,8 @@ scene.run()                      # blocks Python in event loop; Stop button work
 
 **Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `set_material(constant)`, `set_glossiness(value)`, `set_tiling(u, v=None)`, `on_click(fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid. `set_ground` also returns a `Mesh` so all these methods apply to the ground too.
 
+**Mesh getters:** `get_position()` → `(x, y, z)` tuple, `get_rotation()` → `(x, y, z)` tuple in degrees, `get_scale()` → `(x, y, z)` tuple, `get_color()` → hex string. All read Python-side state (no bridge round-trip); values are always in sync because every `set_*` call updates the local state immediately. Note: once physics is added, `get_position()` and `get_rotation()` will need to read live BabylonJS state via the bridge instead.
+
 **`set_texture(source)`:** accepts a file path (reads from Pyodide FS, base64-encodes internally), a `data:` URL, or a raw base64 string (assumed PNG). Setting a texture resets `diffuseColor` to white; call `set_color` after `set_texture` to apply a tint.
 
 **`set_material(constant)`:** applies a PBR material (colour + normal + roughness maps) or simple diffuse texture from the `Material` class. HDR material files live at `public/3dassets/materials/`. Categories and constants:
