@@ -1,4 +1,4 @@
-var r=`from graphics import Canvas
+var i=`from graphics import Canvas
 
 class Camera:
     def stop(self) -> None: ...
@@ -231,6 +231,96 @@ def canvas(width: int = 0, height: int = 0) -> Canvas: ...
 def draw_image(canvas: Canvas, path: str) -> None: ...
 `,_=`from typing import Any, Callable
 
+class _MatBricks:
+    DarkClay: str
+    RoughStone: str
+
+class _MatCarpet:
+    BlueCheckerboard: str
+    BeigePattern: str
+
+class _MatChip:
+    CircuitGreen: str
+    CircuitRed: str
+    CircuitOrange: str
+    CircuitBlue: str
+
+class _MatFabric:
+    BurgundyRibbed: str
+    BlueQuilted: str
+    BlackTartan: str
+    RedBlueCheck: str
+    Denim: str
+
+class _MatGrass:
+    Bright: str
+    Dark: str
+    Olive: str
+
+class _MatGravel:
+    LightGray: str
+    DarkGray: str
+
+class _MatMarble:
+    Brown: str
+    Gray: str
+    Black: str
+    Charcoal: str
+
+class _MatPlanets:
+    Earth: str
+    Jupiter: str
+    Mars: str
+    Mercury: str
+    Neptune: str
+    Saturn: str
+    Uranus: str
+    Venus: str
+
+class _MatRoad:
+    PatchedAsphalt: str
+    AsphaltEdges: str
+    Highway: str
+
+class _MatRoofingTiles:
+    DarkSlate: str
+
+class _MatSnow:
+    Fresh: str
+
+class _MatSports:
+    Soccerball: str
+    Tennis: str
+
+class _MatTiles:
+    LimeGreen: str
+    GreenMosaic: str
+    WoodHexagon: str
+    Checkerboard: str
+
+class _MatWood:
+    Oak: str
+
+class _MatWoodFloor:
+    PinePlanks: str
+
+class _Material:
+    Bricks: _MatBricks
+    Carpet: _MatCarpet
+    Chip: _MatChip
+    Fabric: _MatFabric
+    Grass: _MatGrass
+    Gravel: _MatGravel
+    Marble: _MatMarble
+    Planets: _MatPlanets
+    Road: _MatRoad
+    RoofingTiles: _MatRoofingTiles
+    Snow: _MatSnow
+    Sports: _MatSports
+    Tiles: _MatTiles
+    Wood: _MatWood
+    WoodFloor: _MatWoodFloor
+
 class Sky:
     CLOUDS: str
     DEEP_SPACE: str
@@ -247,6 +337,15 @@ class Mesh:
     def set_rotation(self, x: float = 0, y: float = 0, z: float = 0) -> "Mesh": ...
     def set_color(self, color: str) -> "Mesh": ...
     def set_texture(self, source: str) -> "Mesh": ...
+    def set_material(self, material: str) -> "Mesh":
+        """Apply a PBR material or simple texture (e.g. scene3d.Material.Bricks.DarkClay or scene3d.Material.Planets.Earth)."""
+        ...
+    def set_glossiness(self, value: float) -> "Mesh":
+        """Set surface glossiness for PBR materials: 0.0 = completely matte, 1.0 = mirror-like. Has no effect on plain colour or texture meshes."""
+        ...
+    def set_tiling(self, u: float, v: float = ...) -> "Mesh":
+        """Set how many times the texture repeats across the mesh. u = horizontal repeats, v = vertical (defaults to u). Persists across set_material calls."""
+        ...
     def set_scale(self, x: float = 1, y: float = 1, z: float = 1) -> "Mesh": ...
     def on_click(self, fn: Callable[[], None]) -> "Mesh": ...
 
@@ -254,7 +353,7 @@ class Scene:
     def set_sky(self, color: str = "#87CEEB") -> "Scene":
         """Set the sky to a hex colour (e.g. "#87CEEB") or an environment map (e.g. scene3d.Sky.CLOUDS)."""
         ...
-    def set_ground(self, length: float = 10, width: float = 10) -> "Scene": ...
+    def set_ground(self, length: float = 10, width: float = 10) -> Mesh: ...
     def add(self, mesh: Mesh) -> "Scene": ...
     def get_context(self, ctx_type: str = "2d") -> DOMProxy: ...
     def on_frame(self, fn: Callable[[float], None]) -> Callable[[float], None]: ...
@@ -269,7 +368,8 @@ class _Shapes:
     def Cylinder(diameter: float = 1, height: float = 1, tessellation: int = 24) -> Mesh: ...
 
 Shapes: _Shapes
-`;let e;const f=`
+Material: _Material
+`;let n;const f=`
 import jedi
 import json
 
@@ -316,5 +416,5 @@ def _get_signatures(source, line, column):
         ])
     except Exception:
         return '[]'
-`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());e=await s()}await e.loadPackage(["jedi","parso"]),e.FS.mkdirTree("/stubs");for(const[s,a]of[["cv",r],["audio",l],["graphics",c],["scene3d",_]])e.FS.writeFile(`/stubs/${s}.pyi`,a);await e.runPythonAsync(`import sys
-if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await e.runPythonAsync(f)}let i=Promise.resolve();function o(s){i=i.then(s).catch(()=>{})}self.onmessage=s=>{const{type:a,...n}=s.data;switch(a){case"initialize":o(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":o(async()=>{try{e&&n.code&&await e.loadPackagesFromImports(n.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":o(async()=>{if(!e){self.postMessage({type:"sig_results",requestId:n.requestId,signatures:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_signatures(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"sig_results",requestId:n.requestId,signatures:JSON.parse(t)})});break;case"complete":o(async()=>{if(!e){self.postMessage({type:"completions",requestId:n.requestId,completions:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_completions(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"completions",requestId:n.requestId,completions:JSON.parse(t)})}),o(async()=>{try{e&&await e.loadPackagesFromImports(n.script)}catch{}});break}};
+`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());n=await s()}await n.loadPackage(["jedi","parso"]),n.FS.mkdirTree("/stubs");for(const[s,o]of[["cv",i],["audio",l],["graphics",c],["scene3d",_]])n.FS.writeFile(`/stubs/${s}.pyi`,o);await n.runPythonAsync(`import sys
+if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await n.runPythonAsync(f)}let r=Promise.resolve();function a(s){r=r.then(s).catch(()=>{})}self.onmessage=s=>{const{type:o,...e}=s.data;switch(o){case"initialize":a(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":a(async()=>{try{n&&e.code&&await n.loadPackagesFromImports(e.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":a(async()=>{if(!n){self.postMessage({type:"sig_results",requestId:e.requestId,signatures:[]});return}let t="[]";try{t=await n.runPythonAsync(`_get_signatures(${JSON.stringify(e.script)}, ${e.line}, ${e.column})`)}catch{}self.postMessage({type:"sig_results",requestId:e.requestId,signatures:JSON.parse(t)})});break;case"complete":a(async()=>{if(!n){self.postMessage({type:"completions",requestId:e.requestId,completions:[]});return}let t="[]";try{t=await n.runPythonAsync(`_get_completions(${JSON.stringify(e.script)}, ${e.line}, ${e.column})`)}catch{}self.postMessage({type:"completions",requestId:e.requestId,completions:JSON.parse(t)})}),a(async()=>{try{n&&await n.loadPackagesFromImports(e.script)}catch{}});break}};
