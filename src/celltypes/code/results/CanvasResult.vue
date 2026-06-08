@@ -9,6 +9,7 @@ const props = defineProps<{
 const outerRef = ref<HTMLDivElement | null>(null);
 const containerRef = ref<HTMLDivElement | null>(null);
 const isFullscreen = ref(false);
+const fullscreenSupported = document.fullscreenEnabled;
 
 function mount() {
   const container = containerRef.value;
@@ -48,7 +49,7 @@ watch(() => props.value, mount);
 <template>
   <div ref="outerRef" class="s3d-container canvas-output">
     <div ref="containerRef" />
-    <div class="s3d-overlay" :class="{ 's3d-overlay--visible': isFullscreen }">
+    <div v-if="fullscreenSupported" class="s3d-overlay" :class="{ 's3d-overlay--visible': isFullscreen }">
       <v-btn
         icon
         size="small"

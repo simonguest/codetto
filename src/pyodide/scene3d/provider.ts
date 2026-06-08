@@ -308,7 +308,7 @@ export async function handleScene3dOp(
       controller.scene
     );
     const mat = new StandardMaterial("ground_mat", controller.scene);
-    mat.diffuseColor = new Color3(0.4, 0.6, 0.3);
+    mat.diffuseColor = hexToColor3("#888888", Color3);
     mat.specularColor = new Color3(0.1, 0.1, 0.1);
     ground.material = mat;
     viaRespond({ type: "value", value: viaRegister(ground) });
