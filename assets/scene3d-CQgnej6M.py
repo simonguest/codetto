@@ -168,7 +168,7 @@ class Scene:
         ground._handle = handle
         return ground
 
-    def add(self, mesh):
+    def _add_mesh(self, mesh, parent=None):
         config = {
             "type": mesh._type,
             "position": mesh._position,
@@ -181,11 +181,26 @@ class Scene:
             "tiling": mesh._tiling,
             **mesh._params,
         }
-        handle = _s3d_call("create_mesh", scene=self._handle, config=config)
+        kw = {"scene": self._handle, "config": config}
+        if parent is not None:
+            kw["parent"] = parent
+        handle = _s3d_call("create_mesh", **kw)
         mesh._handle = handle
         if mesh._click_handler is not None:
             self._click_handlers[handle] = mesh._click_handler
             _s3d_call("register_click", scene=self._handle, mesh=handle)
+
+    def add(self, obj):
+        if isinstance(obj, Group):
+            group_handle = _s3d_call("create_group", scene=self._handle,
+                                     position=obj._position,
+                                     rotation=obj._rotation,
+                                     scale=obj._scale)
+            obj._handle = group_handle
+            for mesh in obj._children:
+                self._add_mesh(mesh, parent=group_handle)
+            return self
+        self._add_mesh(obj)
         return self
 
     def get_context(self, ctx_type='2d'):
@@ -324,6 +339,49 @@ class _Mesh:
         return self
 
 
+class Group:
+    def __init__(self):
+        self._children = []
+        self._position = {"x": 0, "y": 0, "z": 0}
+        self._rotation = {"x": 0, "y": 0, "z": 0}
+        self._scale = {"x": 1, "y": 1, "z": 1}
+        self._handle = None
+
+    def __repr__(self):
+        return ""
+
+    def add(self, mesh):
+        self._children.append(mesh)
+        return self
+
+    def set_position(self, x=0, y=0, z=0):
+        self._position = {"x": x, "y": y, "z": z}
+        if self._handle is not None:
+            _s3d_call("set_position", mesh=self._handle, x=x, y=y, z=z)
+        return self
+
+    def set_rotation(self, x=0, y=0, z=0):
+        self._rotation = {"x": x, "y": y, "z": z}
+        if self._handle is not None:
+            _s3d_call("set_rotation", mesh=self._handle, x=x, y=y, z=z)
+        return self
+
+    def set_scale(self, x=1, y=1, z=1):
+        self._scale = {"x": x, "y": y, "z": z}
+        if self._handle is not None:
+            _s3d_call("set_scale", mesh=self._handle, x=x, y=y, z=z)
+        return self
+
+    def get_position(self):
+        return (self._position["x"], self._position["y"], self._position["z"])
+
+    def get_rotation(self):
+        return (self._rotation["x"], self._rotation["y"], self._rotation["z"])
+
+    def get_scale(self):
+        return (self._scale["x"], self._scale["y"], self._scale["z"])
+
+
 class _Shapes:
     @staticmethod
     def Box(width=1, height=1, depth=1):
@@ -343,6 +401,7 @@ Shapes = _Shapes()
 _scene3d_mod = types.ModuleType("scene3d")
 _scene3d_mod.Scene = Scene
 _scene3d_mod.Shapes = Shapes
+_scene3d_mod.Group = Group
 _scene3d_mod.Sky = Sky
 _scene3d_mod.Material = Material
 sys.modules["scene3d"] = _scene3d_mod
