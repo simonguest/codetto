@@ -89,6 +89,7 @@ class _MatPlanets:
     Jupiter = "mat-simple:planets/jupiter.jpg"
     Mars = "mat-simple:planets/mars.jpg"
     Mercury = "mat-simple:planets/mercury.jpg"
+    Moon = "mat-simple:planets/moon.jpg"
     Neptune = "mat-simple:planets/neptune.jpg"
     Saturn = "mat-simple:planets/saturn.jpg"
     Uranus = "mat-simple:planets/uranus.jpg"

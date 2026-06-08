@@ -376,7 +376,7 @@ car.set_rotation(y=45)           # rotates the whole group; individual meshes st
 - `Material.Grass` — `Bright`, `Dark`, `Olive`
 - `Material.Gravel` — `LightGray`, `DarkGray`
 - `Material.Marble` — `Brown`, `Gray`, `Black`, `Charcoal`
-- `Material.Planets` — `Earth`, `Jupiter`, `Mars`, `Mercury`, `Neptune`, `Saturn`, `Uranus`, `Venus` (simple diffuse)
+- `Material.Planets` — `Earth`, `Jupiter`, `Mars`, `Mercury`, `Neptune`, `Saturn`, `Uranus`, `Venus`, `Moon` (simple diffuse)
 - `Material.Road` — `PatchedAsphalt`, `AsphaltEdges`, `Highway`
 - `Material.RoofingTiles` — `DarkSlate`
 - `Material.Snow` — `Fresh`

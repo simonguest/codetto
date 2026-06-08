@@ -41,6 +41,7 @@ class _MatPlanets:
     Jupiter: str
     Mars: str
     Mercury: str
+    Moon: str
     Neptune: str
     Saturn: str
     Uranus: str
