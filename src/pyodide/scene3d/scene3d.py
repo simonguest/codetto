@@ -148,6 +148,49 @@ class Sky:
     PURE_SKY = "env:puresky"
 
 
+class _AmbientLight:
+    def __init__(self, scene_handle):
+        self._scene = scene_handle
+
+    def __repr__(self):
+        return ""
+
+    def set_brightness(self, value):
+        _s3d_call("ambient_set_brightness", scene=self._scene, value=value)
+        return self
+
+    def set_color(self, color):
+        _s3d_call("ambient_set_color", scene=self._scene, color=color)
+        return self
+
+
+class _Light:
+    def __init__(self, handle):
+        self._handle = handle
+
+    def __repr__(self):
+        return ""
+
+    def set_position(self, x=0, y=0, z=0):
+        _s3d_call("light_set_position", light=self._handle, x=x, y=y, z=z)
+        return self
+
+    def set_brightness(self, value):
+        _s3d_call("light_set_brightness", light=self._handle, value=value)
+        return self
+
+    def set_color(self, color):
+        _s3d_call("light_set_color", light=self._handle, color=color)
+        return self
+
+    def set_visible(self, visible):
+        _s3d_call("light_set_visible", light=self._handle, visible=visible)
+        return self
+
+    def remove(self):
+        _s3d_call("light_remove", light=self._handle)
+
+
 class _Camera:
     def __init__(self, scene_handle):
         self._scene = scene_handle
@@ -197,6 +240,7 @@ class Scene:
         self._frame_handler = None
         self._frame_registered = False
         self.camera = _Camera(handle)
+        self.ambient = _AmbientLight(handle)
 
     def __repr__(self):
         return ""
@@ -245,6 +289,10 @@ class Scene:
             return self
         self._add_mesh(obj)
         return self
+
+    def add_light(self, x=0, y=5, z=0):
+        handle = _s3d_call("light_add", scene=self._handle, x=x, y=y, z=z)
+        return _Light(handle)
 
     def get_context(self, ctx_type='2d'):
         """Return a DOMProxy for the 2D overlay canvas.

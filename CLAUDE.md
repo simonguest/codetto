@@ -295,7 +295,7 @@ Provides a `scene3d` Python module for interactive 3D scenes using BabylonJS.
 
 | File | Purpose |
 |---|---|
-| `scene3d.py` | Python `scene3d` module: `Scene`, `Camera`, `Shapes`, `Sky`, `Material`, `DOMProxy` |
+| `scene3d.py` | Python `scene3d` module: `Scene`, `Camera`, `AmbientLight`, `Light`, `Shapes`, `Sky`, `Material`, `DOMProxy` |
 | `scene3d.pyi` | Type stubs for editor autocompletion |
 | `worker.ts` | Registers `_scene3d_call` and `_scene3d_wait_event` bridge globals; loads `scene3d.py` |
 | `provider.ts` | `handleScene3dOp` — handles all scene/mesh ops and the deferred event loop on the main thread |
@@ -347,6 +347,26 @@ scene.run()                      # blocks Python in event loop; Stop button work
 **Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `set_material(constant)`, `set_glossiness(value)`, `set_tiling(u, v=None)`, `on_click(fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid. `set_ground` also returns a `Mesh` so all these methods apply to the ground too.
 
 **Mesh getters:** `get_position()` → `(x, y, z)` tuple, `get_rotation()` → `(x, y, z)` tuple in degrees, `get_scale()` → `(x, y, z)` tuple, `get_color()` → hex string. All read Python-side state (no bridge round-trip); values are always in sync because every `set_*` call updates the local state immediately. Note: once physics is added, `get_position()` and `get_rotation()` will need to read live BabylonJS state via the bridge instead.
+
+**`AmbientLight` (`scene.ambient`):** controls the built-in `HemisphericLight` that illuminates the whole scene.
+- `set_brightness(value)` — `0–100` student scale, maps to `0.0–1.0` BabylonJS (÷ 100); default `90`; `0` = pitch black, `100` = fully lit
+- `set_color(hex)` — tint the ambient light (e.g. `"#ffddcc"` for warm, `"#cceeff"` for cool)
+
+**`Light` (`scene.add_light(x, y, z)`):** adds a `PointLight` at the given position and returns a `Light` object.
+- `set_position(x, y, z)` — move the light
+- `set_brightness(value)` — `0–100` student scale, maps to `0–20` BabylonJS (÷ 5); default `100`; gives enough intensity to visibly illuminate nearby meshes
+- `set_color(hex)` — light colour; indicator sphere tint updates to match
+- `set_visible(True/False)` — toggle a small emissive indicator sphere at the light's position; hidden by default, useful while building scenes
+- `remove()` — dispose the light and its indicator
+
+```python
+light = scene.add_light(0, 5, 0)         # point light overhead (default brightness 100)
+light.set_brightness(80)
+light.set_color("#ff4400")               # warm orange
+light.set_visible(True)                  # show indicator while positioning
+light.set_position(3, 5, -2)
+light.set_visible(False)                 # hide indicator for final scene
+```
 
 **`Camera` (`scene.camera`):** exposed as a property on every `Scene` instance. All methods return `self` for chaining. The underlying BabylonJS `ArcRotateCamera` stays active — mouse orbit and scroll-wheel zoom work on top of any Python camera call.
 - `set_position(x, y, z)` — teleport the camera to a world-space position; BabylonJS recomputes alpha/beta/radius automatically

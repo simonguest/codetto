@@ -18,6 +18,7 @@ interface SceneController {
   scene: any;
   canvas: HTMLCanvasElement;
   camera: any;
+  ambientLight: any;
   _pendingRespond: ((result: any) => void) | null;
   _eventQueue: any[];
   _overlayHandle: number;
@@ -225,6 +226,7 @@ export async function handleScene3dOp(
         scene,
         canvas,
         camera,
+        ambientLight: light,
         _pendingRespond: null,
         _eventQueue: [],
         _overlayHandle: overlayHandle,
@@ -590,6 +592,105 @@ export async function handleScene3dOp(
       return true;
     }
     viaRespond({ type: "value", value: controller._overlayHandle });
+    return true;
+  }
+
+  // ── ambient_set_brightness ───────────────────────────────────────────────────
+  // Scale: 0–100 student range maps to 0.0–1.0 BabylonJS (divide by 100).
+  if (cmd === "ambient_set_brightness") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) controller.ambientLight.intensity = (command.value ?? 90) / 100;
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── ambient_set_color ────────────────────────────────────────────────────────
+  if (cmd === "ambient_set_color") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      const { Color3 } = await import("@babylonjs/core");
+      controller.ambientLight.diffuse = hexToColor3(command.color, Color3);
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── light_add ────────────────────────────────────────────────────────────────
+  if (cmd === "light_add") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (!controller) {
+      viaRespond({ type: "error", message: "Invalid scene handle" });
+      return true;
+    }
+    const { PointLight, Vector3, MeshBuilder, StandardMaterial, Color3 } = await import("@babylonjs/core");
+    const pos = new Vector3(command.x ?? 0, command.y ?? 5, command.z ?? 0);
+    const ptLight = new PointLight("pointLight", pos, controller.scene);
+    ptLight.intensity = 20.0;  // brightness 100 on the 0–100 student scale
+
+    // Indicator sphere — emissive so it isn't dimmed by other lights or itself.
+    const indicator = MeshBuilder.CreateSphere("lightIndicator", { diameter: 0.2, segments: 8 }, controller.scene);
+    indicator.position = pos.clone();
+    const mat = new StandardMaterial("lightIndicatorMat_" + ptLight.uniqueId, controller.scene);
+    mat.emissiveColor = new Color3(1, 1, 0);
+    mat.disableLighting = true;
+    indicator.material = mat;
+    indicator.isVisible = false;
+
+    viaRespond({ type: "value", value: viaRegister({ light: ptLight, indicator }) });
+    return true;
+  }
+
+  // ── light_set_position ───────────────────────────────────────────────────────
+  if (cmd === "light_set_position") {
+    const lc = viaGet(command.light) as { light: any; indicator: any } | undefined;
+    if (lc) {
+      const { Vector3 } = await import("@babylonjs/core");
+      const pos = new Vector3(command.x ?? 0, command.y ?? 0, command.z ?? 0);
+      lc.light.position = pos;
+      lc.indicator.position = pos.clone();
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── light_set_brightness ─────────────────────────────────────────────────────
+  // Scale: 0–100 student range maps to 0–20 BabylonJS (divide by 5).
+  if (cmd === "light_set_brightness") {
+    const lc = viaGet(command.light) as { light: any; indicator: any } | undefined;
+    if (lc) lc.light.intensity = (command.value ?? 100) / 5;
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── light_set_color ──────────────────────────────────────────────────────────
+  if (cmd === "light_set_color") {
+    const lc = viaGet(command.light) as { light: any; indicator: any } | undefined;
+    if (lc) {
+      const { Color3 } = await import("@babylonjs/core");
+      const color = hexToColor3(command.color, Color3);
+      lc.light.diffuse = color;
+      lc.indicator.material.emissiveColor = color;
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── light_set_visible ────────────────────────────────────────────────────────
+  if (cmd === "light_set_visible") {
+    const lc = viaGet(command.light) as { light: any; indicator: any } | undefined;
+    if (lc) lc.indicator.isVisible = command.visible ?? true;
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── light_remove ─────────────────────────────────────────────────────────────
+  if (cmd === "light_remove") {
+    const lc = viaGet(command.light) as { light: any; indicator: any } | undefined;
+    if (lc) {
+      lc.light.dispose();
+      lc.indicator.dispose();
+    }
+    viaRespond({ type: "value", value: null });
     return true;
   }
 
