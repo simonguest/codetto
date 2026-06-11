@@ -1,4 +1,4 @@
-var i=`from graphics import Canvas
+var l=`from graphics import Canvas
 
 class Camera:
     def stop(self) -> None: ...
@@ -92,7 +92,7 @@ def start_gesture_detector(camera: Camera, delegate: str = "GPU", num_hands: int
 def start_segmenter(camera: Camera, delegate: str = "GPU") -> Segmenter: ...
 def color_segment(canvas: Canvas, segmenter: Segmenter, class_name: str, color: str, opacity: float = 0.5) -> None: ...
 def apply_image_to_segment(canvas: Canvas, segmenter: Segmenter, class_name: str, image_path: str, opacity: float = 0.8) -> None: ...
-`,l=`from typing import Optional, Union
+`,i=`from typing import Optional, Union
 
 class _VoiceSpec: ...
 
@@ -363,7 +363,24 @@ class Group:
     def get_rotation(self) -> tuple[float, float, float]: ...
     def get_scale(self) -> tuple[float, float, float]: ...
 
+class Camera:
+    def set_position(self, x: float = 0, y: float = 0, z: float = 0) -> "Camera": ...
+    def move(self, dx: float = 0, dy: float = 0, dz: float = 0) -> "Camera": ...
+    def look_at(self, target: "Mesh | Group | float", y: float = 0, z: float = 0) -> "Camera":
+        """Point the camera at a mesh (look_at(mesh)) or world coordinates (look_at(x, y, z))."""
+        ...
+    def set_distance(self, r: float) -> "Camera":
+        """Set camera zoom distance from its target."""
+        ...
+    def follow(self, target: "Mesh | Group | None", distance: float = ...) -> "Camera":
+        """Continuously track a mesh each frame. Pass None to stop following."""
+        ...
+    def reset(self) -> "Camera":
+        """Return the camera to its default position and orientation."""
+        ...
+
 class Scene:
+    camera: Camera
     def set_sky(self, color: str = "#87CEEB") -> "Scene":
         """Set the sky to a hex colour (e.g. "#87CEEB") or an environment map (e.g. scene3d.Sky.CLOUDS)."""
         ...
@@ -430,5 +447,5 @@ def _get_signatures(source, line, column):
         ])
     except Exception:
         return '[]'
-`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());e=await s()}await e.loadPackage(["jedi","parso"]),e.FS.mkdirTree("/stubs");for(const[s,o]of[["cv",i],["audio",l],["graphics",c],["scene3d",f]])e.FS.writeFile(`/stubs/${s}.pyi`,o);await e.runPythonAsync(`import sys
+`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());e=await s()}await e.loadPackage(["jedi","parso"]),e.FS.mkdirTree("/stubs");for(const[s,o]of[["cv",l],["audio",i],["graphics",c],["scene3d",f]])e.FS.writeFile(`/stubs/${s}.pyi`,o);await e.runPythonAsync(`import sys
 if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await e.runPythonAsync(_)}let r=Promise.resolve();function a(s){r=r.then(s).catch(()=>{})}self.onmessage=s=>{const{type:o,...n}=s.data;switch(o){case"initialize":a(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":a(async()=>{try{e&&n.code&&await e.loadPackagesFromImports(n.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":a(async()=>{if(!e){self.postMessage({type:"sig_results",requestId:n.requestId,signatures:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_signatures(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"sig_results",requestId:n.requestId,signatures:JSON.parse(t)})});break;case"complete":a(async()=>{if(!e){self.postMessage({type:"completions",requestId:n.requestId,completions:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_completions(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"completions",requestId:n.requestId,completions:JSON.parse(t)})}),a(async()=>{try{e&&await e.loadPackagesFromImports(n.script)}catch{}});break}};
