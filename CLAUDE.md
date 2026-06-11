@@ -326,6 +326,9 @@ scene.add(box)
 sphere = scene3d.Shapes.Sphere(diameter=1, segments=16)
 scene.add(sphere)
 
+# Collision detection — register on_collide before scene.run(); both meshes must be added first
+box.on_collide(sphere, lambda: box.set_color("#00ff00"))  # fires once on bounding-box entry
+
 ctx = scene.get_context('2d')    # 2D overlay canvas for HUD drawing
 
 angle = 0.0
@@ -344,7 +347,7 @@ scene.run()                      # blocks Python in event loop; Stop button work
 
 **Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`.
 
-**Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `set_material(constant)`, `set_glossiness(value)`, `set_tiling(u, v=None)`, `on_click(fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid. `set_ground` also returns a `Mesh` so all these methods apply to the ground too.
+**Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `set_material(constant)`, `set_glossiness(value)`, `set_tiling(u, v=None)`, `on_click(fn)`, `on_collide(other_mesh, fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid. `set_ground` also returns a `Mesh` so all these methods apply to the ground too.
 
 **Mesh getters:** `get_position()` → `(x, y, z)` tuple, `get_rotation()` → `(x, y, z)` tuple in degrees, `get_scale()` → `(x, y, z)` tuple, `get_color()` → hex string. All read Python-side state (no bridge round-trip); values are always in sync because every `set_*` call updates the local state immediately. Note: once physics is added, `get_position()` and `get_rotation()` will need to read live BabylonJS state via the bridge instead.
 
@@ -424,7 +427,7 @@ car.set_rotation(y=45)           # rotates the whole group; individual meshes st
 
 **Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll. The camera is also exposed as `scene.camera` for programmatic control — see **`Camera`** above.
 
-**Event loop (`scene.run()`):** calls `viaSyncTimed(250ms)` in a loop. The 250 ms timeout lets Pyodide check the interrupt buffer so the Stop button works within ~250 ms. On a frame event the loop calls the registered `on_frame` handler; on a click event it calls the mesh's `on_click` handler.
+**Event loop (`scene.run()`):** calls `viaSyncTimed(250ms)` in a loop. The 250 ms timeout lets Pyodide check the interrupt buffer so the Stop button works within ~250 ms. On a frame event the loop calls the registered `on_frame` handler; on a click event it calls the mesh's `on_click` handler; on a collide event it calls the matching `on_collide` handler. Collision handlers are registered at the start of `scene.run()` (not at `scene.add()` time), so `on_collide` may be called any time before `scene.run()` as long as both meshes have been added to the scene.
 
 **Frame callbacks:** BabylonJS's `onBeforeRenderObservable` fires each render tick. It dispatches a frame event only when Python is already waiting (i.e. `_pendingRespond` is set). If Python is still processing the previous frame, the tick is silently skipped — no queue buildup.
 

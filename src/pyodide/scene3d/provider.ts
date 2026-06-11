@@ -802,11 +802,34 @@ export async function handleScene3dOp(
     if (controller && mesh) {
       const { ActionManager, ExecuteCodeAction } = await import("@babylonjs/core");
       const meshHandle = command.mesh;
-      mesh.actionManager = new ActionManager(controller.scene);
+      mesh.actionManager = mesh.actionManager || new ActionManager(controller.scene);
       mesh.actionManager.registerAction(
         new ExecuteCodeAction(ActionManager.OnPickTrigger, () => {
           dispatchEvent(controller, { type: "click", mesh: meshHandle });
         })
+      );
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── register_collide ─────────────────────────────────────────────────────────
+  if (cmd === "register_collide") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    const mesh = viaGet(command.mesh);
+    const other = viaGet(command.other);
+    if (controller && mesh && other) {
+      const { ActionManager, ExecuteCodeAction } = await import("@babylonjs/core");
+      const meshHandle = command.mesh;
+      const otherHandle = command.other;
+      mesh.actionManager = mesh.actionManager || new ActionManager(controller.scene);
+      mesh.actionManager.registerAction(
+        new ExecuteCodeAction(
+          { trigger: ActionManager.OnIntersectionEnterTrigger, parameter: other },
+          () => {
+            dispatchEvent(controller, { type: "collide", mesh: meshHandle, other: otherHandle });
+          }
+        )
       );
     }
     viaRespond({ type: "value", value: null });

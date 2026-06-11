@@ -236,7 +236,9 @@ class Scene:
     def __init__(self):
         handle = _s3d_call("create_scene")
         self._handle = handle
+        self._meshes = []
         self._click_handlers = {}
+        self._collide_handlers = {}
         self._frame_handler = None
         self._frame_registered = False
         self.camera = _Camera(handle)
@@ -273,6 +275,7 @@ class Scene:
             kw["parent"] = parent
         handle = _s3d_call("create_mesh", **kw)
         mesh._handle = handle
+        self._meshes.append(mesh)
         if mesh._click_handler is not None:
             self._click_handlers[handle] = mesh._click_handler
             _s3d_call("register_click", scene=self._handle, mesh=handle)
@@ -318,6 +321,14 @@ class Scene:
         return fn  # enables use as a decorator
 
     def run(self):
+        for mesh in self._meshes:
+            for other, fn in mesh._collide_intents:
+                if mesh._handle is not None and other._handle is not None:
+                    key = (mesh._handle, other._handle)
+                    if key not in self._collide_handlers:
+                        self._collide_handlers[key] = fn
+                        _s3d_call("register_collide", scene=self._handle, mesh=mesh._handle, other=other._handle)
+            mesh._collide_intents = []
         while True:
             result_json = _scene3d_wait_event(self._handle)  # type: ignore
             result = json.loads(result_json)
@@ -330,6 +341,10 @@ class Scene:
                     self._frame_handler(result["dt"])
             elif result["type"] == "click":
                 handler = self._click_handlers.get(result["mesh"])
+                if handler is not None:
+                    handler()
+            elif result["type"] == "collide":
+                handler = self._collide_handlers.get((result["mesh"], result["other"]))
                 if handler is not None:
                     handler()
 
@@ -347,6 +362,7 @@ class _Mesh:
         self._tiling = None
         self._rotation = {"x": 0, "y": 0, "z": 0}
         self._click_handler = None
+        self._collide_intents = []  # list of (other_mesh, callback); registered at scene.run()
         self._handle = None
 
     def __repr__(self):
@@ -427,6 +443,10 @@ class _Mesh:
 
     def on_click(self, fn):
         self._click_handler = fn
+        return self
+
+    def on_collide(self, other, fn):
+        self._collide_intents.append((other, fn))
         return self
 
 
