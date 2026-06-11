@@ -173,7 +173,9 @@ Static files made available to student Python code via Pyodide's virtual filesys
 - Student code accesses them as normal paths: `open('/sample_files/chime.wav', 'rb')`.
 - To add a new file: drop it in `public/sample_files/` and add its name to `manifest.json`.
 
-Current files: `cat.png`, `chime.wav`.
+Current files:
+- **Images:** `abstract.jpg`, `cat.jpg`, `city.jpg`, `codercub.jpg`, `dog.jpg`, `earth.jpg`, `fabric.jpg`, `forest.jpg`, `undersea.jpg`
+- **Sounds:** `coin_pickup.wav`, `correct.wav`, `gameover.wav`, `incorrect.wav`, `laser.wav`, `pop.wav`
 
 ### via.js bridge
 
@@ -313,7 +315,7 @@ box = scene3d.Shapes.Box(width=1, height=1, depth=1)
 box.set_position(0, 0.5, 0)
 box.set_rotation(y=45)           # degrees; any combination of x, y, z
 box.set_color("#cc4400")
-box.set_texture('/sample_files/cat.png')   # file path from Pyodide FS
+box.set_texture('/sample_files/cat.jpg')   # file path from Pyodide FS
 box.set_texture('data:image/png;base64,…') # data URL (e.g. from AI model)
 box.set_material(scene3d.Material.Bricks.DarkClay)  # PBR material with normal + roughness maps
 box.set_glossiness(0.3)          # 0.0 = matte, 1.0 = mirror-like (PBR materials only)

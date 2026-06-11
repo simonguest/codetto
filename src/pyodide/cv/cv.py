@@ -168,7 +168,7 @@ def apply_image_to_segment(canvas, segmenter, class_name, image_path, opacity=0.
     canvas: the graphics canvas.
     segmenter: a segmenter returned by cv.start_segmenter().
     class_name: one of cv.SEGMENT constants or a string.
-    image_path: path to an image file, e.g. "/sample_files/cat.png".
+    image_path: path to an image file, e.g. "/sample_files/fabric.jpg".
     opacity: 0.0 to 1.0, default 0.8.
     The image is scaled to fill the full canvas and clipped to the segment.
     Replaces any previous overlay.
