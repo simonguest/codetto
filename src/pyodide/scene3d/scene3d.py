@@ -140,6 +140,16 @@ class Material:
     WoodFloor = _MatWoodFloor()
 
 
+class Key:
+    LEFT   = 'ArrowLeft'
+    RIGHT  = 'ArrowRight'
+    UP     = 'ArrowUp'
+    DOWN   = 'ArrowDown'
+    SPACE  = ' '
+    ENTER  = 'Enter'
+    ESCAPE = 'Escape'
+
+
 class Sky:
     CLOUDS = "env:clouds"
     DEEP_SPACE = "env:deep_space"
@@ -239,6 +249,7 @@ class Scene:
         self._meshes = []
         self._click_handlers = {}
         self._collide_handlers = {}
+        self._key_handlers = {}
         self._frame_handler = None
         self._frame_registered = False
         self.camera = _Camera(handle)
@@ -307,6 +318,10 @@ class Scene:
         handle = _s3d_call("get_context", scene=self._handle)
         return DOMProxy(handle)
 
+    def on_key(self, key, fn):
+        self._key_handlers[key] = fn
+        return self
+
     def on_frame(self, fn):
         """Register a callback invoked before each rendered frame.
 
@@ -321,6 +336,8 @@ class Scene:
         return fn  # enables use as a decorator
 
     def run(self):
+        if self._key_handlers:
+            _s3d_call("register_keys", scene=self._handle, keys=list(self._key_handlers.keys()))
         for mesh in self._meshes:
             for other, fn in mesh._collide_intents:
                 if mesh._handle is not None and other._handle is not None:
@@ -345,6 +362,10 @@ class Scene:
                     handler()
             elif result["type"] == "collide":
                 handler = self._collide_handlers.get((result["mesh"], result["other"]))
+                if handler is not None:
+                    handler()
+            elif result["type"] == "key":
+                handler = self._key_handlers.get(result["key"])
                 if handler is not None:
                     handler()
 
@@ -514,5 +535,6 @@ _scene3d_mod.Scene = Scene
 _scene3d_mod.Shapes = Shapes
 _scene3d_mod.Group = Group
 _scene3d_mod.Sky = Sky
+_scene3d_mod.Key = Key
 _scene3d_mod.Material = Material
 sys.modules["scene3d"] = _scene3d_mod

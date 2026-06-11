@@ -813,6 +813,38 @@ export async function handleScene3dOp(
     return true;
   }
 
+  // ── register_keys ────────────────────────────────────────────────────────────
+  if (cmd === "register_keys") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      const registeredKeys = new Set<string>(command.keys ?? []);
+      const NAV_KEYS = new Set([
+        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+        ' ', 'PageUp', 'PageDown',
+      ]);
+
+      // Remove camera arrow-key bindings so student key handlers get full control.
+      controller.camera.keysUp = [];
+      controller.camera.keysDown = [];
+      controller.camera.keysLeft = [];
+      controller.camera.keysRight = [];
+
+      controller.canvas.addEventListener("keydown", (e: KeyboardEvent) => {
+        if (NAV_KEYS.has(e.key)) e.preventDefault();
+        if (registeredKeys.has(e.key)) {
+          dispatchEvent(controller, { type: "key", key: e.key });
+        }
+      });
+
+      // Focus the canvas so keyboard events fire immediately without a click.
+      controller.canvas.focus();
+      // Signal to tests that the listener is attached and ready.
+      controller.canvas.dataset.keysReady = 'true';
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
   // ── register_collide ─────────────────────────────────────────────────────────
   if (cmd === "register_collide") {
     const controller = viaGet(command.scene) as SceneController | undefined;

@@ -329,6 +329,14 @@ scene.add(sphere)
 # Collision detection — register on_collide before scene.run(); both meshes must be added first
 box.on_collide(sphere, lambda: box.set_color("#00ff00"))  # fires once on bounding-box entry
 
+# Key handling — register on_key before scene.run(); camera arrow-key bindings are removed automatically
+scene.on_key(scene3d.Key.LEFT,  lambda: box.set_position(-1, 0, 0))
+scene.on_key(scene3d.Key.RIGHT, lambda: box.set_position(1, 0, 0))
+scene.on_key(scene3d.Key.UP,    lambda: box.set_position(0, 0, 1))   # +z = away from default camera
+scene.on_key(scene3d.Key.DOWN,  lambda: box.set_position(0, 0, -1))
+scene.on_key(scene3d.Key.SPACE, lambda: print("jump!"))
+scene.on_key('w', lambda: box.set_position(0, 0, 1))  # plain string for letter keys
+
 ctx = scene.get_context('2d')    # 2D overlay canvas for HUD drawing
 
 angle = 0.0
@@ -427,7 +435,7 @@ car.set_rotation(y=45)           # rotates the whole group; individual meshes st
 
 **Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll. The camera is also exposed as `scene.camera` for programmatic control — see **`Camera`** above.
 
-**Event loop (`scene.run()`):** calls `viaSyncTimed(250ms)` in a loop. The 250 ms timeout lets Pyodide check the interrupt buffer so the Stop button works within ~250 ms. On a frame event the loop calls the registered `on_frame` handler; on a click event it calls the mesh's `on_click` handler; on a collide event it calls the matching `on_collide` handler. Collision handlers are registered at the start of `scene.run()` (not at `scene.add()` time), so `on_collide` may be called any time before `scene.run()` as long as both meshes have been added to the scene.
+**Event loop (`scene.run()`):** calls `viaSyncTimed(250ms)` in a loop. The 250 ms timeout lets Pyodide check the interrupt buffer so the Stop button works within ~250 ms. On a frame event the loop calls the registered `on_frame` handler; on a click event it calls the mesh's `on_click` handler; on a collide event it calls the matching `on_collide` handler; on a key event it calls the matching `on_key` handler. Collision handlers are registered at the start of `scene.run()` (not at `scene.add()` time), so `on_collide` may be called any time before `scene.run()` as long as both meshes have been added to the scene. Key handlers are also registered at `scene.run()` start; registering any key handler automatically removes the camera's arrow-key bindings (mouse orbit is preserved) and focuses the canvas.
 
 **Frame callbacks:** BabylonJS's `onBeforeRenderObservable` fires each render tick. It dispatches a frame event only when Python is already waiting (i.e. `_pendingRespond` is set). If Python is still processing the previous frame, the tick is silently skipped — no queue buildup.
 

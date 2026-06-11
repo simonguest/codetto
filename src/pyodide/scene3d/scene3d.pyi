@@ -91,6 +91,15 @@ class _Material:
     Wood: _MatWood
     WoodFloor: _MatWoodFloor
 
+class Key:
+    LEFT: str
+    RIGHT: str
+    UP: str
+    DOWN: str
+    SPACE: str
+    ENTER: str
+    ESCAPE: str
+
 class Sky:
     CLOUDS: str
     DEEP_SPACE: str
@@ -178,6 +187,9 @@ class Scene:
     def add(self, obj: "Mesh | Group") -> "Scene": ...
     def add_light(self, x: float = 0, y: float = 5, z: float = 0) -> Light: ...
     def get_context(self, ctx_type: str = "2d") -> DOMProxy: ...
+    def on_key(self, key: str, fn: Callable[[], None]) -> "Scene":
+        """Register a callback for a key press. Use Key constants (e.g. scene3d.Key.LEFT) for special keys, or plain strings for letters ('w', 'a', 's', 'd'). Camera arrow-key bindings are removed automatically when any on_key is registered."""
+        ...
     def on_frame(self, fn: Callable[[float], None]) -> Callable[[float], None]: ...
     def run(self) -> None: ...
 
