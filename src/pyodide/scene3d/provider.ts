@@ -622,10 +622,14 @@ export async function handleScene3dOp(
       viaRespond({ type: "error", message: "Invalid scene handle" });
       return true;
     }
-    const { PointLight, Vector3, MeshBuilder, StandardMaterial, Color3 } = await import("@babylonjs/core");
+    const { PointLight, Light, Vector3, MeshBuilder, StandardMaterial, Color3 } = await import("@babylonjs/core");
     const pos = new Vector3(command.x ?? 0, command.y ?? 5, command.z ?? 0);
     const ptLight = new PointLight("pointLight", pos, controller.scene);
     ptLight.intensity = 20.0;  // brightness 100 on the 0–100 student scale
+    // Force physical (distance²) attenuation for both StandardMaterial and PBRMaterial,
+    // otherwise INTENSITYMODE_AUTOMATIC treats them differently and StandardMaterial
+    // gets a raw 20× multiplier instead of the attenuated PBR calculation.
+    ptLight.intensityMode = Light.INTENSITYMODE_LUMINOUSINTENSITY;
 
     // Indicator sphere — emissive so it isn't dimmed by other lights or itself.
     const indicator = MeshBuilder.CreateSphere("lightIndicator", { diameter: 0.2, segments: 8 }, controller.scene);
