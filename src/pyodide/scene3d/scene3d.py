@@ -148,6 +148,47 @@ class Sky:
     PURE_SKY = "env:puresky"
 
 
+class _Camera:
+    def __init__(self, scene_handle):
+        self._scene = scene_handle
+
+    def __repr__(self):
+        return ""
+
+    def set_position(self, x=0, y=0, z=0):
+        _s3d_call("camera_set_position", scene=self._scene, x=x, y=y, z=z)
+        return self
+
+    def move(self, dx=0, dy=0, dz=0):
+        _s3d_call("camera_move", scene=self._scene, dx=dx, dy=dy, dz=dz)
+        return self
+
+    def look_at(self, target, y=None, z=None):
+        if isinstance(target, (_Mesh, Group)):
+            _s3d_call("camera_look_at", scene=self._scene, mesh=target._handle)
+        else:
+            _s3d_call("camera_look_at", scene=self._scene, x=target, y=y or 0, z=z or 0)
+        return self
+
+    def set_distance(self, r):
+        _s3d_call("camera_set_distance", scene=self._scene, r=r)
+        return self
+
+    def follow(self, target, distance=None):
+        if target is None:
+            _s3d_call("camera_follow", scene=self._scene, mesh=None)
+        else:
+            kw = {"scene": self._scene, "mesh": target._handle}
+            if distance is not None:
+                kw["distance"] = distance
+            _s3d_call("camera_follow", **kw)
+        return self
+
+    def reset(self):
+        _s3d_call("camera_reset", scene=self._scene)
+        return self
+
+
 class Scene:
     def __init__(self):
         handle = _s3d_call("create_scene")
@@ -155,6 +196,7 @@ class Scene:
         self._click_handlers = {}
         self._frame_handler = None
         self._frame_registered = False
+        self.camera = _Camera(handle)
 
     def __repr__(self):
         return ""

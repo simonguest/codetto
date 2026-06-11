@@ -295,7 +295,7 @@ Provides a `scene3d` Python module for interactive 3D scenes using BabylonJS.
 
 | File | Purpose |
 |---|---|
-| `scene3d.py` | Python `scene3d` module: `Scene`, `Shapes`, `Sky`, `Material`, `DOMProxy` |
+| `scene3d.py` | Python `scene3d` module: `Scene`, `Camera`, `Shapes`, `Sky`, `Material`, `DOMProxy` |
 | `scene3d.pyi` | Type stubs for editor autocompletion |
 | `worker.ts` | Registers `_scene3d_call` and `_scene3d_wait_event` bridge globals; loads `scene3d.py` |
 | `provider.ts` | `handleScene3dOp` — handles all scene/mesh ops and the deferred event loop on the main thread |
@@ -348,6 +348,14 @@ scene.run()                      # blocks Python in event loop; Stop button work
 
 **Mesh getters:** `get_position()` → `(x, y, z)` tuple, `get_rotation()` → `(x, y, z)` tuple in degrees, `get_scale()` → `(x, y, z)` tuple, `get_color()` → hex string. All read Python-side state (no bridge round-trip); values are always in sync because every `set_*` call updates the local state immediately. Note: once physics is added, `get_position()` and `get_rotation()` will need to read live BabylonJS state via the bridge instead.
 
+**`Camera` (`scene.camera`):** exposed as a property on every `Scene` instance. All methods return `self` for chaining. The underlying BabylonJS `ArcRotateCamera` stays active — mouse orbit and scroll-wheel zoom work on top of any Python camera call.
+- `set_position(x, y, z)` — teleport the camera to a world-space position; BabylonJS recomputes alpha/beta/radius automatically
+- `move(dx, dy, dz)` — translate by a relative amount
+- `look_at(mesh_or_x, y=0, z=0)` — point camera at a mesh (`look_at(box)`) or world coordinates (`look_at(0, 0, 0)`)
+- `set_distance(r)` — set zoom (ArcRotateCamera radius from its target)
+- `follow(mesh, distance=None)` — register a before-render observer that copies the mesh's world position to `camera.target` every frame; optional `distance` sets the radius; `follow(None)` removes the observer
+- `reset()` — remove any follow observer and restore default alpha/beta/radius/target
+
 **`Group`:** groups multiple meshes under a shared `TransformNode` so they move and rotate as a single unit. Create a `Group`, add meshes to it with `group.add(mesh)`, then pass the group to `scene.add()`. Child mesh positions and rotations are relative to the group origin. The group supports `set_position`, `set_rotation`, `set_scale`, `get_position`, `get_rotation`, `get_scale` — identical signatures to `_Mesh`. Groups have no appearance of their own (`set_color`, `set_material`, etc. are not available on a `Group`). This is the correct foundation for physics: a future physics pass will attach a compound impostor to the `TransformNode`, keeping the assembly together as a single rigid body.
 
 ```python
@@ -394,7 +402,7 @@ car.set_rotation(y=45)           # rotates the whole group; individual meshes st
 
 **`set_sky(color)`:** accepts a hex colour string (e.g. `"#87CEEB"`) or a `Sky` constant for an HDR environment skybox. Available constants: `Sky.CLOUDS`, `Sky.DEEP_SPACE`, `Sky.MODERN_BUILDINGS`, `Sky.ORLANDO_STADIUM`, `Sky.PURE_SKY`. Environment files live at `public/3dassets/environments/`. When an env skybox is set, the same `CubeTexture` is also assigned to `scene.environmentTexture` so PBR materials automatically receive Image-Based Lighting (IBL) reflections. Cleared when switching back to a flat colour.
 
-**Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll.
+**Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll. The camera is also exposed as `scene.camera` for programmatic control — see **`Camera`** above.
 
 **Event loop (`scene.run()`):** calls `viaSyncTimed(250ms)` in a loop. The 250 ms timeout lets Pyodide check the interrupt buffer so the Stop button works within ~250 ms. On a frame event the loop calls the registered `on_frame` handler; on a click event it calls the mesh's `on_click` handler.
 

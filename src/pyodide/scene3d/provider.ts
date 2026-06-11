@@ -17,10 +17,12 @@ interface SceneController {
   engine: any;
   scene: any;
   canvas: HTMLCanvasElement;
+  camera: any;
   _pendingRespond: ((result: any) => void) | null;
   _eventQueue: any[];
   _overlayHandle: number;
   _skybox: any | null;
+  _followObserver: any | null;
 }
 
 const MATERIALS_BASE = "/3dassets/materials";
@@ -222,10 +224,12 @@ export async function handleScene3dOp(
         engine,
         scene,
         canvas,
+        camera,
         _pendingRespond: null,
         _eventQueue: [],
         _overlayHandle: overlayHandle,
         _skybox: null,
+        _followObserver: null,
       };
 
       // Wrapper div registers as the display element for CanvasResult.vue.
@@ -586,6 +590,103 @@ export async function handleScene3dOp(
       return true;
     }
     viaRespond({ type: "value", value: controller._overlayHandle });
+    return true;
+  }
+
+  // ── camera_set_position ──────────────────────────────────────────────────────
+  if (cmd === "camera_set_position") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      const { Vector3 } = await import("@babylonjs/core");
+      controller.camera.setPosition(new Vector3(command.x ?? 0, command.y ?? 0, command.z ?? 0));
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── camera_move ──────────────────────────────────────────────────────────────
+  if (cmd === "camera_move") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      const { Vector3 } = await import("@babylonjs/core");
+      const pos = controller.camera.position;
+      controller.camera.setPosition(new Vector3(
+        pos.x + (command.dx ?? 0),
+        pos.y + (command.dy ?? 0),
+        pos.z + (command.dz ?? 0)
+      ));
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── camera_look_at ───────────────────────────────────────────────────────────
+  if (cmd === "camera_look_at") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      const { Vector3 } = await import("@babylonjs/core");
+      if (command.mesh != null) {
+        const target = viaGet(command.mesh);
+        if (target) {
+          const pos = target.absolutePosition ?? target.position;
+          controller.camera.target = pos.clone();
+        }
+      } else {
+        controller.camera.target = new Vector3(command.x ?? 0, command.y ?? 0, command.z ?? 0);
+      }
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── camera_set_distance ──────────────────────────────────────────────────────
+  if (cmd === "camera_set_distance") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      controller.camera.radius = command.r ?? 12;
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── camera_follow ────────────────────────────────────────────────────────────
+  if (cmd === "camera_follow") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      if (controller._followObserver) {
+        controller.scene.onBeforeRenderObservable.remove(controller._followObserver);
+        controller._followObserver = null;
+      }
+      if (command.mesh != null) {
+        const target = viaGet(command.mesh);
+        if (target) {
+          if (command.distance != null) controller.camera.radius = command.distance;
+          controller._followObserver = controller.scene.onBeforeRenderObservable.add(() => {
+            const pos = target.absolutePosition ?? target.position;
+            if (pos) controller.camera.target.copyFrom(pos);
+          });
+        }
+      }
+    }
+    viaRespond({ type: "value", value: null });
+    return true;
+  }
+
+  // ── camera_reset ─────────────────────────────────────────────────────────────
+  if (cmd === "camera_reset") {
+    const controller = viaGet(command.scene) as SceneController | undefined;
+    if (controller) {
+      if (controller._followObserver) {
+        controller.scene.onBeforeRenderObservable.remove(controller._followObserver);
+        controller._followObserver = null;
+      }
+      const { Vector3 } = await import("@babylonjs/core");
+      controller.camera.alpha = -Math.PI / 2;
+      controller.camera.beta = Math.PI / 4;
+      controller.camera.radius = 12;
+      controller.camera.target = Vector3.Zero();
+    }
+    viaRespond({ type: "value", value: null });
     return true;
   }
 
