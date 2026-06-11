@@ -175,7 +175,8 @@ Static files made available to student Python code via Pyodide's virtual filesys
 
 Current files:
 - **Images:** `abstract.jpg`, `cat.jpg`, `city.jpg`, `codercub.jpg`, `dog.jpg`, `earth.jpg`, `fabric.jpg`, `forest.jpg`, `undersea.jpg`
-- **Sounds:** `coin_pickup.wav`, `correct.wav`, `gameover.wav`, `incorrect.wav`, `laser.wav`, `pop.wav`
+- **Sounds:** `clang.wav`, `coin_pickup.wav`, `correct.wav`, `door.wav`, `gameover.wav`, `incorrect.wav`, `laser.wav`, `pop.wav`, `thud.wav`, `wood.wav`, `zap.wav`
+- **Music:** `music_ambience.wav`, `music_bach.wav`, `music_sibelius.wav`
 
 ### via.js bridge
 
