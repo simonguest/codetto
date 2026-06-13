@@ -20,6 +20,16 @@ def _s3d_call(cmd, **kwargs):
     return _s3d_decode(_scene3d_call(json.dumps({"cmd": cmd, **kwargs})))  # type: ignore
 
 
+def _resolve_material(mat_str):
+    parts = mat_str.split(".")
+    obj = Material
+    for part in parts:
+        obj = getattr(obj, part, None)
+        if obj is None:
+            return None
+    return obj
+
+
 class DOMProxy:
     """Wraps a main-thread object handle for the 2D overlay context.
 
@@ -307,6 +317,41 @@ class Scene:
     def add_light(self, x=0, y=5, z=0):
         handle = _s3d_call("light_add", scene=self._handle, x=x, y=y, z=z)
         return _Light(handle)
+
+    def import_meshes(self, meshes):
+        for m in meshes:
+            if hasattr(m, "model_dump"):
+                m = m.model_dump()
+
+            mesh_type = m.get("type", "Box").lower()
+            if mesh_type == "box":
+                mesh = Shapes.Box(width=m.get("width", 1), height=m.get("height", 1), depth=m.get("depth", 1))
+            elif mesh_type == "sphere":
+                mesh = Shapes.Sphere(diameter=m.get("diameter", 1), segments=m.get("segments", 16))
+            elif mesh_type == "cylinder":
+                mesh = Shapes.Cylinder(diameter=m.get("diameter", 1), height=m.get("height", 1), tessellation=m.get("tessellation", 24))
+            else:
+                continue
+
+            pos = m.get("position") or [0, 0, 0]
+            mesh.set_position(pos[0], pos[1], pos[2])
+
+            rot = m.get("rotation") or [0, 0, 0]
+            mesh.set_rotation(rot[0], rot[1], rot[2])
+
+            scale = m.get("scale") or [1, 1, 1]
+            mesh.set_scale(scale[0], scale[1], scale[2])
+
+            if m.get("color"):
+                mesh.set_color(m["color"])
+
+            if m.get("material"):
+                resolved = _resolve_material(m["material"])
+                if resolved:
+                    mesh.set_material(resolved)
+
+            self.add(mesh)
+        return self
 
     def get_context(self, ctx_type='2d'):
         """Return a DOMProxy for the 2D overlay canvas.

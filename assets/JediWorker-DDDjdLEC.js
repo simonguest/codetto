@@ -229,7 +229,7 @@ colors: Colors
 
 def canvas(width: int = 0, height: int = 0) -> Canvas: ...
 def draw_image(canvas: Canvas, path: str) -> None: ...
-`,f=`from typing import Any, Callable
+`,f=`from typing import Any, Callable, Sequence
 
 class _MatBricks:
     DarkClay: str
@@ -416,6 +416,15 @@ class Scene:
         ...
     def set_ground(self, length: float = 10, width: float = 10) -> Mesh: ...
     def add(self, obj: "Mesh | Group") -> "Scene": ...
+    def import_meshes(self, meshes: Sequence[Any]) -> "Scene":
+        """Create and add meshes from a list of descriptors (dicts or Pydantic model instances).
+
+        Each descriptor may have: type ("Box"|"Sphere"|"Cylinder"), position [x,y,z],
+        rotation [x,y,z], scale [x,y,z], color (hex), material ("Category.Name"),
+        and shape params (width/height/depth for Box; diameter/segments for Sphere;
+        diameter/height/tessellation for Cylinder).
+        """
+        ...
     def add_light(self, x: float = 0, y: float = 5, z: float = 0) -> Light: ...
     def get_context(self, ctx_type: str = "2d") -> DOMProxy: ...
     def on_key(self, key: str, fn: Callable[[], None]) -> "Scene":
@@ -434,7 +443,7 @@ class _Shapes:
 
 Shapes: _Shapes
 Material: _Material
-`;let e;const _=`
+`;let e;const d=`
 import jedi
 import json
 
@@ -481,5 +490,5 @@ def _get_signatures(source, line, column):
         ])
     except Exception:
         return '[]'
-`;async function d(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());e=await s()}await e.loadPackage(["jedi","parso"]),e.FS.mkdirTree("/stubs");for(const[s,o]of[["cv",l],["audio",i],["graphics",c],["scene3d",f]])e.FS.writeFile(`/stubs/${s}.pyi`,o);await e.runPythonAsync(`import sys
-if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await e.runPythonAsync(_)}let r=Promise.resolve();function a(s){r=r.then(s).catch(()=>{})}self.onmessage=s=>{const{type:o,...n}=s.data;switch(o){case"initialize":a(async()=>{try{await d(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":a(async()=>{try{e&&n.code&&await e.loadPackagesFromImports(n.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":a(async()=>{if(!e){self.postMessage({type:"sig_results",requestId:n.requestId,signatures:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_signatures(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"sig_results",requestId:n.requestId,signatures:JSON.parse(t)})});break;case"complete":a(async()=>{if(!e){self.postMessage({type:"completions",requestId:n.requestId,completions:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_completions(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"completions",requestId:n.requestId,completions:JSON.parse(t)})}),a(async()=>{try{e&&await e.loadPackagesFromImports(n.script)}catch{}});break}};
+`;async function _(){{const{loadPyodide:s}=await import(new URL("../pyodide/pyodide.mjs",import.meta.url).toString());e=await s()}await e.loadPackage(["jedi","parso"]),e.FS.mkdirTree("/stubs");for(const[s,o]of[["cv",l],["audio",i],["graphics",c],["scene3d",f]])e.FS.writeFile(`/stubs/${s}.pyi`,o);await e.runPythonAsync(`import sys
+if '/stubs' not in sys.path: sys.path.insert(0, '/stubs')`),await e.runPythonAsync(d)}let r=Promise.resolve();function a(s){r=r.then(s).catch(()=>{})}self.onmessage=s=>{const{type:o,...n}=s.data;switch(o){case"initialize":a(async()=>{try{await _(),self.postMessage({type:"initialized"})}catch(t){console.error("JediWorker: Initialization failed:",t),self.postMessage({type:"error",error:String(t)})}});break;case"sync_packages":a(async()=>{try{e&&n.code&&await e.loadPackagesFromImports(n.code)}catch(t){console.warn("JediWorker: Failed to sync packages:",t)}});break;case"signatures":a(async()=>{if(!e){self.postMessage({type:"sig_results",requestId:n.requestId,signatures:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_signatures(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"sig_results",requestId:n.requestId,signatures:JSON.parse(t)})});break;case"complete":a(async()=>{if(!e){self.postMessage({type:"completions",requestId:n.requestId,completions:[]});return}let t="[]";try{t=await e.runPythonAsync(`_get_completions(${JSON.stringify(n.script)}, ${n.line}, ${n.column})`)}catch{}self.postMessage({type:"completions",requestId:n.requestId,completions:JSON.parse(t)})}),a(async()=>{try{e&&await e.loadPackagesFromImports(n.script)}catch{}});break}};
