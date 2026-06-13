@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 class _MatBricks:
     DarkClay: str
@@ -185,6 +185,15 @@ class Scene:
         ...
     def set_ground(self, length: float = 10, width: float = 10) -> Mesh: ...
     def add(self, obj: "Mesh | Group") -> "Scene": ...
+    def import_meshes(self, meshes: Sequence[Any]) -> "Scene":
+        """Create and add meshes from a list of descriptors (dicts or Pydantic model instances).
+
+        Each descriptor may have: type ("Box"|"Sphere"|"Cylinder"), position [x,y,z],
+        rotation [x,y,z], scale [x,y,z], color (hex), material ("Category.Name"),
+        and shape params (width/height/depth for Box; diameter/segments for Sphere;
+        diameter/height/tessellation for Cylinder).
+        """
+        ...
     def add_light(self, x: float = 0, y: float = 5, z: float = 0) -> Light: ...
     def get_context(self, ctx_type: str = "2d") -> DOMProxy: ...
     def on_key(self, key: str, fn: Callable[[], None]) -> "Scene":

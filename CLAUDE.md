@@ -433,6 +433,17 @@ car.set_rotation(y=45)           # rotates the whole group; individual meshes st
 
 **`set_sky(color)`:** accepts a hex colour string (e.g. `"#87CEEB"`) or a `Sky` constant for an HDR environment skybox. Available constants: `Sky.CLOUDS`, `Sky.DEEP_SPACE`, `Sky.MODERN_BUILDINGS`, `Sky.ORLANDO_STADIUM`, `Sky.PURE_SKY`. Environment files live at `public/3dassets/environments/`. When an env skybox is set, the same `CubeTexture` is also assigned to `scene.environmentTexture` so PBR materials automatically receive Image-Based Lighting (IBL) reflections. Cleared when switching back to a flat colour.
 
+**`scene.import_meshes(meshes)`:** creates and adds meshes from a list of descriptors. Each descriptor is a dict or a Pydantic model instance (normalized via `model_dump()` automatically). Supported fields:
+- `type` — `"Box"` | `"Sphere"` | `"Cylinder"` (case-insensitive; unknown types are silently skipped)
+- `position` — `[x, y, z]` (default `[0, 0, 0]`)
+- `rotation` — `[x, y, z]` degrees (default `[0, 0, 0]`)
+- `scale` — `[x, y, z]` (default `[1, 1, 1]`)
+- `color` — hex string (default grey)
+- `material` — dotted string resolved against the `Material` class, e.g. `"Grass.Bright"` → `Material.Grass.Bright`; unrecognised strings are silently ignored
+- Shape params: `width`/`height`/`depth` for Box; `diameter`/`segments` for Sphere; `diameter`/`height`/`tessellation` for Cylinder
+
+Designed for use with OpenAI structured output — the student defines a Pydantic model whose schema the LLM must conform to, calls `client.beta.chat.completions.parse(..., response_format=SceneDescription)`, then passes `result.choices[0].message.parsed.meshes` directly to `import_meshes`. Returns `self` for chaining. Implemented entirely in Python using the existing Shapes/add API — no new bridge calls required.
+
 **Scene defaults:** ArcRotateCamera (mouse orbit/zoom), HemisphericLight, dark background. Mouse wheel zoom is decoupled from page scroll. The camera is also exposed as `scene.camera` for programmatic control — see **`Camera`** above.
 
 **Event loop (`scene.run()`):** calls `viaSyncTimed(250ms)` in a loop. The 250 ms timeout lets Pyodide check the interrupt buffer so the Stop button works within ~250 ms. On a frame event the loop calls the registered `on_frame` handler; on a click event it calls the mesh's `on_click` handler; on a collide event it calls the matching `on_collide` handler; on a key event it calls the matching `on_key` handler. Collision handlers are registered at the start of `scene.run()` (not at `scene.add()` time), so `on_collide` may be called any time before `scene.run()` as long as both meshes have been added to the scene. Key handlers are also registered at `scene.run()` start; registering any key handler automatically removes the camera's arrow-key bindings (mouse orbit is preserved) and focuses the canvas.
