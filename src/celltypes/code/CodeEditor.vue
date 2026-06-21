@@ -3,7 +3,7 @@ import { onMounted, watch, computed, ref } from "vue";
 import { EditorState, Prec, StateEffect, StateField } from "@codemirror/state";
 import { EditorView } from "codemirror";
 import {
-  keymap, showTooltip, type Tooltip,
+  keymap, showTooltip, tooltips, type Tooltip,
   lineNumbers, highlightActiveLineGutter, highlightSpecialChars,
   drawSelection, dropCursor, rectangularSelection, crosshairCursor,
   highlightActiveLine,
@@ -267,11 +267,15 @@ onMounted(() => {
       theme,
       indentUnit.of("  "),
       EditorView.lineWrapping,
+      tooltips({ parent: document.body }),
       autocompletion({ override: [jediCompletionSource] }),
       colorPickerExtension,
       colorPickerTheme,
       signatureTooltipField,
       EditorView.baseTheme({
+        ".cm-tooltip": {
+          fontSize: "0.875rem",
+        },
         ".cm-signature-help": {
           padding: "6px 10px",
           maxHeight: "260px",
