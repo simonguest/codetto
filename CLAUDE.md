@@ -100,12 +100,14 @@ This is a Jupyter notebook client for K-12 students. It runs as either a web app
 ### Cell types (`src/celltypes/`)
 
 Each cell type is a self-contained directory with an `index.ts` export:
-- `code` — CodeMirror editor + execution controls + result/stdout/error display
+- `code` — CodeMirror editor + execution controls + result/stdout/error display; supports the `"hide_code"` tag (see below)
 - `markdown` — rendered markdown via `marked`; double-click (or pencil icon) to edit when notebook edit mode is active
 - `video` — video player via `video.js`; triggered by `raw` cells tagged with `"video"` in `cell.metadata.tags`; cell source is a JSON payload `{ "url": "...", "controls": true }`
 - `chat` — LLM chat interface
 - `journal` — student-editable note cell; triggered by `markdown` cells tagged with `"journal"` in `cell.metadata.tags`; double-click (or click the pencil icon) to enter edit mode, Close to save. See `docs/cell-types/journal.md`.
 - `cfu` — "Check for Understanding" quiz cell; triggered by `raw` cells tagged with `"cfu"` in `cell.metadata.tags`; cell source is a JSON payload (see below).
+
+**`hide_code` tag (code cells):** adding `"hide_code"` to a code cell's `metadata.tags` collapses the editor by default when the notebook loads. The student can reveal it via the "Hide code" toggle. The same tag is written/cleared by the toggle at runtime (`CodeControls.vue:25`).
 
 **CFU JSON schema:**
 ```json
