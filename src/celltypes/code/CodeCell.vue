@@ -23,9 +23,9 @@ let outputTypes: OutputType[] = [];
 outputTypes = notebookStore.getOutputTypes(props.cell.id);
 
 const getDefaultTab = () => {
+  if (outputTypes.indexOf("error") !== -1) return "error";
   if (outputTypes.indexOf("result") !== -1) return "result";
   if (outputTypes.indexOf("stdout") !== -1) return "stdout";
-  if (outputTypes.indexOf("error") !== -1) return "error";
 };
 
 const outputTab = ref(getDefaultTab() ?? "result");

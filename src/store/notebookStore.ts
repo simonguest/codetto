@@ -223,7 +223,7 @@ export const notebookStore = reactive({
     if (cell) {
       cell.outputs?.forEach(output => {
         if (output.output_type === "error") {
-          error += output.traceback?.join("") || "";
+          error += output.traceback?.join("\n") || "";
         }
       });
     }
