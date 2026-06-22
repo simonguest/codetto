@@ -6,7 +6,7 @@ import { pyodideStore } from "@store/pyodideStore";
 import { jediStore } from "@store/jediStore";
 import { settingsStore } from "@store/settingsStore";
 import { Locale } from "@/i18n";
-import { viaRegister, viaGet, viaClear } from "@/bridge/viaStore";
+import { viaRegister, viaGet, viaClear, viaStopAll } from "@/bridge/viaStore";
 import { handleGraphicsOp } from "./graphics/provider";
 import { handleCvOp } from "./cv/provider";
 import { handleAudioOp } from "./audio/provider";
@@ -138,6 +138,8 @@ onMounted(async () => {
 onUnmounted(async () => {
   console.log("PyodideProvider: Terminating worker.");
   pyodideStore.setWorkerStatus("terminating");
+  viaStopAll();
+  viaClear();
   worker.terminate();
 });
 

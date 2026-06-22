@@ -15,6 +15,14 @@ export function viaGet(handle: number): any {
   return objects.get(handle);
 }
 
+export function viaStopAll() {
+  for (const obj of objects.values()) {
+    if (typeof obj?.stop === "function") {
+      try { obj.stop(); } catch (_) {}
+    }
+  }
+}
+
 export function viaClear() {
   objects.clear();
   nextHandle = 1;
