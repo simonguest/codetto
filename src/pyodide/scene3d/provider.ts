@@ -34,6 +34,7 @@ async function createMaterial(matConst: string, scene: any): Promise<any> {
     const { StandardMaterial, Texture } = await import("@babylonjs/core");
     const mat = new StandardMaterial("mat_" + path, scene);
     mat.diffuseTexture = new Texture(`${MATERIALS_BASE}/${path}`, scene);
+    mat.maxSimultaneousLights = 8;
     return mat;
   }
   if (matConst.startsWith("mat:")) {
@@ -48,6 +49,7 @@ async function createMaterial(matConst: string, scene: any): Promise<any> {
     mat.useRoughnessFromMetallicTextureGreen = true;
     mat.metallic = 0;
     mat.roughness = 1;
+    mat.maxSimultaneousLights = 8;
     return mat;
   }
   return null;
@@ -316,6 +318,7 @@ export async function handleScene3dOp(
     const mat = new StandardMaterial("ground_mat", controller.scene);
     mat.diffuseColor = hexToColor3("#888888", Color3);
     mat.specularColor = new Color3(0.1, 0.1, 0.1);
+    mat.maxSimultaneousLights = 8;
     ground.material = mat;
     viaRespond({ type: "value", value: viaRegister(ground) });
     return true;
@@ -423,6 +426,7 @@ export async function handleScene3dOp(
         mesh.material = await createMaterial(cfg.material, controller.scene);
       } else {
         const mat = new StandardMaterial("mat_" + mesh.uniqueId, controller.scene);
+        mat.maxSimultaneousLights = 8;
         if (cfg.texture) {
           const { Texture } = await import("@babylonjs/core");
           mat.diffuseTexture = new Texture(cfg.texture, controller.scene);
@@ -639,6 +643,16 @@ export async function handleScene3dOp(
     mat.disableLighting = true;
     indicator.material = mat;
     indicator.isVisible = false;
+
+    // BabylonJS caps simultaneous lights per material at 4 by default. Bump all
+    // existing scene materials so the new light is visible on meshes created before
+    // this light was added.
+    const lightCount = controller.scene.lights.length;
+    for (const sceneMat of controller.scene.materials) {
+      if (!sceneMat.disableLighting && (sceneMat.maxSimultaneousLights ?? 4) < lightCount) {
+        sceneMat.maxSimultaneousLights = lightCount;
+      }
+    }
 
     viaRespond({ type: "value", value: viaRegister({ light: ptLight, indicator }) });
     return true;
