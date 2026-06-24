@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "jupyter-k12",
+  "productName": "Codetto",
   "version": "0.1.0",
-  "identifier": "com.simonguest.jupyter-k12",
+  "identifier": "com.simonguest.codetto",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:55000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Jupyter K-12",
+        "title": "Codetto",
         "width": 800,
         "height": 600,
         "resizable": true,

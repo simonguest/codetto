@@ -1,7 +1,7 @@
 {
-  "name": "jupyter-k12",
+  "name": "codetto",
   "version": "0.1.0",
-  "description": "Jupyter K-12",
+  "description": "Codetto",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
