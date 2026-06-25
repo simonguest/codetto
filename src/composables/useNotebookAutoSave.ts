@@ -25,6 +25,27 @@ export function useNotebookAutoSave(notebookId: string) {
 
         // Convert reactive object to plain object for IndexedDB
         const plainNotebook = JSON.parse(JSON.stringify(content));
+
+        // Calculate CFU progress before saving
+        const cfuCells = plainNotebook.cells.filter(
+          (cell: { cell_type: string; metadata?: { tags?: string[] } }) =>
+            cell.cell_type === 'raw' && cell.metadata?.tags?.includes('cfu')
+        );
+        if (cfuCells.length > 0) {
+          const answered = cfuCells.filter((cell: { source: string | string[] }) => {
+            try {
+              const source = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+              return JSON.parse(source).submitted_answer !== '';
+            } catch {
+              return false;
+            }
+          }).length;
+          plainNotebook.metadata = plainNotebook.metadata || {};
+          plainNotebook.metadata.progress = Math.round((answered / cfuCells.length) * 100);
+        } else if (plainNotebook.metadata) {
+          delete plainNotebook.metadata.progress;
+        }
+
         await saveNotebook(notebookId, plainNotebook)
         saveStatus.value = 'saved'
         lastSaved.value = new Date()

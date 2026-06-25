@@ -156,7 +156,7 @@ Notebooks open in read-only mode by default. Edit mode is toggled via the pencil
 
 **Color** — `notebook.metadata.color` sets the hex color of the left accent border on the index card (e.g. `"#e53935"` for red, `"#43a047"` for green). Defaults to `#42a5f5` (blue) if absent.
 
-**Progress** — `notebook.metadata.progress` renders a circular progress indicator in the bottom-right of the index card. Accepts an integer `0–100`. Hidden if absent.
+**Progress** — `notebook.metadata.progress` renders a circular progress indicator in the bottom-right of the index card. Accepts an integer `0–100`. Hidden if absent. Calculated automatically on every autosave (`useNotebookAutoSave.ts`): counts CFU cells whose `submitted_answer` is non-empty divided by total CFU cells, rounded to the nearest integer. Written only when the notebook contains at least one CFU cell; deleted otherwise to keep metadata clean.
 
 **Image** — `notebook.metadata.image` sets the background image for the index card as a base64 data URL (e.g. `"data:image/jpeg;base64,…"`). Overrides the default SVG placeholder for both light and dark themes. If absent, the theme-appropriate ruled-notebook SVG is used.
 
