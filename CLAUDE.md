@@ -162,6 +162,10 @@ Notebooks open in read-only mode by default. Edit mode is toggled via the pencil
 
 **Image** — `notebook.metadata.image` sets the background image for the index card as a base64 data URL (e.g. `"data:image/jpeg;base64,…"`). Overrides the default SVG placeholder for both light and dark themes. If absent, the theme-appropriate ruled-notebook SVG is used.
 
+**Course** — `notebook.metadata.course` assigns a notebook to a named course (e.g. `"Python Basics"`). When any notebooks have a `course` value, a Course dropdown appears in the index toolbar. Selecting a course filters across all folders, showing only notebooks in that course.
+
+**Module** — `notebook.metadata.module` assigns a notebook to a module within a course (e.g. `"Unit 3: Loops"`). The Module dropdown appears alongside the Course dropdown only after a course is selected, and narrows the view further to notebooks matching both fields. Both fields are optional strings; neither has any independent existence beyond the metadata value.
+
 **Form fields** — Code cells support Google Colab-compatible `#@param` annotations for interactive widgets: plain values, sliders (`type:"slider"` with `min`/`max`/`step`), dropdowns (array of values), and booleans (`type:"boolean"`).
 
 ### i18n

@@ -53,6 +53,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   sortNewest: string;
   sortOldest: string;
   noSearchResults: string;
+  filterByCourse: string;
+  filterByModule: string;
   resources: string;
 }> = {
   'en-US': {
@@ -108,6 +110,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     sortNewest: 'Newest first',
     sortOldest: 'Oldest first',
     noSearchResults: 'No notebooks match your search',
+    filterByCourse: 'Course',
+    filterByModule: 'Module',
     resources: 'Resources',
   },
   'ja-JP': {
@@ -163,6 +167,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     sortNewest: '新しい順',
     sortOldest: '古い順',
     noSearchResults: '検索に一致するノートブックが見つかりません',
+    filterByCourse: 'コース',
+    filterByModule: 'モジュール',
     resources: 'リソース',
   },
   'hi-IN': {
@@ -218,6 +224,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     sortNewest: 'नवीनतम पहले',
     sortOldest: 'पुरानी पहले',
     noSearchResults: 'खोज से कोई नोटबुक नहीं मिली',
+    filterByCourse: 'कोर्स',
+    filterByModule: 'मॉड्यूल',
     resources: 'संसाधन',
   },
   'fa-IR': {
@@ -273,6 +281,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     sortNewest: 'جدیدترین',
     sortOldest: 'قدیمی‌ترین',
     noSearchResults: 'هیچ دفترچه‌ای با جستجوی شما مطابقت ندارد',
+    filterByCourse: 'دوره',
+    filterByModule: 'ماژول',
     resources: 'منابع',
   },
   'mn-MN': {
@@ -328,6 +338,8 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     sortNewest: 'Шинэ эхэнд',
     sortOldest: 'Хуучин эхэнд',
     noSearchResults: 'Хайлтад тохирсон дэвтэр олдсонгүй',
+    filterByCourse: 'Курс',
+    filterByModule: 'Модуль',
     resources: 'Нөөцүүд',
   }
 } as const;

@@ -21,6 +21,8 @@ type SortMode = 'newest' | 'oldest' | 'alpha';
 const allNotebooks = ref<NotebookInfo[]>([]);
 const searchQuery = ref('');
 const sortMode = ref<SortMode>('newest');
+const selectedCourse = ref('');
+const selectedModule = ref('');
 const showUrlDialog = ref(false);
 const showNewNotebookDialog = ref(false);
 const newNotebookName = ref('');
@@ -47,6 +49,24 @@ const errorDialog = ref({
 const currentFolder = computed(() => (route.query.folder as string) || '');
 
 watch(currentFolder, () => { searchQuery.value = ''; });
+watch(selectedCourse, () => { selectedModule.value = ''; });
+
+const availableCourses = computed(() => {
+  const courses = new Set<string>();
+  for (const nb of allNotebooks.value) {
+    if (nb.course) courses.add(nb.course);
+  }
+  return [...courses].sort();
+});
+
+const availableModules = computed(() => {
+  if (!selectedCourse.value) return [];
+  const modules = new Set<string>();
+  for (const nb of allNotebooks.value) {
+    if (nb.course === selectedCourse.value && nb.module) modules.add(nb.module);
+  }
+  return [...modules].sort();
+});
 
 const sortOptions = computed(() => [
   { title: notebookLabels.value.sortNewest, value: 'newest' as SortMode },
@@ -101,7 +121,16 @@ const currentItems = computed(() => {
 });
 
 const filteredNotebooks = computed(() => {
-  let list = currentItems.value.notebooks;
+  let list = selectedCourse.value
+    ? allNotebooks.value
+    : currentItems.value.notebooks;
+
+  if (selectedCourse.value) {
+    list = list.filter(nb => nb.course === selectedCourse.value);
+    if (selectedModule.value) {
+      list = list.filter(nb => nb.module === selectedModule.value);
+    }
+  }
 
   const q = searchQuery.value.trim().toLowerCase();
   if (q) {
@@ -307,6 +336,28 @@ const closeErrorDialog = () => {
           class="flex-grow-1"
         />
         <v-select
+          v-if="availableCourses.length > 0"
+          v-model="selectedCourse"
+          :items="availableCourses"
+          :label="notebookLabels.filterByCourse"
+          variant="outlined"
+          density="compact"
+          hide-details
+          clearable
+          style="max-width: 200px; flex-shrink: 0"
+        />
+        <v-select
+          v-if="selectedCourse && availableModules.length > 0"
+          v-model="selectedModule"
+          :items="availableModules"
+          :label="notebookLabels.filterByModule"
+          variant="outlined"
+          density="compact"
+          hide-details
+          clearable
+          style="max-width: 200px; flex-shrink: 0"
+        />
+        <v-select
           v-model="sortMode"
           :items="sortOptions"
           :label="notebookLabels.sortBy"
@@ -319,9 +370,9 @@ const closeErrorDialog = () => {
 
       <!-- Folders and Notebooks Grid -->
       <v-row>
-        <!-- Folder cards -->
+        <!-- Folder cards (hidden when course filter is active) -->
         <v-col
-          v-for="folder in currentItems.folders"
+          v-for="folder in selectedCourse ? [] : currentItems.folders"
           :key="folder.path"
           cols="12"
           sm="6"
@@ -359,8 +410,8 @@ const closeErrorDialog = () => {
         <p class="text-body-2 text-medium-emphasis">Create your first notebook to get started</p>
       </div>
 
-      <!-- Empty state: search returned nothing -->
-      <div v-else-if="filteredNotebooks.length === 0 && searchQuery.trim()" class="text-center mt-8">
+      <!-- Empty state: filter/search returned nothing -->
+      <div v-else-if="filteredNotebooks.length === 0 && (searchQuery.trim() || selectedCourse)" class="text-center mt-8">
         <v-icon icon="mdi-magnify-close" size="64" color="grey" />
         <p class="text-h6 mt-4 text-medium-emphasis">{{ notebookLabels.noSearchResults }}</p>
       </div>
