@@ -233,6 +233,11 @@ const downloadNotebook = async () => {
   right: 4px;
 }
 
+.card-menu-overlay :deep(.v-btn) {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(4px);
+}
+
 /* Info section */
 .card-info-area {
   flex: 1;
