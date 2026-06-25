@@ -21,14 +21,12 @@ const emit = defineEmits<Emits>();
 
 const router = useRouter();
 
-// Get notebook labels based on current locale
 const notebookLabels = computed(() => NOTEBOOK_LABELS[settingsStore.locale]);
 
-// Format date for display
 const formatDate = (date: Date) => {
   const now = new Date();
   const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-  
+
   if (diffInHours < 1) {
     return notebookLabels.value.justNow;
   } else if (diffInHours < 24) {
@@ -41,12 +39,21 @@ const formatDate = (date: Date) => {
   }
 };
 
-// Navigate to notebook viewer
+const formattedDate = computed(() =>
+  formatDate(props.notebook.lastModified || props.notebook.created)
+);
+
+const isLight = computed(() => settingsStore.theme === 'light');
+const cardBg = computed(() => isLight.value ? '#dce9f8' : '#1a2038');
+const cardColor = computed(() => props.notebook.color || '#42a5f5');
+const placeholderImage = computed(() =>
+  isLight.value ? '/notebook-placeholder-light.svg' : '/notebook-placeholder.svg'
+);
+
 const openNotebook = () => {
   router.push(`/notebooks/${props.notebook.id}`);
 };
 
-// Rename notebook
 const showRenameDialog = ref(false);
 const renameTitle = ref('');
 
@@ -63,7 +70,6 @@ const confirmRename = () => {
   }
 };
 
-// Delete notebook
 const showDeleteDialog = ref(false);
 
 const confirmDelete = () => {
@@ -71,7 +77,6 @@ const confirmDelete = () => {
   emit('delete', props.notebook.id);
 };
 
-// Download notebook as .ipynb file
 const downloadNotebook = async () => {
   const notebook = await getNotebook(props.notebook.id);
   const json = JSON.stringify(notebook, null, 2);
@@ -87,13 +92,16 @@ const downloadNotebook = async () => {
 
 <template>
   <v-card
-    class="notebook-card"
-    hover
+    :class="['notebook-card', { 'is-light': isLight }]"
+    :style="{ '--card-color': cardColor, '--card-bg': cardBg }"
+    rounded="xl"
     @click="openNotebook"
   >
-    <v-card-text class="pb-2">
-      <!-- Ellipsis Menu - Top Right -->
-      <div class="d-flex justify-end mb-2">
+    <!-- Image area -->
+    <div class="card-image-area">
+      <img :src="placeholderImage" class="card-bg" alt="" />
+      <div class="card-image-fade" />
+      <div class="card-menu-overlay" @click.stop>
         <v-menu>
           <template v-slot:activator="{ props }">
             <v-btn
@@ -101,8 +109,8 @@ const downloadNotebook = async () => {
               variant="text"
               size="small"
               v-bind="props"
-              @click.stop
-            ></v-btn>
+              color="white"
+            />
           </template>
           <v-list>
             <v-list-item @click="openRenameDialog">
@@ -117,24 +125,30 @@ const downloadNotebook = async () => {
           </v-list>
         </v-menu>
       </div>
+    </div>
 
-      <!-- Notebook Content -->
-      <div class="d-flex align-center">
-        <v-icon
-          icon="mdi-notebook-outline"
-          size="large"
-          color="primary"
-          class="me-3"
-        ></v-icon>
-        <div class="flex-grow-1">
-          <h3 class="text-h6 mb-1">{{ notebook.title }}</h3>
-          <p class="text-caption text-medium-emphasis mb-0">
-            {{ notebookLabels.lastEdited }}: {{ formatDate(notebook.lastModified || notebook.created) }}
-          </p>
+    <!-- Info area -->
+    <div class="card-info-area">
+      <p class="card-title">{{ notebook.title }}</p>
+      <p v-if="notebook.description" class="card-description">{{ notebook.description }}</p>
+      <div class="card-footer">
+        <span class="card-timestamp">
+          <v-icon size="13" class="me-1">mdi-clock-outline</v-icon>
+          {{ notebookLabels.lastEdited }}: {{ formattedDate }}
+        </span>
+        <div v-if="notebook.progress !== undefined" class="card-progress">
+          <v-progress-circular
+            :model-value="notebook.progress"
+            size="20"
+            width="2.5"
+            color="success"
+          />
+          <span class="progress-label">{{ notebook.progress }}%</span>
         </div>
       </div>
-    </v-card-text>
+    </div>
   </v-card>
+
   <!-- Rename dialog -->
   <v-dialog v-model="showRenameDialog" max-width="400" @click:outside="showRenameDialog = false">
     <v-card>
@@ -145,10 +159,10 @@ const downloadNotebook = async () => {
           :label="notebookLabels.renameDialogLabel"
           autofocus
           @keyup.enter="confirmRename"
-        ></v-text-field>
+        />
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn @click="showRenameDialog = false">{{ notebookLabels.deleteCancel }}</v-btn>
         <v-btn color="primary" @click="confirmRename" :disabled="!renameTitle.trim()">{{ notebookLabels.renameSave }}</v-btn>
       </v-card-actions>
@@ -161,7 +175,7 @@ const downloadNotebook = async () => {
       <v-card-title>{{ notebookLabels.deleteConfirmTitle }}</v-card-title>
       <v-card-text>{{ notebookLabels.deleteConfirmMessage }}</v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn @click="showDeleteDialog = false">{{ notebookLabels.deleteCancel }}</v-btn>
         <v-btn color="error" @click="confirmDelete">{{ notebookLabels.deleteConfirm }}</v-btn>
       </v-card-actions>
@@ -172,31 +186,125 @@ const downloadNotebook = async () => {
 <style scoped>
 .notebook-card {
   cursor: pointer;
-  transition: transform 0.2s ease-in-out;
-  height: 140px;
+  height: 220px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  background-color: var(--card-bg) !important;
+  border-left: 4px solid var(--card-color) !important;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .notebook-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45) !important;
 }
 
-.notebook-card .v-card-text {
+/* Image section */
+.card-image-area {
+  position: relative;
+  height: 90px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.card-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Gradient fade at the bottom of the image into the info area */
+.card-image-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background: linear-gradient(to bottom, transparent, var(--card-bg));
+  pointer-events: none;
+}
+
+.card-menu-overlay {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+/* Info section */
+.card-info-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding-top: 12px;
+  padding: 8px 14px 12px;
 }
 
-/* Ensure title text doesn't overflow */
-.notebook-card .text-h6 {
-  line-height: 1.2;
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 3px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
+}
+
+.card-description {
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 4px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-timestamp {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+}
+
+.card-progress {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Light theme overrides */
+.notebook-card.is-light .card-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.notebook-card.is-light .card-description {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.notebook-card.is-light .card-timestamp {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.notebook-card.is-light .progress-label {
+  color: rgba(0, 0, 0, 0.7);
 }
 </style>

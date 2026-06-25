@@ -8,6 +8,9 @@ export interface NotebookInfo {
   folder?: string;
   lastModified?: Date;
   created: Date;
+  description?: string;
+  progress?: number;
+  color?: string;
 }
 
 const DB_NAME = "NotebookDB";
@@ -218,6 +221,9 @@ export const listNotebooks = async (): Promise<NotebookInfo[]> => {
           folder: record.notebook.metadata?.folder as string | undefined,
           lastModified: new Date(record.lastModified),
           created: new Date(record.created),
+          description: record.notebook.metadata?.description as string | undefined,
+          progress: record.notebook.metadata?.progress as number | undefined,
+          color: record.notebook.metadata?.color as string | undefined,
         }));
 
         // Sort by created date, newest first
