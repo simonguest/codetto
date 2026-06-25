@@ -21,6 +21,8 @@ const vuetify = createVuetify({
     themes: {
       light: {
         colors: {
+          background: '#eef0f8',
+          surface: '#f8f9fc',
           primary: '#1976D2',
           secondary: '#424242',
           accent: '#82B1FF',
@@ -32,6 +34,8 @@ const vuetify = createVuetify({
       },
       dark: {
         colors: {
+          background: '#12141c',
+          surface: '#1d1f2e',
           primary: '#2196F3',
           secondary: '#424242',
           accent: '#FF4081',
