@@ -20,9 +20,22 @@ type SortMode = 'newest' | 'oldest' | 'alpha';
 
 const allNotebooks = ref<NotebookInfo[]>([]);
 const searchQuery = ref('');
-const sortMode = ref<SortMode>('newest');
-const selectedCourse = ref('');
-const selectedModule = ref('');
+
+const sortMode = computed({
+  get: () => ((route.query.sort as SortMode) || 'newest'),
+  set: (val: SortMode) => router.replace({ query: { ...route.query, sort: val === 'newest' ? undefined : val } }),
+});
+
+const selectedCourse = computed({
+  get: () => (route.query.course as string) || '',
+  set: (val: string) => router.replace({ query: { ...route.query, course: val || undefined, module: undefined } }),
+});
+
+const selectedModule = computed({
+  get: () => (route.query.module as string) || '',
+  set: (val: string) => router.replace({ query: { ...route.query, module: val || undefined } }),
+});
+
 const showUrlDialog = ref(false);
 const showNewNotebookDialog = ref(false);
 const newNotebookName = ref('');
@@ -49,7 +62,6 @@ const errorDialog = ref({
 const currentFolder = computed(() => (route.query.folder as string) || '');
 
 watch(currentFolder, () => { searchQuery.value = ''; });
-watch(selectedCourse, () => { selectedModule.value = ''; });
 
 const availableCourses = computed(() => {
   const courses = new Set<string>();

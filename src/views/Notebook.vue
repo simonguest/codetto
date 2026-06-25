@@ -44,9 +44,13 @@ onMounted(async () => {
 });
 
 const goBack = () => {
-  const raw = notebook.value?.metadata?.folder;
-  const folder = raw && !raw.startsWith('/') ? `/${raw}` : raw;
-  router.push(folder ? { name: 'notebooks', query: { folder } } : '/notebooks');
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    const raw = notebook.value?.metadata?.folder;
+    const folder = raw && !raw.startsWith('/') ? `/${raw}` : raw;
+    router.push(folder ? { name: 'notebooks', query: { folder } } : '/notebooks');
+  }
 };
 
 const toggleResources = () => {
