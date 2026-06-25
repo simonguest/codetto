@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c8ddf2"/>
+      <stop offset="100%" stop-color="#d8eaf8"/>
+    </linearGradient>
+    <radialGradient id="hl" cx="85%" cy="10%" r="45%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#b0d0ef" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#c8ddf2" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lf" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="black" stop-opacity="0"/>
+      <stop offset="8%" stop-color="black" stop-opacity="1"/>
+      <stop offset="92%" stop-color="black" stop-opacity="1"/>
+      <stop offset="100%" stop-color="black" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="lm"><rect width="400" height="140" fill="url(#lf)"/></mask>
+  </defs>
+
+  <rect width="400" height="140" fill="url(#bg)"/>
+  <rect width="400" height="140" fill="url(#hl)"/>
+
+  <!-- Margin line -->
+  <line x1="54" y1="0" x2="54" y2="140" stroke="#c03030" stroke-width="0.9" opacity="0.28"/>
+
+  <!-- Ruled lines -->
+  <g stroke="rgba(0,80,180,0.18)" stroke-width="0.8" mask="url(#lm)">
+    <line x1="0" y1="22" x2="400" y2="22"/>
+    <line x1="0" y1="38" x2="400" y2="38"/>
+    <line x1="0" y1="54" x2="400" y2="54"/>
+    <line x1="0" y1="70" x2="400" y2="70"/>
+    <line x1="0" y1="86" x2="400" y2="86"/>
+    <line x1="0" y1="102" x2="400" y2="102"/>
+    <line x1="0" y1="118" x2="400" y2="118"/>
+    <line x1="0" y1="134" x2="400" y2="134"/>
+  </g>
+
+  <!-- Abstract handwriting strokes -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Line at y≈38: full line of writing -->
+    <path d="M 64,36 C 74,32 84,40 96,36 C 108,32 118,38 130,36 C 143,33 154,40 168,36 C 180,32 193,38 207,36 C 220,33 233,40 249,36 C 263,32 277,38 294,36 C 309,33 322,40 340,36 C 355,32 368,38 382,36"
+          stroke="rgba(20,80,190,0.38)" stroke-width="1.6"/>
+    <!-- Line at y≈54: full line of writing -->
+    <path d="M 64,52 C 78,48 90,56 104,52 C 118,48 132,54 148,52 C 162,48 174,56 192,52 C 206,48 220,54 237,52 C 253,48 267,56 284,52 C 298,48 314,54 331,52 C 347,48 361,56 378,52"
+          stroke="rgba(20,80,190,0.32)" stroke-width="1.6"/>
+    <!-- Line at y≈70: partial line (trailing off) -->
+    <path d="M 64,68 C 80,64 94,72 110,68 C 124,64 138,70 155,68 C 169,64 183,72 200,68 C 214,64 228,70 246,68 C 260,64 273,72 288,68"
+          stroke="rgba(20,80,190,0.24)" stroke-width="1.6"/>
+  </g>
+
+  <!-- Spiral binding -->
+  <!-- Spine wire -->
+  <line x1="25" y1="0" x2="25" y2="140" stroke="rgba(30,100,200,0.16)" stroke-width="2"/>
+  <!-- Coil loops -->
+  <g fill="none" stroke="rgba(30,100,200,0.28)" stroke-width="1.5">
+    <ellipse cx="25" cy="19" rx="11" ry="7"/>
+    <ellipse cx="25" cy="37" rx="11" ry="7"/>
+    <ellipse cx="25" cy="55" rx="11" ry="7"/>
+    <ellipse cx="25" cy="73" rx="11" ry="7"/>
+    <ellipse cx="25" cy="91" rx="11" ry="7"/>
+    <ellipse cx="25" cy="109" rx="11" ry="7"/>
+    <ellipse cx="25" cy="127" rx="11" ry="7"/>
+  </g>
+</svg>
