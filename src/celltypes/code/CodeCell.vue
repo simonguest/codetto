@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, nextTick } from "vue";
 
 import type { Cell } from "@schemas/notebook";
 import { notebookStore, OutputType } from "@store/notebookStore";
@@ -33,7 +33,7 @@ const outputTab = ref(getDefaultTab() ?? "result");
 // Track which output types we've already seen to avoid resetting the active tab
 // when only the content of an existing type updates (e.g. new stdout lines arriving
 // while the user is viewing the stdout tab).
-let knownOutputTypes = new Set<string>(outputTypes);
+let knownOutputTypes = new Set<OutputType>(outputTypes);
 
 watch(
   () => props.cell.outputs,
@@ -47,7 +47,9 @@ watch(
     if (typesChanged) {
       knownOutputTypes = newTypeSet;
       outputTab.value = "none";
-      outputTab.value = getDefaultTab() ?? "none";
+      nextTick(() => {
+        outputTab.value = getDefaultTab() ?? "none";
+      });
     }
   },
   { deep: true }

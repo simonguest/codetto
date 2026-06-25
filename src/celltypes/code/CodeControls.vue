@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const runCode = () => {
-  notebookStore.clearOutputs(props.id);
+  notebookStore.markPendingClear(props.id);
   pyodideStore.executeCell(props.id);
 };
 

@@ -119,15 +119,21 @@ onMounted(async () => {
           }
         }
         break;
-      case "execute_completed":
+      case "execute_completed": {
+        const completedCellId = pyodideStore.runningCellId;
         pyodideStore.executionCompleted();
+        if (completedCellId) notebookStore.flushPendingClear(completedCellId);
         break;
-      case "error":
-        if (pyodideStore.runningCellId && !error.includes("KeyboardInterrupt")) {
-          notebookStore.setError(pyodideStore.runningCellId, error);
+      }
+      case "error": {
+        const errorCellId = pyodideStore.runningCellId;
+        if (errorCellId && !error.includes("KeyboardInterrupt")) {
+          notebookStore.setError(errorCellId, error);
         }
         pyodideStore.executionCompleted();
+        if (errorCellId) notebookStore.flushPendingClear(errorCellId);
         break;
+      }
       case "fatal":
         pyodideStore.setFatalError(error);
         break;

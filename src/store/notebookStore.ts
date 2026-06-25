@@ -6,6 +6,10 @@ import { Locale } from "@/i18n";
 
 export type OutputType = "result" | "stdout" | "error";
 
+// Cells marked here have their outputs replaced atomically on the first new output
+// rather than cleared immediately, preventing scroll-position jumps for fast code.
+const _pendingClear = new Set<string>();
+
 export const notebookStore = reactive({
   content: {} as Notebook,
   updated: null as Number | null,
@@ -105,6 +109,15 @@ export const notebookStore = reactive({
       this.updated = Date.now();
     }
   },
+  markPendingClear(cellId: string) {
+    _pendingClear.add(cellId);
+  },
+  flushPendingClear(cellId: string) {
+    if (_pendingClear.has(cellId)) {
+      _pendingClear.delete(cellId);
+      this.clearOutputs(cellId);
+    }
+  },
   getOutputTypes(cellId: string) {
     let result: OutputType[] = [];
     const cell = this.findCell(cellId);
@@ -133,6 +146,10 @@ export const notebookStore = reactive({
   addStdout(cellId: string, stdout: string) {
     const cell = this.findCell(cellId);
     if (cell) {
+      if (_pendingClear.has(cellId)) {
+        _pendingClear.delete(cellId);
+        cell.outputs = [];
+      }
       if (!cell.outputs) cell.outputs = [];
       const index = cell.outputs.findIndex(
         (output: Output) => output.output_type === "stream" && output.name === "stdout"
@@ -167,6 +184,10 @@ export const notebookStore = reactive({
   setResult(cellId: string, result: any) {
     const cell = this.findCell(cellId);
     if (cell) {
+      if (_pendingClear.has(cellId)) {
+        _pendingClear.delete(cellId);
+        cell.outputs = [];
+      }
       if (!cell.outputs) cell.outputs = [];
 
       // Find if there's already an execute_result output
@@ -208,6 +229,10 @@ export const notebookStore = reactive({
   setError(cellId: string, traceback: string | string[]) {
     const cell = this.findCell(cellId);
     if (cell) {
+      if (_pendingClear.has(cellId)) {
+        _pendingClear.delete(cellId);
+        cell.outputs = [];
+      }
       if (!cell.outputs) cell.outputs = [];
       const tracebackArray = Array.isArray(traceback) ? traceback : traceback.split("\n");
       cell.outputs.push({

@@ -306,7 +306,7 @@ onMounted(() => {
         key: "Mod-Enter",
         run: () => {
           if (pyodideStore.executionStatus === "idle" && pyodideStore.workerStatus === "ready") {
-            notebookStore.clearOutputs(props.id);
+            notebookStore.markPendingClear(props.id);
             pyodideStore.executeCell(props.id);
           }
           return true;
