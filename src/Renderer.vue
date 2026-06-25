@@ -92,6 +92,7 @@ function handleInsert(cellType: string, insertAfterCellId: string | null) {
     />
 
     <template v-for="(cell, index) in notebookStore.content.cells" :key="cell.id">
+      <template v-if="!cell.metadata.tags?.includes('hidden')">
       <!-- Per-cell toolbar in edit mode -->
       <div v-if="editMode" class="cell-toolbar">
         <v-btn
@@ -163,6 +164,7 @@ function handleInsert(cellType: string, insertAfterCellId: string | null) {
         :locale="props.locale"
         @insert="handleInsert"
       />
+      </template>
     </template>
 
     <!-- Delete confirmation dialog -->

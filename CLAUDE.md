@@ -109,6 +109,8 @@ Each cell type is a self-contained directory with an `index.ts` export:
 
 **`hide_code` tag (code cells):** adding `"hide_code"` to a code cell's `metadata.tags` collapses the editor by default when the notebook loads. The student can reveal it via the "Hide code" toggle. The same tag is written/cleared by the toggle at runtime (`CodeControls.vue:25`).
 
+**`hidden` tag (any cell):** adding `"hidden"` to any cell's `metadata.tags` prevents it from rendering at all — the cell is completely absent from the DOM for students and in edit mode. Use this for setup cells that must execute (e.g. helper functions, imports) but should be invisible to the student. Implemented as a `v-if` guard in `Renderer.vue`.
+
 **CFU JSON schema:**
 ```json
 {
