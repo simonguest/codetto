@@ -11,6 +11,7 @@ export interface NotebookInfo {
   description?: string;
   progress?: number;
   color?: string;
+  image?: string;
 }
 
 const DB_NAME = "NotebookDB";
@@ -224,6 +225,7 @@ export const listNotebooks = async (): Promise<NotebookInfo[]> => {
           description: record.notebook.metadata?.description as string | undefined,
           progress: record.notebook.metadata?.progress as number | undefined,
           color: record.notebook.metadata?.color as string | undefined,
+          image: record.notebook.metadata?.image as string | undefined,
         }));
 
         // Sort by created date, newest first

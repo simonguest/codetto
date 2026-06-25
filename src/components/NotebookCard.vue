@@ -46,8 +46,9 @@ const formattedDate = computed(() =>
 const isLight = computed(() => settingsStore.theme === 'light');
 const cardBg = computed(() => isLight.value ? '#dce9f8' : '#1a2038');
 const cardColor = computed(() => props.notebook.color || '#42a5f5');
-const placeholderImage = computed(() =>
-  isLight.value ? '/notebook-placeholder-light.svg' : '/notebook-placeholder.svg'
+const imageSrc = computed(() =>
+  props.notebook.image ||
+  (isLight.value ? '/notebook-placeholder-light.svg' : '/notebook-placeholder.svg')
 );
 
 const openNotebook = () => {
@@ -99,7 +100,7 @@ const downloadNotebook = async () => {
   >
     <!-- Image area -->
     <div class="card-image-area">
-      <img :src="placeholderImage" class="card-bg" alt="" />
+      <img :src="imageSrc" class="card-bg" alt="" />
       <div class="card-image-fade" />
       <div class="card-menu-overlay" @click.stop>
         <v-menu>
