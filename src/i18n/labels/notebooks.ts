@@ -47,9 +47,15 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   newNotebook: string;
   newNotebookNameLabel: string;
   newNotebookCreate: string;
+  searchPlaceholder: string;
+  sortBy: string;
+  sortAlpha: string;
+  sortNewest: string;
+  sortOldest: string;
+  noSearchResults: string;
 }> = {
   'en-US': {
-    title: 'Notebooks',
+    title: 'My Notebooks',
     addNotebook: 'Add',
     fromTemplate: 'From template',
     fromFile: 'From File',
@@ -95,9 +101,15 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     newNotebook: 'New Notebook',
     newNotebookNameLabel: 'Notebook name',
     newNotebookCreate: 'Create',
+    searchPlaceholder: 'Search notebooks...',
+    sortBy: 'Sort by',
+    sortAlpha: 'Alphabetical',
+    sortNewest: 'Newest first',
+    sortOldest: 'Oldest first',
+    noSearchResults: 'No notebooks match your search',
   },
   'ja-JP': {
-    title: 'ノートブック',
+    title: 'マイノートブック',
     addNotebook: '追加',
     fromTemplate: 'テンプレートから',
     fromFile: 'ファイルから',
@@ -143,9 +155,15 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     newNotebook: 'New Notebook',
     newNotebookNameLabel: 'Notebook name',
     newNotebookCreate: 'Create',
+    searchPlaceholder: 'ノートブックを検索...',
+    sortBy: '並べ替え',
+    sortAlpha: 'アルファベット順',
+    sortNewest: '新しい順',
+    sortOldest: '古い順',
+    noSearchResults: '検索に一致するノートブックが見つかりません',
   },
   'hi-IN': {
-    title: 'नोटबुक',
+    title: 'मेरी नोटबुक',
     addNotebook: 'जोड़ें',
     fromTemplate: 'टेम्प्लेट से',
     fromFile: 'फ़ाइल से',
@@ -191,9 +209,15 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     newNotebook: 'New Notebook',
     newNotebookNameLabel: 'Notebook name',
     newNotebookCreate: 'Create',
+    searchPlaceholder: 'नोटबुक खोजें...',
+    sortBy: 'क्रमबद्ध करें',
+    sortAlpha: 'वर्णमाला क्रम',
+    sortNewest: 'नवीनतम पहले',
+    sortOldest: 'पुरानी पहले',
+    noSearchResults: 'खोज से कोई नोटबुक नहीं मिली',
   },
   'fa-IR': {
-    title: 'دفترچه‌ها',
+    title: 'دفترچه‌های من',
     addNotebook: 'افزودن',
     fromTemplate: 'از قالب',
     fromFile: 'از فایل',
@@ -239,9 +263,15 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     newNotebook: 'New Notebook',
     newNotebookNameLabel: 'Notebook name',
     newNotebookCreate: 'Create',
+    searchPlaceholder: 'جستجوی دفترچه‌ها...',
+    sortBy: 'مرتب‌سازی',
+    sortAlpha: 'الفبایی',
+    sortNewest: 'جدیدترین',
+    sortOldest: 'قدیمی‌ترین',
+    noSearchResults: 'هیچ دفترچه‌ای با جستجوی شما مطابقت ندارد',
   },
   'mn-MN': {
-    title: 'Дэвтэрүүд',
+    title: 'Миний дэвтэрүүд',
     addNotebook: 'Нэмэх',
     fromTemplate: 'Загвараас',
     fromFile: 'Файлаас',
@@ -287,5 +317,11 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     newNotebook: 'New Notebook',
     newNotebookNameLabel: 'Notebook name',
     newNotebookCreate: 'Create',
+    searchPlaceholder: 'Дэвтэр хайх...',
+    sortBy: 'Эрэмбэлэх',
+    sortAlpha: 'Цагаан толгойн дарааллаар',
+    sortNewest: 'Шинэ эхэнд',
+    sortOldest: 'Хуучин эхэнд',
+    noSearchResults: 'Хайлтад тохирсон дэвтэр олдсонгүй',
   }
 } as const;

@@ -152,6 +152,12 @@ Notebooks open in read-only mode by default. Edit mode is toggled via the pencil
 
 **Globals** — `notebook.metadata.globals` defines named values substituted at runtime using `{{VARIABLE}}` syntax in markdown and code cells. Each global can have a `"default"` and per-locale overrides (e.g. `"hi-IN"`, `"ja-JP"`).
 
+**Description** — `notebook.metadata.description` shows as a subtitle below the title on the index card and is included in the index search box. If absent, the description area is left blank.
+
+**Color** — `notebook.metadata.color` sets the hex color of the left accent border on the index card (e.g. `"#e53935"` for red, `"#43a047"` for green). Defaults to `#42a5f5` (blue) if absent.
+
+**Progress** — `notebook.metadata.progress` renders a circular progress indicator in the bottom-right of the index card. Accepts an integer `0–100`. Hidden if absent.
+
 **Form fields** — Code cells support Google Colab-compatible `#@param` annotations for interactive widgets: plain values, sliders (`type:"slider"` with `min`/`max`/`step`), dropdowns (array of values), and booleans (`type:"boolean"`).
 
 ### i18n

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { settingsStore } from "@store/settingsStore";
@@ -16,7 +16,11 @@ const router = useRouter();
 const notebookLabels = computed(() => NOTEBOOK_LABELS[settingsStore.locale]);
 const isRTL = computed(() => LOCALE_METADATA[settingsStore.locale].direction === 'rtl');
 
+type SortMode = 'newest' | 'oldest' | 'alpha';
+
 const allNotebooks = ref<NotebookInfo[]>([]);
+const searchQuery = ref('');
+const sortMode = ref<SortMode>('newest');
 const showUrlDialog = ref(false);
 const showNewNotebookDialog = ref(false);
 const newNotebookName = ref('');
@@ -41,6 +45,14 @@ const errorDialog = ref({
 });
 
 const currentFolder = computed(() => (route.query.folder as string) || '');
+
+watch(currentFolder, () => { searchQuery.value = ''; });
+
+const sortOptions = computed(() => [
+  { title: notebookLabels.value.sortNewest, value: 'newest' as SortMode },
+  { title: notebookLabels.value.sortOldest, value: 'oldest' as SortMode },
+  { title: notebookLabels.value.sortAlpha,  value: 'alpha'  as SortMode },
+]);
 
 interface FolderItem {
   name: string;
@@ -86,6 +98,32 @@ const currentItems = computed(() => {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return { folders, notebooks };
+});
+
+const filteredNotebooks = computed(() => {
+  let list = currentItems.value.notebooks;
+
+  const q = searchQuery.value.trim().toLowerCase();
+  if (q) {
+    list = list.filter(nb =>
+      nb.title.toLowerCase().includes(q) ||
+      (nb.description && nb.description.toLowerCase().includes(q))
+    );
+  }
+
+  const copy = [...list];
+  switch (sortMode.value) {
+    case 'alpha':
+      return copy.sort((a, b) => a.title.localeCompare(b.title));
+    case 'oldest':
+      return copy.sort((a, b) =>
+        (a.lastModified || a.created).getTime() - (b.lastModified || b.created).getTime()
+      );
+    default: // newest
+      return copy.sort((a, b) =>
+        (b.lastModified || b.created).getTime() - (a.lastModified || a.created).getTime()
+      );
+  }
 });
 
 const breadcrumbs = computed(() => {
@@ -243,7 +281,7 @@ const closeErrorDialog = () => {
       <v-breadcrumbs
         v-if="breadcrumbs.length > 1"
         :items="breadcrumbs"
-        class="pa-0 mb-4"
+        class="pa-0 mb-3"
       >
         <template v-slot:item="{ item }">
           <v-breadcrumbs-item
@@ -255,6 +293,29 @@ const closeErrorDialog = () => {
           </v-breadcrumbs-item>
         </template>
       </v-breadcrumbs>
+
+      <!-- Search and Sort controls -->
+      <div class="d-flex align-center gap-3 mb-4">
+        <v-text-field
+          v-model="searchQuery"
+          :placeholder="notebookLabels.searchPlaceholder"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          density="compact"
+          hide-details
+          clearable
+          class="flex-grow-1"
+        />
+        <v-select
+          v-model="sortMode"
+          :items="sortOptions"
+          :label="notebookLabels.sortBy"
+          variant="outlined"
+          density="compact"
+          hide-details
+          style="max-width: 185px; flex-shrink: 0"
+        />
+      </div>
 
       <!-- Folders and Notebooks Grid -->
       <v-row>
@@ -276,7 +337,7 @@ const closeErrorDialog = () => {
 
         <!-- Notebook cards -->
         <v-col
-          v-for="notebook in currentItems.notebooks"
+          v-for="notebook in filteredNotebooks"
           :key="notebook.id"
           cols="12"
           sm="6"
@@ -291,11 +352,17 @@ const closeErrorDialog = () => {
         </v-col>
       </v-row>
 
-      <!-- Empty state -->
+      <!-- Empty state: no notebooks at all -->
       <div v-if="currentItems.folders.length === 0 && currentItems.notebooks.length === 0" class="text-center mt-8">
-        <v-icon icon="mdi-notebook-outline" size="64" color="grey"></v-icon>
+        <v-icon icon="mdi-notebook-outline" size="64" color="grey" />
         <p class="text-h6 mt-4 text-medium-emphasis">No notebooks yet</p>
         <p class="text-body-2 text-medium-emphasis">Create your first notebook to get started</p>
+      </div>
+
+      <!-- Empty state: search returned nothing -->
+      <div v-else-if="filteredNotebooks.length === 0 && searchQuery.trim()" class="text-center mt-8">
+        <v-icon icon="mdi-magnify-close" size="64" color="grey" />
+        <p class="text-h6 mt-4 text-medium-emphasis">{{ notebookLabels.noSearchResults }}</p>
       </div>
     </v-container>
 
