@@ -124,7 +124,7 @@ onUnmounted(() => {
         @click="toggleResources"
       >
         <v-icon>mdi-paperclip</v-icon>
-        <v-tooltip activator="parent" location="bottom"> Resources </v-tooltip>
+        <v-tooltip activator="parent" location="bottom">{{ notebookLabels.resources }}</v-tooltip>
       </v-btn>
     </div>
 
