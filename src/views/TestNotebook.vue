@@ -77,6 +77,7 @@ onUnmounted(() => {
 .notebook-content {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   min-height: 0;
   overscroll-behavior: contain;
   padding-bottom: 32px;

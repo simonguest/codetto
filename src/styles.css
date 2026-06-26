@@ -149,13 +149,12 @@ textarea:not([rows]) {
 html,
 body {
   overscroll-behavior-y: none;
-  overflow: visible;
+  overflow: hidden;
   height: 100%;
 }
 #app {
-  overflow: auto;
+  overflow: hidden;
   height: 100%;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* =============================================================
