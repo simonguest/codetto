@@ -121,50 +121,68 @@ onUnmounted(() => {
       </v-btn>
 
       <v-btn
-        icon="mdi-paperclip"
+        icon="mdi-bookshelf"
         variant="text"
         size="small"
         :color="showResources ? 'primary' : 'default'"
         @click="toggleResources"
       >
-        <v-icon>mdi-paperclip</v-icon>
+        <v-icon>mdi-bookshelf</v-icon>
         <v-tooltip activator="parent" location="bottom">{{ notebookLabels.resources }}</v-tooltip>
       </v-btn>
     </div>
 
-    <!-- Scrollable content -->
-    <div class="notebook-content">
-      <v-container fluid class="pa-4">
-        <!-- Notebook Renderer -->
-        <Renderer
-          v-if="notebook && !loading && !error"
-          :initial-notebook="notebook"
-          :id="notebookId"
-          :theme="settingsStore.theme"
-          :locale="settingsStore.locale"
-          :edit-mode="editMode"
-        />
+    <!-- Content + sidebar overlay -->
+    <div class="notebook-body">
+      <!-- Scrollable content -->
+      <div class="notebook-content">
+        <v-container fluid class="pa-4">
+          <!-- Notebook Renderer -->
+          <Renderer
+            v-if="notebook && !loading && !error"
+            :initial-notebook="notebook"
+            :id="notebookId"
+            :theme="settingsStore.theme"
+            :locale="settingsStore.locale"
+            :edit-mode="editMode"
+          />
 
-        <!-- Loading state -->
-        <div v-else-if="loading" class="loading">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
-          <p>{{ notebookLabels.loadingNotebook }}</p>
-        </div>
-
-        <!-- Error state -->
-        <v-card v-else-if="error" class="pa-6">
-          <div class="text-center">
-            <v-icon icon="mdi-alert-circle" size="64" color="error" class="mb-4"></v-icon>
-            <h2 class="text-h5 mb-2">{{ notebookLabels.failedToLoad }}</h2>
-            <p class="text-body-1 text-medium-emphasis mb-4">
-              {{ error }}
-            </p>
-            <v-btn color="primary" @click="goBack">
-              {{ notebookLabels.backToNotebooks }}
-            </v-btn>
+          <!-- Loading state -->
+          <div v-else-if="loading" class="loading">
+            <v-progress-circular indeterminate color="primary"></v-progress-circular>
+            <p>{{ notebookLabels.loadingNotebook }}</p>
           </div>
-        </v-card>
-      </v-container>
+
+          <!-- Error state -->
+          <v-card v-else-if="error" class="pa-6">
+            <div class="text-center">
+              <v-icon icon="mdi-alert-circle" size="64" color="error" class="mb-4"></v-icon>
+              <h2 class="text-h5 mb-2">{{ notebookLabels.failedToLoad }}</h2>
+              <p class="text-body-1 text-medium-emphasis mb-4">
+                {{ error }}
+              </p>
+              <v-btn color="primary" @click="goBack">
+                {{ notebookLabels.backToNotebooks }}
+              </v-btn>
+            </div>
+          </v-card>
+        </v-container>
+      </div>
+
+      <!-- Resources sidebar overlay -->
+      <div class="notebook-sidebar" :class="{ 'notebook-sidebar-open': showResources }">
+        <div class="notebook-sidebar-header">
+          <span class="text-subtitle2">{{ notebookLabels.resources }}</span>
+          <v-btn icon="mdi-close" variant="text" size="small" @click="showResources = false" />
+        </div>
+      </div>
+
+      <!-- Backdrop to close sidebar on outside click -->
+      <div
+        v-if="showResources"
+        class="notebook-sidebar-backdrop"
+        @click="showResources = false"
+      />
     </div>
   </div>
 </template>
@@ -206,13 +224,53 @@ html[dir="ltr"] .notebook-title {
   text-align: left;
 }
 
-.notebook-content {
+.notebook-body {
   flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.notebook-content {
+  height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  min-height: 0;
   overscroll-behavior: contain;
   padding-bottom: 32px;
+}
+
+.notebook-sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  background: rgb(var(--v-theme-surface));
+  border-left: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.notebook-sidebar-open {
+  transform: translateX(0);
+}
+
+.notebook-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 16px;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  flex-shrink: 0;
+}
+
+.notebook-sidebar-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
 }
 
 .loading {
