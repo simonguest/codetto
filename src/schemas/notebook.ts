@@ -82,12 +82,23 @@ export interface LanguageInfo {
 }
 
 /**
+ * A file embedded in the notebook, base64-encoded.
+ */
+export interface NotebookFile {
+  name: string;
+  mimeType: string;
+  size: number;   // raw byte count (pre-base64)
+  data: string;   // base64-encoded content
+}
+
+/**
  * Metadata for the entire notebook.
  * Following Jupyter spec, notebook metadata can contain arbitrary key-value pairs.
  */
 export interface NotebookMetadata {
   kernelspec?: KernelSpec;
   language_info?: LanguageInfo;
+  files?: NotebookFile[];
   /** Allow any additional metadata properties */
   [key: string]: any;
 }

@@ -53,6 +53,7 @@ The `/test/:filename` route (`src/views/TestNotebook.vue`) fetches the notebook 
 - **stdout output** — `page.locator('textarea.output-console')`; only in the DOM when the stdout tab is active (Vuetify tab window items use `v-if`)
 - **Pyodide ready** — inferred from the run button becoming enabled (no direct DOM indicator)
 - **Edit mode active** — `page.locator('.cell-toolbar').first()` visible; use `?edit=true` on the test URL to activate
+- **Resources panel active** — use `?resources=true` on the test URL; `TestNotebook.vue` mounts `ResourcesPanel` in an open sidebar (analogous to `?edit=true`); the file input is directly accessible without clicking the bookshelf button. File item rows use the `.resources-file-item` selector.
 - **Textarea value** — use `toHaveValue()` not `toContainText()` for `<textarea>` elements; `toContainText` reads innerHTML, not the input value
 - **Multi-element locators** — Playwright strict mode rejects `.toBeVisible()` when a locator matches more than one element; use `.first()` or `.nth(n)` to disambiguate
 
@@ -166,6 +167,8 @@ Notebooks open in read-only mode by default. Edit mode is toggled via the pencil
 
 **Module** — `notebook.metadata.module` assigns a notebook to a module within a course (e.g. `"Unit 3: Loops"`). The Module dropdown appears alongside the Course dropdown only after a course is selected, and narrows the view further to notebooks matching both fields. Both fields are optional strings; neither has any independent existence beyond the metadata value.
 
+**Files** — `notebook.metadata.files` stores files embedded in the notebook as an array of `NotebookFile` objects (`{ name: string; mimeType: string; size: number; data: string }`). Files are base64-encoded and mounted in the Pyodide filesystem at `/notebook_files/<name>` when the notebook loads, making them accessible to Python as `open('/notebook_files/data.csv')`. Limits: 5 MB per file, 20 MB total (constants `MAX_FILE_SIZE` / `MAX_TOTAL_SIZE` in `notebookStore.ts`). Managed via `notebookStore.addFile()` / `notebookStore.removeFile()`. See also: **Notebook files** section below.
+
 **Form fields** — Code cells support Google Colab-compatible `#@param` annotations for interactive widgets: plain values, sliders (`type:"slider"` with `min`/`max`/`step`), dropdowns (array of values), and booleans (`type:"boolean"`).
 
 ### i18n
@@ -193,6 +196,17 @@ Current files:
 - **Images:** `abstract.jpg`, `cat.jpg`, `city.jpg`, `codercub.jpg`, `dog.jpg`, `earth.jpg`, `fabric.jpg`, `forest.jpg`, `undersea.jpg`
 - **Sounds:** `clang.wav`, `coin_pickup.wav`, `correct.wav`, `door.wav`, `gameover.wav`, `incorrect.wav`, `laser.wav`, `pop.wav`, `thud.wav`, `wood.wav`, `zap.wav`
 - **Music:** `music_ambience.wav`, `music_bach.wav`, `music_sibelius.wav`
+
+### Notebook files (`notebook.metadata.files`)
+
+Students and teachers can attach files to a notebook via the **Resources panel** (bookshelf icon in the notebook header). Files are base64-encoded and stored in `notebook.metadata.files[]`, making notebooks self-contained — files travel with the notebook when exported or shared.
+
+- **UI** — the bookshelf icon opens a slide-in overlay panel (`src/components/ResourcesPanel.vue`). The panel shows the file list with type icons and sizes, a total usage indicator (x MB / 20 MB), and an "Add file" button. The file input accepts images, audio, CSV, JSON, and plain text. Unsupported types and oversized files are rejected with an inline error.
+- **Mount point** — `/notebook_files/<name>` in Pyodide's virtual FS. Student Python code accesses files as `open('/notebook_files/data.csv')`.
+- **Mounting lifecycle** — `mountNotebookFiles()` in `PyodideWorker.ts` creates `/notebook_files`, clears stale files, and writes the current set. It runs when the worker initialises and whenever `notebookStore.content.metadata.files` changes (watched deeply in `PyodideProvider.vue`). Messages are ordered in the worker queue, so a `mount_notebook_files` sent immediately before a `run` is always processed first.
+- **Schema** — `NotebookFile` in `src/schemas/notebook.ts`: `{ name: string; mimeType: string; size: number; data: string }`. `size` is the raw byte count before base64 encoding.
+- **Size limits** — `MAX_FILE_SIZE = 5 MB` per file, `MAX_TOTAL_SIZE = 20 MB` total (exported from `notebookStore.ts`). When replacing a file with the same name, the replaced file's size is subtracted before checking the total.
+- **Filename sanitisation** — spaces become `_`; characters outside `[a-zA-Z0-9._-]` are stripped. Done in `ResourcesPanel.vue` before calling `addFile`.
 
 ### via.js bridge
 

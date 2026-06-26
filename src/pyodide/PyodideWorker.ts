@@ -61,6 +61,22 @@ async function mountSampleFiles() {
   );
 }
 
+async function mountNotebookFiles(files: Array<{ name: string; data: string }>) {
+  try { pyodide.FS.mkdir("/notebook_files"); } catch { /* already exists */ }
+  const entries: string[] = pyodide.FS.readdir("/notebook_files");
+  for (const entry of entries) {
+    if (entry !== "." && entry !== "..") {
+      try { pyodide.FS.unlink(`/notebook_files/${entry}`); } catch { /* ignore */ }
+    }
+  }
+  for (const { name, data } of files) {
+    const binary = atob(data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    pyodide.FS.writeFile(`/notebook_files/${name}`, bytes);
+  }
+}
+
 async function initialize() {
   console.log("PyodideWorker: Starting Pyodide initialization...");
 
@@ -208,6 +224,15 @@ self.onmessage = async event => {
       self.postMessage({
         type: "reset_completed"
       });
+      break;
+    case "mount_notebook_files":
+      if (pyodide) {
+        try {
+          await mountNotebookFiles(data.files ?? []);
+        } catch (e) {
+          console.error("PyodideWorker: Failed to mount notebook files:", e);
+        }
+      }
       break;
     case "set_env_vars":
       if (pyodide && data.envVars) {

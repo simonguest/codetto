@@ -96,6 +96,7 @@ onMounted(async () => {
           pyodideStore.pyodideVersion = pyodideVersion;
         }
         sendEnvVars();
+        sendNotebookFiles();
         break;
       case "reset_completed":
         viaClear();
@@ -149,6 +150,13 @@ onUnmounted(async () => {
   worker.terminate();
 });
 
+function sendNotebookFiles() {
+  const files = (notebookStore.content.metadata?.files ?? []).map(
+    (f: { name: string; data: string }) => ({ name: f.name, data: f.data })
+  );
+  worker.postMessage({ type: "mount_notebook_files", files });
+}
+
 function sendEnvVars() {
   // Spread into a plain object so structured clone works reliably with Vue reactive proxies
   worker.postMessage({ type: "set_env_vars", envVars: { ...settingsStore.envVars } });
@@ -197,6 +205,16 @@ watch(
       syncNotebookPackages();
     }
   }
+);
+
+watch(
+  () => notebookStore.content.metadata?.files,
+  () => {
+    if (pyodideStore.workerStatus === "ready") {
+      sendNotebookFiles();
+    }
+  },
+  { deep: true }
 );
 
 watch(

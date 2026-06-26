@@ -7,10 +7,12 @@ import { notebookStore } from "@store/notebookStore";
 import type { Notebook } from "@schemas/notebook";
 
 import Renderer from "@/Renderer.vue";
+import ResourcesPanel from "@components/ResourcesPanel.vue";
 
 const route = useRoute();
 const filename = computed(() => route.params.filename as string);
 const editMode = computed(() => route.query.edit === 'true');
+const showResources = computed(() => route.query.resources === 'true');
 
 const notebook = ref<Notebook | null>(null);
 const loading = ref(true);
@@ -38,6 +40,7 @@ onUnmounted(() => {
 
 <template>
   <div class="notebook">
+    <div class="notebook-body">
     <div class="notebook-content">
       <v-container fluid class="pa-4">
         <Renderer
@@ -63,6 +66,11 @@ onUnmounted(() => {
         </v-card>
       </v-container>
     </div>
+
+    <div v-if="showResources" class="notebook-sidebar notebook-sidebar-open">
+      <ResourcesPanel />
+    </div>
+    </div>
   </div>
 </template>
 
@@ -74,13 +82,37 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.notebook-content {
+.notebook-body {
   flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.notebook-content {
+  height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  min-height: 0;
   overscroll-behavior: contain;
   padding-bottom: 32px;
+}
+
+.notebook-sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  background: rgb(var(--v-theme-surface));
+  border-left: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.notebook-sidebar-open {
+  transform: translateX(0);
 }
 
 .loading {

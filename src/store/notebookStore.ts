@@ -1,7 +1,10 @@
 import { reactive } from "vue";
 import { v4 as uuidv4 } from "uuid";
 
-import { Notebook, Cell, Output, NOTEBOOK_SKELETON } from "@schemas/notebook";
+import { Notebook, Cell, Output, NOTEBOOK_SKELETON, NotebookFile } from "@schemas/notebook";
+
+export const MAX_FILE_SIZE = 5 * 1024 * 1024;    // 5 MB per file
+export const MAX_TOTAL_SIZE = 20 * 1024 * 1024;  // 20 MB total across all files
 import { Locale } from "@/i18n";
 
 export type OutputType = "result" | "stdout" | "error";
@@ -348,6 +351,35 @@ export const notebookStore = reactive({
       this.removeTag(cellId, tag);
     } else {
       this.addTag(cellId, tag);
+    }
+  },
+  addFile(file: NotebookFile): { success: boolean; error?: string } {
+    if (!this.content.metadata) this.content.metadata = {};
+    if (!this.content.metadata.files) this.content.metadata.files = [];
+    const files: NotebookFile[] = this.content.metadata.files;
+
+    if (file.size > MAX_FILE_SIZE) return { success: false, error: 'too_large' };
+
+    const existingTotal = files.reduce((sum, f) => sum + f.size, 0);
+    const replaced = files.find(f => f.name === file.name);
+    const replacedSize = replaced ? replaced.size : 0;
+    if (existingTotal - replacedSize + file.size > MAX_TOTAL_SIZE) {
+      return { success: false, error: 'total_too_large' };
+    }
+
+    const idx = files.findIndex(f => f.name === file.name);
+    if (idx !== -1) files.splice(idx, 1);
+    files.push(file);
+    this.updated = Date.now();
+    return { success: true };
+  },
+  removeFile(name: string) {
+    const files: NotebookFile[] | undefined = this.content.metadata?.files;
+    if (!files) return;
+    const idx = files.findIndex(f => f.name === name);
+    if (idx !== -1) {
+      files.splice(idx, 1);
+      this.updated = Date.now();
     }
   },
   getGlobals() {

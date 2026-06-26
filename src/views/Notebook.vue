@@ -11,6 +11,7 @@ import { useNotebookAutoSave } from "@composables/useNotebookAutoSave";
 import type { Notebook } from "@schemas/notebook";
 
 import Renderer from "@/Renderer.vue";
+import ResourcesPanel from "@components/ResourcesPanel.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -172,9 +173,10 @@ onUnmounted(() => {
       <!-- Resources sidebar overlay -->
       <div class="notebook-sidebar" :class="{ 'notebook-sidebar-open': showResources }">
         <div class="notebook-sidebar-header">
-          <span class="text-subtitle2">{{ notebookLabels.resources }}</span>
+          <span class="text-subtitle-2">{{ notebookLabels.resources }}</span>
           <v-btn icon="mdi-close" variant="text" size="small" @click="showResources = false" />
         </div>
+        <ResourcesPanel />
       </div>
 
       <!-- Backdrop to close sidebar on outside click -->

@@ -56,6 +56,12 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   filterByCourse: string;
   filterByModule: string;
   resources: string;
+  filesSection: string;
+  filesAdd: string;
+  filesEmpty: string;
+  filesErrorSize: string;
+  filesErrorTotal: string;
+  filesErrorType: string;
   duplicateTitle: string;
   duplicateMessage: string;
   duplicateOpenExisting: string;
@@ -117,6 +123,12 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'Course',
     filterByModule: 'Module',
     resources: 'Resources',
+    filesSection: 'Files',
+    filesAdd: 'Add file',
+    filesEmpty: 'No files attached. Add files to use them in Python at /notebook_files.',
+    filesErrorSize: 'File exceeds the 5 MB limit',
+    filesErrorTotal: 'Total size would exceed the 20 MB limit',
+    filesErrorType: 'File type not supported. Use images, audio, CSV, JSON, or plain text.',
     duplicateTitle: 'Notebook Already Added',
     duplicateMessage: 'You already have a notebook called "{title}". Open your existing copy or import a fresh one?',
     duplicateOpenExisting: 'Open Existing',
@@ -178,6 +190,12 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'コース',
     filterByModule: 'モジュール',
     resources: 'リソース',
+    filesSection: 'ファイル',
+    filesAdd: 'ファイルを追加',
+    filesEmpty: 'ファイルが添付されていません。/notebook_files でPythonから使えます。',
+    filesErrorSize: 'ファイルが5MBの制限を超えています',
+    filesErrorTotal: '合計サイズが20MBを超えます',
+    filesErrorType: 'ファイル形式は非対応です。画像、音声、CSV、JSON、テキストを使用してください。',
     duplicateTitle: 'ノートブックはすでに追加されています',
     duplicateMessage: '「{title}」というノートブックがすでにあります。既存のコピーを開くか、新しいコピーをインポートしますか？',
     duplicateOpenExisting: '既存を開く',
@@ -239,6 +257,12 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'कोर्स',
     filterByModule: 'मॉड्यूल',
     resources: 'संसाधन',
+    filesSection: 'फ़ाइलें',
+    filesAdd: 'फ़ाइल जोड़ें',
+    filesEmpty: 'कोई फ़ाइल संलग्न नहीं। /notebook_files पर Python में उपयोग करें।',
+    filesErrorSize: 'फ़ाइल 5 MB की सीमा से अधिक है',
+    filesErrorTotal: 'कुल आकार 20 MB की सीमा से अधिक हो जाएगा',
+    filesErrorType: 'फ़ाइल प्रकार समर्थित नहीं। छवि, ऑडियो, CSV, JSON या सादा पाठ उपयोग करें।',
     duplicateTitle: 'नोटबुक पहले से जोड़ी गई है',
     duplicateMessage: '"{title}" नाम की नोटबुक पहले से है। अपनी मौजूदा प्रति खोलें या नई प्रति आयात करें?',
     duplicateOpenExisting: 'मौजूदा खोलें',
@@ -300,6 +324,12 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'دوره',
     filterByModule: 'ماژول',
     resources: 'منابع',
+    filesSection: 'فایل‌ها',
+    filesAdd: 'افزودن فایل',
+    filesEmpty: 'فایلی پیوست نشده. در Python از /notebook_files استفاده کنید.',
+    filesErrorSize: 'فایل از حد ۵ مگابایت تجاوز می‌کند',
+    filesErrorTotal: 'حجم کل از حد ۲۰ مگابایت تجاوز خواهد کرد',
+    filesErrorType: 'نوع فایل پشتیبانی نمی‌شود. از تصویر، صوت، CSV، JSON یا متن ساده استفاده کنید.',
     duplicateTitle: 'دفترچه قبلاً اضافه شده است',
     duplicateMessage: 'شما قبلاً دفترچه‌ای با نام «{title}» دارید. آیا می‌خواهید نسخه موجود را باز کنید یا یک نسخه جدید وارد کنید؟',
     duplicateOpenExisting: 'باز کردن نسخه موجود',
@@ -361,6 +391,12 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'Курс',
     filterByModule: 'Модуль',
     resources: 'Нөөцүүд',
+    filesSection: 'Файлууд',
+    filesAdd: 'Файл нэмэх',
+    filesEmpty: 'Файл хавсаргаагүй байна. /notebook_files дээр Python-д ашиглана.',
+    filesErrorSize: 'Файл 5 МБ-ын хязгаараас хэтэрсэн байна',
+    filesErrorTotal: 'Нийт хэмжээ 20 МБ-ын хязгаараас хэтрэх болно',
+    filesErrorType: 'Файлын төрөл дэмжигдэхгүй. Зураг, аудио, CSV, JSON эсвэл текст ашиглана уу.',
     duplicateTitle: 'Дэвтэр аль хэдийн нэмэгдсэн байна',
     duplicateMessage: '"{title}" нэртэй дэвтэр аль хэдийн байна. Одоо байгаа хувийг нээх үү эсвэл шинэ хувийг импортлох уу?',
     duplicateOpenExisting: 'Одоо байгааг нээх',
