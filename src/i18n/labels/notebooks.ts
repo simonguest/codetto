@@ -56,6 +56,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
   filterByCourse: string;
   filterByModule: string;
   resources: string;
+  duplicateTitle: string;
+  duplicateMessage: string;
+  duplicateOpenExisting: string;
+  duplicateImportNew: string;
 }> = {
   'en-US': {
     title: 'My Notebooks',
@@ -113,6 +117,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'Course',
     filterByModule: 'Module',
     resources: 'Resources',
+    duplicateTitle: 'Notebook Already Added',
+    duplicateMessage: 'You already have a notebook called "{title}". Open your existing copy or import a fresh one?',
+    duplicateOpenExisting: 'Open Existing',
+    duplicateImportNew: 'Import as New',
   },
   'ja-JP': {
     title: 'マイノートブック',
@@ -170,6 +178,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'コース',
     filterByModule: 'モジュール',
     resources: 'リソース',
+    duplicateTitle: 'ノートブックはすでに追加されています',
+    duplicateMessage: '「{title}」というノートブックがすでにあります。既存のコピーを開くか、新しいコピーをインポートしますか？',
+    duplicateOpenExisting: '既存を開く',
+    duplicateImportNew: '新しくインポート',
   },
   'hi-IN': {
     title: 'मेरी नोटबुक',
@@ -227,6 +239,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'कोर्स',
     filterByModule: 'मॉड्यूल',
     resources: 'संसाधन',
+    duplicateTitle: 'नोटबुक पहले से जोड़ी गई है',
+    duplicateMessage: '"{title}" नाम की नोटबुक पहले से है। अपनी मौजूदा प्रति खोलें या नई प्रति आयात करें?',
+    duplicateOpenExisting: 'मौजूदा खोलें',
+    duplicateImportNew: 'नई के रूप में आयात करें',
   },
   'fa-IR': {
     title: 'دفترچه‌های من',
@@ -284,6 +300,10 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'دوره',
     filterByModule: 'ماژول',
     resources: 'منابع',
+    duplicateTitle: 'دفترچه قبلاً اضافه شده است',
+    duplicateMessage: 'شما قبلاً دفترچه‌ای با نام «{title}» دارید. آیا می‌خواهید نسخه موجود را باز کنید یا یک نسخه جدید وارد کنید؟',
+    duplicateOpenExisting: 'باز کردن نسخه موجود',
+    duplicateImportNew: 'وارد کردن به عنوان جدید',
   },
   'mn-MN': {
     title: 'Миний дэвтэрүүд',
@@ -341,5 +361,9 @@ export const NOTEBOOK_LABELS: Record<Locale, {
     filterByCourse: 'Курс',
     filterByModule: 'Модуль',
     resources: 'Нөөцүүд',
+    duplicateTitle: 'Дэвтэр аль хэдийн нэмэгдсэн байна',
+    duplicateMessage: '"{title}" нэртэй дэвтэр аль хэдийн байна. Одоо байгаа хувийг нээх үү эсвэл шинэ хувийг импортлох уу?',
+    duplicateOpenExisting: 'Одоо байгааг нээх',
+    duplicateImportNew: 'Шинэ болгон импортлох',
   }
 } as const;

@@ -2,13 +2,40 @@
 import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import BaseLayout from "./BaseLayout.vue";
-import { importNotebookFromUrl } from "@storage/notebookStorage";
+import { parseNotebookFromUrl, saveImportedNotebook, findDuplicateNotebook, type NotebookInfo } from "@storage/notebookStorage";
+import type { Notebook } from "@schemas/notebook";
 import { settingsStore } from "@store/settingsStore";
 import { NOTEBOOK_LABELS } from "@/i18n";
+import DuplicateNotebookDialog from "@components/DuplicateNotebookDialog.vue";
 
 const router = useRouter();
 const notebookLabels = computed(() => NOTEBOOK_LABELS[settingsStore.locale]);
 const errorDialog = ref({ show: false, title: '', message: '' });
+
+const duplicateMatch = ref<NotebookInfo | null>(null);
+const pendingImport = ref<{ notebook: Notebook; sourceUrl: string } | null>(null);
+
+const openExisting = () => {
+  const id = duplicateMatch.value?.id;
+  pendingImport.value = null;
+  duplicateMatch.value = null;
+  if (id) router.push({ name: 'notebook', params: { id } });
+};
+
+const finishImport = async () => {
+  if (!pendingImport.value) return;
+  const { notebook, sourceUrl } = pendingImport.value;
+  pendingImport.value = null;
+  duplicateMatch.value = null;
+
+  const id = await saveImportedNotebook(notebook, { sourceUrl });
+  router.push({ name: 'notebook', params: { id } });
+};
+
+const cancelDuplicate = () => {
+  pendingImport.value = null;
+  duplicateMatch.value = null;
+};
 
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search);
@@ -18,9 +45,24 @@ onMounted(async () => {
   // Strip the query param before processing so a refresh doesn't retry
   window.history.replaceState({}, '', window.location.pathname + window.location.hash);
 
+  const url = `https://github.com/${githubParam}`;
+
   try {
-    const id = await importNotebookFromUrl(`https://github.com/${githubParam}`);
-    router.push({ name: 'notebook', params: { id } });
+    const notebook = await parseNotebookFromUrl(url);
+    const duplicate = await findDuplicateNotebook(
+      url,
+      notebook.metadata?.title as string,
+      notebook.metadata?.course as string | undefined,
+      notebook.metadata?.module as string | undefined,
+    );
+
+    if (duplicate) {
+      pendingImport.value = { notebook, sourceUrl: url };
+      duplicateMatch.value = duplicate;
+    } else {
+      const id = await saveImportedNotebook(notebook, { sourceUrl: url });
+      router.push({ name: 'notebook', params: { id } });
+    }
   } catch (error) {
     errorDialog.value = {
       show: true,
@@ -33,6 +75,14 @@ onMounted(async () => {
 
 <template>
   <BaseLayout />
+
+  <DuplicateNotebookDialog
+    :show="!!duplicateMatch"
+    :existing="duplicateMatch"
+    @open-existing="openExisting"
+    @import-new="finishImport"
+    @cancel="cancelDuplicate"
+  />
 
   <v-dialog v-model="errorDialog.show" max-width="400px">
     <v-card>

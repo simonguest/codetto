@@ -7,8 +7,10 @@ import { NOTEBOOK_LABELS, LOCALE_METADATA } from "@/i18n";
 import NotebookCard from "@components/NotebookCard.vue";
 import FolderCard from "@components/FolderCard.vue";
 
-import { listNotebooks, deleteNotebook as deleteNotebookFromStorage, renameNotebook as renameNotebookInStorage, createNotebook, importNotebookFromFile, importNotebookFromUrl, type NotebookInfo } from "@storage/notebookStorage";
+import { listNotebooks, deleteNotebook as deleteNotebookFromStorage, renameNotebook as renameNotebookInStorage, createNotebook, parseNotebookFromFile, parseNotebookFromUrl, saveImportedNotebook, findDuplicateNotebook, type NotebookInfo } from "@storage/notebookStorage";
+import type { Notebook } from "@schemas/notebook";
 import UrlInputDialog from "@components/UrlInputDialog.vue";
+import DuplicateNotebookDialog from "@components/DuplicateNotebookDialog.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -58,6 +60,9 @@ const errorDialog = ref({
   title: '',
   message: ''
 });
+
+const duplicateMatch = ref<NotebookInfo | null>(null);
+const pendingImport = ref<{ notebook: Notebook; sourceUrl?: string; folder?: string } | null>(null);
 
 const currentFolder = computed(() => (route.query.folder as string) || '');
 
@@ -221,34 +226,70 @@ const deleteNotebook = async (notebookId: string) => {
   }
 };
 
+const finishImport = async () => {
+  if (!pendingImport.value) return;
+  const { notebook, sourceUrl, folder } = pendingImport.value;
+  pendingImport.value = null;
+  duplicateMatch.value = null;
+
+  const id = await saveImportedNotebook(notebook, { sourceUrl, folder });
+  await loadNotebooks();
+  router.push({ name: 'notebook', params: { id } });
+};
+
+const openExisting = () => {
+  const id = duplicateMatch.value?.id;
+  pendingImport.value = null;
+  duplicateMatch.value = null;
+  if (id) router.push({ name: 'notebook', params: { id } });
+};
+
+const cancelDuplicate = () => {
+  pendingImport.value = null;
+  duplicateMatch.value = null;
+};
+
 const importFromFile = async () => {
-  try {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.ipynb';
-    input.style.display = 'none';
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.ipynb';
+  input.style.display = 'none';
 
-    input.onchange = async (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+  input.onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
 
-      try {
-        const id = await importNotebookFromFile(file, currentFolder.value || undefined);
-        console.log('Notebook imported successfully:', id);
+    try {
+      const notebook = await parseNotebookFromFile(file);
+      const folder = currentFolder.value || undefined;
+      const duplicate = await findDuplicateNotebook(
+        undefined,
+        notebook.metadata?.title as string,
+        notebook.metadata?.course as string | undefined,
+        notebook.metadata?.module as string | undefined,
+      );
+
+      if (duplicate) {
+        pendingImport.value = { notebook, folder };
+        duplicateMatch.value = duplicate;
+      } else {
+        const id = await saveImportedNotebook(notebook, { folder });
         await loadNotebooks();
-      } catch (importError) {
-        console.error('Failed to import notebook:', importError);
-        alert(`Failed to import notebook: ${importError instanceof Error ? importError.message : 'Unknown error'}`);
+        router.push({ name: 'notebook', params: { id } });
       }
-    };
+    } catch (importError) {
+      console.error('Failed to import notebook:', importError);
+      errorDialog.value = {
+        show: true,
+        title: notebookLabels.value.urlDialogError,
+        message: importError instanceof Error ? importError.message : notebookLabels.value.urlDialogErrorMessage,
+      };
+    }
+  };
 
-    document.body.appendChild(input);
-    input.click();
-    document.body.removeChild(input);
-  } catch (error) {
-    console.error('Failed to import notebook:', error);
-    alert('Failed to import notebook. Please try again.');
-  }
+  document.body.appendChild(input);
+  input.click();
+  document.body.removeChild(input);
 };
 
 const importFromUrl = () => {
@@ -259,9 +300,23 @@ const handleUrlSubmit = async (url: string) => {
   showUrlDialog.value = false;
 
   try {
-    const id = await importNotebookFromUrl(url, currentFolder.value || undefined);
-    console.log('Notebook imported successfully:', id);
-    await loadNotebooks();
+    const notebook = await parseNotebookFromUrl(url);
+    const folder = currentFolder.value || undefined;
+    const duplicate = await findDuplicateNotebook(
+      url,
+      notebook.metadata?.title as string,
+      notebook.metadata?.course as string | undefined,
+      notebook.metadata?.module as string | undefined,
+    );
+
+    if (duplicate) {
+      pendingImport.value = { notebook, sourceUrl: url, folder };
+      duplicateMatch.value = duplicate;
+    } else {
+      const id = await saveImportedNotebook(notebook, { sourceUrl: url, folder });
+      await loadNotebooks();
+      router.push({ name: 'notebook', params: { id } });
+    }
   } catch (importError) {
     console.error('Failed to import notebook from URL:', importError);
 
@@ -269,7 +324,7 @@ const handleUrlSubmit = async (url: string) => {
       errorDialog.value = {
         show: true,
         title: notebookLabels.value.urlDialogError,
-        message: importError instanceof Error ? importError.message : notebookLabels.value.urlDialogErrorMessage
+        message: importError instanceof Error ? importError.message : notebookLabels.value.urlDialogErrorMessage,
       };
     }, 150);
   }
@@ -469,6 +524,15 @@ const closeErrorDialog = () => {
       :show="showUrlDialog"
       @submit="handleUrlSubmit"
       @cancel="handleUrlCancel"
+    />
+
+    <!-- Duplicate Notebook Dialog -->
+    <DuplicateNotebookDialog
+      :show="!!duplicateMatch"
+      :existing="duplicateMatch"
+      @open-existing="openExisting"
+      @import-new="finishImport"
+      @cancel="cancelDuplicate"
     />
 
     <!-- Error Dialog -->

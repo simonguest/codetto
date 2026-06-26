@@ -14,6 +14,7 @@ export interface NotebookInfo {
   image?: string;
   course?: string;
   module?: string;
+  sourceUrl?: string;
 }
 
 const DB_NAME = "NotebookDB";
@@ -151,7 +152,7 @@ export const saveNotebook = async (id: string, notebook: Notebook): Promise<void
 
         const record: NotebookRecord = {
           id,
-          notebook,
+          notebook: JSON.parse(JSON.stringify(notebook)),
           lastModified: now,
           created: existingRecord?.created || now,
         };
@@ -230,6 +231,7 @@ export const listNotebooks = async (): Promise<NotebookInfo[]> => {
           image: record.notebook.metadata?.image as string | undefined,
           course: record.notebook.metadata?.course as string | undefined,
           module: record.notebook.metadata?.module as string | undefined,
+          sourceUrl: record.notebook.metadata?.source_url as string | undefined,
         }));
 
         // Sort by created date, newest first
@@ -290,6 +292,107 @@ export const deleteNotebook = async (id: string): Promise<void> => {
       reject(err);
     }
   });
+};
+
+const normalizeImportedNotebook = (notebook: Notebook, defaultTitle: string): Notebook => {
+  if (!notebook.metadata) notebook.metadata = {};
+  if (!notebook.nbformat) notebook.nbformat = 4;
+  if (!notebook.nbformat_minor) notebook.nbformat_minor = 2;
+
+  notebook.cells.forEach((cell: Cell) => {
+    if (!cell.id) cell.id = uuidv4();
+    if (!cell.metadata) cell.metadata = {};
+    if (!cell.source) cell.source = [];
+  });
+
+  if (!notebook.metadata.title) {
+    notebook.metadata.title = defaultTitle;
+  }
+
+  return notebook;
+};
+
+export const parseNotebookFromUrl = async (url: string): Promise<Notebook> => {
+  if (!validateUrl(url)) {
+    throw new Error('Please enter a valid URL (must start with http:// or https://)');
+  }
+
+  const fetchUrl = transformUrl(url);
+  const response = await fetch(fetchUrl);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch notebook: ${response.status} ${response.statusText}`);
+  }
+
+  const content = await response.text();
+  const notebook: Notebook = JSON.parse(content);
+
+  if (!notebook.cells || !Array.isArray(notebook.cells)) {
+    throw new Error('Invalid notebook format: missing or invalid cells array');
+  }
+
+  const urlPath = new URL(url).pathname;
+  const filename = urlPath.split('/').pop() || 'imported-notebook.ipynb';
+  const defaultTitle = filename.replace('.ipynb', '') || 'Imported Notebook';
+
+  return normalizeImportedNotebook(notebook, defaultTitle);
+};
+
+export const parseNotebookFromFile = (file: File): Promise<Notebook> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const notebook: Notebook = JSON.parse(content);
+
+        if (!notebook.cells || !Array.isArray(notebook.cells)) {
+          throw new Error('Invalid notebook format: missing or invalid cells array');
+        }
+
+        const defaultTitle = file.name.replace('.ipynb', '') || 'Imported Notebook';
+        resolve(normalizeImportedNotebook(notebook, defaultTitle));
+      } catch (err) {
+        reject(new Error(`Failed to parse notebook file: ${err instanceof Error ? err.message : String(err)}`));
+      }
+    };
+
+    reader.onerror = () => reject(new Error('Failed to read the selected file'));
+    reader.readAsText(file);
+  });
+};
+
+export const saveImportedNotebook = async (notebook: Notebook, options: { sourceUrl?: string; folder?: string } = {}): Promise<string> => {
+  if (options.folder) {
+    notebook.metadata!.folder = options.folder;
+  }
+  if (options.sourceUrl) {
+    notebook.metadata!.source_url = options.sourceUrl;
+  }
+
+  const id = uuidv4();
+  await saveNotebook(id, notebook);
+  return id;
+};
+
+export const findDuplicateNotebook = async (sourceUrl: string | undefined, title: string, course: string | undefined, module: string | undefined): Promise<NotebookInfo | null> => {
+  const all = await listNotebooks();
+
+  if (sourceUrl) {
+    const byUrl = all.find(nb => nb.sourceUrl === sourceUrl);
+    if (byUrl) return byUrl;
+  }
+
+  const titleNorm = title.trim().toLowerCase();
+  const courseNorm = (course || '').trim().toLowerCase();
+  const moduleNorm = (module || '').trim().toLowerCase();
+
+  return all.find(nb =>
+    nb.title.trim().toLowerCase() === titleNorm &&
+    (nb.course || '').trim().toLowerCase() === courseNorm &&
+    (nb.module || '').trim().toLowerCase() === moduleNorm
+  ) ?? null;
 };
 
 export const loadSampleNotebook = async (samplePath: string): Promise<Notebook> => {
