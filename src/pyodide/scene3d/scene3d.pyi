@@ -216,6 +216,10 @@ class _Shapes:
     def Cone(diameter: float = 1, height: float = 1, tessellation: int = 24) -> Mesh: ...
     @staticmethod
     def Torus(diameter: float = 1, thickness: float = 0.5, tessellation: int = 16) -> Mesh: ...
+    @staticmethod
+    def Text(text: str, size: float = 1, depth: float = 0.2, resolution: int = 8) -> Mesh:
+        """Create extruded 3D text. Returns a single merged Mesh — supports set_color, set_material, set_position, etc."""
+        ...
 
 Shapes: _Shapes
 Material: _Material

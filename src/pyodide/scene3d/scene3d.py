@@ -336,6 +336,8 @@ class Scene:
                 mesh = Shapes.Cone(diameter=m.get("diameter", 1), height=m.get("height", 1), tessellation=m.get("tessellation", 24))
             elif mesh_type == "torus":
                 mesh = Shapes.Torus(diameter=m.get("diameter", 1), thickness=m.get("thickness", 0.5), tessellation=m.get("tessellation", 16))
+            elif mesh_type == "text":
+                mesh = Shapes.Text(text=m.get("text", ""), size=m.get("size", 1), depth=m.get("depth", 0.2))
             else:
                 continue
 
@@ -589,6 +591,10 @@ class _Shapes:
     @staticmethod
     def Torus(diameter=1, thickness=0.5, tessellation=16):
         return _Mesh("torus", diameter=diameter, thickness=thickness, tessellation=tessellation)
+
+    @staticmethod
+    def Text(text, size=1, depth=0.2, resolution=8):
+        return _Mesh("text", text=text, size=size, depth=depth, resolution=resolution)
 
 
 Shapes = _Shapes()

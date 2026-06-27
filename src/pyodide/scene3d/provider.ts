@@ -12,6 +12,7 @@
 import { viaRegister, viaGet } from "@/bridge/viaStore";
 import { notebookStore } from "@store/notebookStore";
 import { pyodideStore } from "@store/pyodideStore";
+import earcut from "earcut";
 
 interface SceneController {
   engine: any;
@@ -27,6 +28,16 @@ interface SceneController {
 }
 
 const MATERIALS_BASE = "/3dassets/materials";
+const FONT_PATH = "/3dassets/fonts/helvetiker_regular.typeface.json";
+let _fontData: any = null;
+
+async function loadFont(): Promise<any> {
+  if (!_fontData) {
+    const res = await fetch(FONT_PATH);
+    _fontData = await res.json();
+  }
+  return _fontData;
+}
 
 async function createMaterial(matConst: string, scene: any): Promise<any> {
   if (matConst.startsWith("mat-simple:")) {
@@ -408,6 +419,19 @@ export async function handleScene3dOp(
           thickness: cfg.thickness ?? 0.5,
           tessellation: cfg.tessellation ?? 16,
         }, controller.scene);
+      } else if (cfg.type === "text") {
+        const { CreateText } = await import("@babylonjs/core/Meshes/Builders/textBuilder.js");
+        const fontData = await loadFont();
+        const textMesh = CreateText("text", cfg.text ?? "", fontData, {
+          size: cfg.size ?? 1,
+          resolution: cfg.resolution ?? 8,
+          depth: cfg.depth ?? 0.2,
+        }, controller.scene, earcut);
+        if (!textMesh) {
+          viaRespond({ type: "error", message: "CreateText returned null (empty string or missing glyphs)" });
+          return true;
+        }
+        mesh = textMesh;
       } else {
         viaRespond({ type: "error", message: `Unknown mesh type: ${cfg.type}` });
         return true;

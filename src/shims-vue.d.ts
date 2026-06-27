@@ -11,3 +11,8 @@ declare module '*?raw' {
   const content: string
   export default content
 }
+
+declare module 'earcut' {
+  function earcut(data: number[], holeIndices?: number[], dim?: number): number[];
+  export default earcut;
+}

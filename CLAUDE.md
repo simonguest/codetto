@@ -383,7 +383,9 @@ def animate(dt):                 # dt = seconds since last frame
 scene.run()                      # blocks Python in event loop; Stop button works
 ```
 
-**Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`, `Shapes.Plane(width, height)`, `Shapes.Cone(diameter, height, tessellation)`, `Shapes.Torus(diameter, thickness, tessellation)`.
+**Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`, `Shapes.Plane(width, height)`, `Shapes.Cone(diameter, height, tessellation)`, `Shapes.Torus(diameter, thickness, tessellation)`, `Shapes.Text(text, size, depth, resolution)`.
+
+**`Shapes.Text(text, size, depth, resolution)`:** creates extruded 3D text using the bundled Helvetiker font (`public/3dassets/fonts/helvetiker_regular.typeface.json`), loaded lazily and cached. Returns a single merged `Mesh` — supports all the same `set_color`, `set_material`, `set_position`, etc. methods as any other shape. `earcut` is installed as a peer dependency and injected at call time.
 
 **Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `set_material(constant)`, `set_glossiness(value)`, `set_tiling(u, v=None)`, `on_click(fn)`, `on_collide(other_mesh, fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid. `set_ground` also returns a `Mesh` so all these methods apply to the ground too.
 

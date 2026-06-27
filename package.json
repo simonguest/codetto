@@ -26,6 +26,7 @@
     "@videojs-player/vue": "^1.0.0",
     "canvas-confetti": "^1.9.4",
     "codemirror": "^6.0.2",
+    "earcut": "^3.0.2",
     "highlight.js": "^11.11.1",
     "katex": "^0.17.0",
     "markdown-it": "^14.2.0",
