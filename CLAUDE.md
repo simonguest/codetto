@@ -383,7 +383,7 @@ def animate(dt):                 # dt = seconds since last frame
 scene.run()                      # blocks Python in event loop; Stop button works
 ```
 
-**Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`.
+**Shapes:** `Shapes.Box(width, height, depth)`, `Shapes.Sphere(diameter, segments)`, `Shapes.Cylinder(diameter, height, tessellation)`, `Shapes.Plane(width, height)`, `Shapes.Cone(diameter, height, tessellation)`, `Shapes.Torus(diameter, thickness, tessellation)`.
 
 **Mesh methods:** `set_position(x, y, z)`, `set_rotation(x, y, z)` (degrees), `set_scale(x, y, z)`, `set_color(hex)`, `set_texture(source)`, `set_material(constant)`, `set_glossiness(value)`, `set_tiling(u, v=None)`, `on_click(fn)`, `on_collide(other_mesh, fn)`. All keyword arguments default to 0 (or 1 for scale), so `set_rotation(y=45)` is valid. `set_ground` also returns a `Mesh` so all these methods apply to the ground too.
 

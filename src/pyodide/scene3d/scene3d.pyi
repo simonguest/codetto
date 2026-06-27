@@ -188,10 +188,11 @@ class Scene:
     def import_meshes(self, meshes: Sequence[Any]) -> "Scene":
         """Create and add meshes from a list of descriptors (dicts or Pydantic model instances).
 
-        Each descriptor may have: type ("Box"|"Sphere"|"Cylinder"), position [x,y,z],
-        rotation [x,y,z], scale [x,y,z], color (hex), material ("Category.Name"),
+        Each descriptor may have: type ("Box"|"Sphere"|"Cylinder"|"Plane"|"Cone"|"Torus"),
+        position [x,y,z], rotation [x,y,z], scale [x,y,z], color (hex), material ("Category.Name"),
         and shape params (width/height/depth for Box; diameter/segments for Sphere;
-        diameter/height/tessellation for Cylinder).
+        diameter/height/tessellation for Cylinder/Cone; width/height for Plane;
+        diameter/thickness/tessellation for Torus).
         """
         ...
     def add_light(self, x: float = 0, y: float = 5, z: float = 0) -> Light: ...
@@ -209,6 +210,12 @@ class _Shapes:
     def Sphere(diameter: float = 1, segments: int = 16) -> Mesh: ...
     @staticmethod
     def Cylinder(diameter: float = 1, height: float = 1, tessellation: int = 24) -> Mesh: ...
+    @staticmethod
+    def Plane(width: float = 1, height: float = 1) -> Mesh: ...
+    @staticmethod
+    def Cone(diameter: float = 1, height: float = 1, tessellation: int = 24) -> Mesh: ...
+    @staticmethod
+    def Torus(diameter: float = 1, thickness: float = 0.5, tessellation: int = 16) -> Mesh: ...
 
 Shapes: _Shapes
 Material: _Material

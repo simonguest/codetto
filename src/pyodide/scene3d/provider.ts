@@ -388,6 +388,26 @@ export async function handleScene3dOp(
           height: cfg.height ?? 1,
           tessellation: cfg.tessellation ?? 24,
         }, controller.scene);
+      } else if (cfg.type === "plane") {
+        const { Mesh } = await import("@babylonjs/core");
+        mesh = MeshBuilder.CreatePlane("plane", {
+          width: cfg.width ?? 1,
+          height: cfg.height ?? 1,
+          sideOrientation: Mesh.DOUBLESIDE,
+        }, controller.scene);
+      } else if (cfg.type === "cone") {
+        mesh = MeshBuilder.CreateCylinder("cone", {
+          diameterTop: 0,
+          diameterBottom: cfg.diameter ?? 1,
+          height: cfg.height ?? 1,
+          tessellation: cfg.tessellation ?? 24,
+        }, controller.scene);
+      } else if (cfg.type === "torus") {
+        mesh = MeshBuilder.CreateTorus("torus", {
+          diameter: cfg.diameter ?? 1,
+          thickness: cfg.thickness ?? 0.5,
+          tessellation: cfg.tessellation ?? 16,
+        }, controller.scene);
       } else {
         viaRespond({ type: "error", message: `Unknown mesh type: ${cfg.type}` });
         return true;

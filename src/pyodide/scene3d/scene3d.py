@@ -330,6 +330,12 @@ class Scene:
                 mesh = Shapes.Sphere(diameter=m.get("diameter", 1), segments=m.get("segments", 16))
             elif mesh_type == "cylinder":
                 mesh = Shapes.Cylinder(diameter=m.get("diameter", 1), height=m.get("height", 1), tessellation=m.get("tessellation", 24))
+            elif mesh_type == "plane":
+                mesh = Shapes.Plane(width=m.get("width", 1), height=m.get("height", 1))
+            elif mesh_type == "cone":
+                mesh = Shapes.Cone(diameter=m.get("diameter", 1), height=m.get("height", 1), tessellation=m.get("tessellation", 24))
+            elif mesh_type == "torus":
+                mesh = Shapes.Torus(diameter=m.get("diameter", 1), thickness=m.get("thickness", 0.5), tessellation=m.get("tessellation", 16))
             else:
                 continue
 
@@ -571,6 +577,18 @@ class _Shapes:
     @staticmethod
     def Cylinder(diameter=1, height=1, tessellation=24):
         return _Mesh("cylinder", diameter=diameter, height=height, tessellation=tessellation)
+
+    @staticmethod
+    def Plane(width=1, height=1):
+        return _Mesh("plane", width=width, height=height)
+
+    @staticmethod
+    def Cone(diameter=1, height=1, tessellation=24):
+        return _Mesh("cone", diameter=diameter, height=height, tessellation=tessellation)
+
+    @staticmethod
+    def Torus(diameter=1, thickness=0.5, tessellation=16):
+        return _Mesh("torus", diameter=diameter, thickness=thickness, tessellation=tessellation)
 
 
 Shapes = _Shapes()
