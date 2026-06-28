@@ -34,7 +34,7 @@ const toggleHideCode = () => {
           size="32"
           icon="mdi-play-outline"
           @click="runCode"
-          :disabled="pyodideStore.executionStatus !== 'idle' || pyodideStore.workerStatus !== 'ready'"
+          :disabled="pyodideStore.executionStatus !== 'idle' || pyodideStore.workerStatus !== 'ready' || pyodideStore._interruptPending"
           :loading="pyodideStore.workerStatus !== 'ready' || pyodideStore.runningCellId === id"
           aria-label="Run code"
         >

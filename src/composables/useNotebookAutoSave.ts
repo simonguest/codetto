@@ -26,6 +26,23 @@ export function useNotebookAutoSave(notebookId: string) {
         // Convert reactive object to plain object for IndexedDB
         const plainNotebook = JSON.parse(JSON.stringify(content));
 
+        // Strip canvas handle outputs before persisting. The "application/x-via-canvas"
+        // MIME type is an integer handle pointing to a live DOM element — it has no
+        // meaning across page reloads and should never be written to IndexedDB.
+        // Leaving it in causes the saved cell to appear to have a result on next load
+        // (showing the output tab) while the handle resolves to nothing, and the
+        // coincidental handle-number reuse prevents CanvasResult from re-mounting.
+        plainNotebook.cells?.forEach((cell: any) => {
+          if (!cell.outputs) return;
+          cell.outputs = cell.outputs
+            .map((output: any) => {
+              if (!output.data?.['application/x-via-canvas']) return output;
+              const { 'application/x-via-canvas': _, ...rest } = output.data;
+              return Object.keys(rest).length > 0 ? { ...output, data: rest } : null;
+            })
+            .filter(Boolean);
+        });
+
         // Calculate CFU progress before saving
         const cfuCells = plainNotebook.cells.filter(
           (cell: { cell_type: string; metadata?: { tags?: string[] } }) =>

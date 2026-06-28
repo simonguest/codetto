@@ -25,5 +25,8 @@ export function viaStopAll() {
 
 export function viaClear() {
   objects.clear();
-  nextHandle = 1;
+  // Do NOT reset nextHandle — handles must keep incrementing across clears.
+  // Resetting to 1 causes saved handle values (from a prior session's cell
+  // outputs) to match newly-allocated handles, which prevents CanvasResult's
+  // prop-change watch from firing and leaves the canvas un-mounted.
 }

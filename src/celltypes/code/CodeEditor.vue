@@ -305,7 +305,7 @@ onMounted(() => {
       Prec.highest(keymap.of([indentWithTab, {
         key: "Mod-Enter",
         run: () => {
-          if (pyodideStore.executionStatus === "idle" && pyodideStore.workerStatus === "ready") {
+          if (pyodideStore.executionStatus === "idle" && pyodideStore.workerStatus === "ready" && !pyodideStore._interruptPending) {
             notebookStore.markPendingClear(props.id);
             pyodideStore.executeCell(props.id);
           }

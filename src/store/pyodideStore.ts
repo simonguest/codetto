@@ -14,6 +14,11 @@ export const pyodideStore = reactive({
   inputPrompt: null as string | null,
   userInput: null as string | null,
   pyodideVersion: null as string | null,
+  // True from the moment Stop is clicked until the worker acknowledges the
+  // interrupt via an error message. Keeps the Run button disabled during
+  // that window to prevent a new run from starting before the old one's
+  // KeyboardInterrupt message has been processed.
+  _interruptPending: false,
   setInterruptBuffer(buffer: Int32Array) {
     this.interruptBuffer = buffer;
   },
@@ -25,6 +30,7 @@ export const pyodideStore = reactive({
   interruptExecution() {
     if (this.interruptBuffer) {
       this.interruptBuffer[0] = 2;
+      this._interruptPending = true;
     }
     this.executionStatus = "idle";
   },
@@ -40,6 +46,7 @@ export const pyodideStore = reactive({
   executionCompleted() {
     this.runningCellId = null;
     this.executionStatus = "idle";
+    this._interruptPending = false;
   },
   setFatalError(trace: string) {
     this.workerStatus = "error";
@@ -62,5 +69,6 @@ export const pyodideStore = reactive({
   resetCompleted() {
     this.runningCellId = null;
     this.executionStatus = "idle";
+    this._interruptPending = false;
   }
 });
