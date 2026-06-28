@@ -28,7 +28,7 @@ interface SceneController {
 }
 
 const MATERIALS_BASE = "/3dassets/materials";
-const FONT_PATH = "/3dassets/fonts/helvetiker_regular.typeface.json";
+const FONT_PATH = "/3dassets/fonts/noto_sans_latin_cyrillic.typeface.json";
 let _fontData: any = null;
 
 async function loadFont(): Promise<any> {
