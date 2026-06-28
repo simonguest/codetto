@@ -15,6 +15,33 @@ import { handleScene3dOp } from "./scene3d/provider";
 const props = defineProps<{ locale: Locale | null }>();
 let worker: Worker;
 
+const autorunQueue: string[] = [];
+const autorunCellIds = new Set<string>();
+
+function runNextAutorun() {
+  if (autorunQueue.length === 0) return;
+  // Bail if the notebook was cleared (user navigated away mid-queue)
+  if (!notebookStore.content.cells?.length) {
+    autorunQueue.length = 0;
+    autorunCellIds.clear();
+    return;
+  }
+  if (pyodideStore.executionStatus !== "idle" || pyodideStore.workerStatus !== "ready") return;
+  const cellId = autorunQueue.shift()!;
+  pyodideStore.executeCell(cellId);
+}
+
+function seedAutorunQueue() {
+  autorunQueue.length = 0;
+  autorunCellIds.clear();
+  const cells = notebookStore.content.cells ?? [];
+  if (!cells.length) return;
+  cells
+    .filter(c => c.cell_type === "code" && c.metadata?.tags?.includes("autorun"))
+    .forEach(c => { autorunQueue.push(c.id); autorunCellIds.add(c.id); });
+  runNextAutorun(); // no-op if not idle/ready yet; executionStatus watcher drains when idle
+}
+
 // via.js bridge — main-thread side
 let viaSignal: Int32Array | null = null;
 let viaData: Uint8Array | null = null;
@@ -103,6 +130,7 @@ onMounted(async () => {
         pyodideStore.resetCompleted();
         syncNotebookPackages();
         sendEnvVars();
+        seedAutorunQueue();
         break;
       case "stdout":
         if (pyodideStore.runningCellId) {
@@ -129,7 +157,14 @@ onMounted(async () => {
       case "error": {
         const errorCellId = pyodideStore.runningCellId;
         if (errorCellId && !error.includes("KeyboardInterrupt")) {
-          notebookStore.setError(errorCellId, error);
+          if (autorunCellIds.has(errorCellId) && notebookStore.hasTag(errorCellId, 'hidden')) {
+            console.error(`[autorun] Cell ${errorCellId} failed:\n${error}`);
+          } else {
+            notebookStore.setError(errorCellId, error);
+          }
+          if (autorunCellIds.has(errorCellId)) {
+            autorunQueue.length = 0;
+          }
         }
         pyodideStore.executionCompleted();
         if (errorCellId) notebookStore.flushPendingClear(errorCellId);
@@ -182,8 +217,16 @@ watch(
 );
 
 watch(
+  () => pyodideStore.workerStatus,
+  (status) => { if (status === "ready") seedAutorunQueue(); }
+);
+
+watch(
   () => pyodideStore.executionStatus,
   newExecutionStatus => {
+    if (newExecutionStatus === "idle" && autorunQueue.length > 0) {
+      runNextAutorun();
+    }
     if (newExecutionStatus === "queued" && pyodideStore.runningCellId != null) {
       // Grab the source from the notebook
       const code = notebookStore.parseGlobals(

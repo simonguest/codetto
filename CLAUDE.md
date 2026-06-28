@@ -112,6 +112,12 @@ Each cell type is a self-contained directory with an `index.ts` export:
 
 **`hidden` tag (any cell):** adding `"hidden"` to any cell's `metadata.tags` prevents it from rendering at all — the cell is completely absent from the DOM for students and in edit mode. Use this for setup cells that must execute (e.g. helper functions, imports) but should be invisible to the student. Implemented as a `v-if` guard in `Renderer.vue`.
 
+**`autorun` tag (code cells):** adding `"autorun"` to a code cell's `metadata.tags` causes it to execute automatically when the notebook loads — no student interaction required. Autorun cells run in notebook order, one at a time, before the student can interact with any code cell. Errors in a hidden+autorun cell are logged to the browser console (not shown in the cell UI); errors in a visible+autorun cell are shown normally. An error in any autorun cell cancels the remaining autorun queue.
+
+`autorun` and `hidden` are independent tags and can be combined: `["autorun", "hidden"]` runs the cell silently on load with no DOM presence — the intended pattern for notebook setup code. `["autorun"]` alone runs and displays the cell (and its output) automatically.
+
+**Implementation** (`src/pyodide/PyodideProvider.vue`): autorun is triggered by two hooks — `workerStatus → "ready"` (cold start / page refresh) and `reset_completed` (navigation when Pyodide is already running, since `Renderer.vue` calls `resetGlobals()` on every mount). Both call `seedAutorunQueue()`, which collects autorun cell IDs in order and drains them via `runNextAutorun()` as each execution goes idle. The autorun cell IDs are tracked in `autorunCellIds` (a `Set`) so the error handler knows whether to `console.error` vs. write to the cell's output.
+
 **CFU JSON schema:**
 ```json
 {
