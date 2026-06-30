@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, watch, computed, ref } from "vue";
-import { EditorState, Prec, StateEffect, StateField } from "@codemirror/state";
+import { Compartment, EditorState, Prec, StateEffect, StateField } from "@codemirror/state";
 import { EditorView } from "codemirror";
 import {
   keymap, showTooltip, tooltips, type Tooltip,
@@ -19,7 +19,8 @@ import {
 } from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
 import {
-  autocompletion, CompletionContext, CompletionResult, CompletionSource, completionKeymap,
+  autocompletion, closeBrackets, closeBracketsKeymap,
+  CompletionContext, CompletionResult, CompletionSource, completionKeymap,
 } from "@codemirror/autocomplete";
 import { renderMarkdown } from "@/utils/markdown";
 
@@ -34,6 +35,8 @@ import { basicLight } from "./themes/basicLight";
 import { materialDark } from "./themes/materialDark";
 import { colorPickerExtension, colorPickerTheme } from "./colorPickerExtension";
 
+const closeBracketsCompartment = new Compartment();
+
 const customSetup = [
   lineNumbers(),
   highlightActiveLineGutter(),
@@ -45,12 +48,13 @@ const customSetup = [
   EditorState.allowMultipleSelections.of(true),
   indentOnInput(),
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-  // bracketMatching() and closeBrackets() omitted — distracting/confusing for students
+  closeBracketsCompartment.of(settingsStore.autoCloseBrackets ? [closeBrackets()] : []),
   rectangularSelection(),
   crosshairCursor(),
   highlightActiveLine(),
   highlightSelectionMatches(),
   keymap.of([
+    ...closeBracketsKeymap,
     ...defaultKeymap,
     ...searchKeymap,
     ...historyKeymap,
@@ -127,6 +131,15 @@ const props = defineProps<{
 
 let editorView: EditorView | null = null;
 let isUpdatingFromStore = false;
+
+watch(
+  () => settingsStore.autoCloseBrackets,
+  (enabled) => {
+    editorView?.dispatch({
+      effects: closeBracketsCompartment.reconfigure(enabled ? [closeBrackets()] : []),
+    });
+  }
+);
 const isCompletionLoading = ref(false);
 
 const source = computed<string[]>(() => {

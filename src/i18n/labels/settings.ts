@@ -14,6 +14,8 @@ export const SETTINGS_LABELS: Record<Locale, {
   setDefault: string;
   codeCompletion: string;
   codeCompletionHint: string;
+  autoCloseBrackets: string;
+  autoCloseBracketsHint: string;
   environmentVariables: string;
   envVarName: string;
   envVarValue: string;
@@ -43,6 +45,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     setDefault: 'Set Default',
     codeCompletion: 'Smart Code Completion',
     codeCompletionHint: 'Library-aware suggestions when typing a dot (.) or pressing Ctrl+Space',
+    autoCloseBrackets: 'Auto-Close Brackets & Quotes',
+    autoCloseBracketsHint: 'Automatically insert the matching closing bracket or quote when opening one',
     environmentVariables: 'Environment Variables',
     envVarName: 'Name',
     envVarValue: 'Value',
@@ -72,6 +76,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     setDefault: 'デフォルトに設定',
     codeCompletion: 'スマートコード補完',
     codeCompletionHint: 'ドット(.)入力またはCtrl+Spaceでライブラリの候補を表示する',
+    autoCloseBrackets: '括弧・引用符の自動補完',
+    autoCloseBracketsHint: '括弧や引用符を入力すると、対応する閉じ括弧・引用符を自動で挿入する',
     environmentVariables: '環境変数',
     envVarName: '名前',
     envVarValue: '値',
@@ -101,6 +107,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     setDefault: 'डिफ़ॉल्ट सेट करें',
     codeCompletion: 'स्मार्ट कोड पूर्णता',
     codeCompletionHint: 'डॉट (.) या Ctrl+Space दबाने पर लाइब्रेरी सुझाव दिखाएं',
+    autoCloseBrackets: 'कोष्ठक और उद्धरण स्वत: बंद करें',
+    autoCloseBracketsHint: 'खुला कोष्ठक या उद्धरण टाइप करने पर संगत बंद करने वाला चिह्न स्वत: जोड़ें',
     environmentVariables: 'पर्यावरण चर',
     envVarName: 'नाम',
     envVarValue: 'मान',
@@ -130,6 +138,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     setDefault: 'تنظیم به عنوان پیش‌فرض',
     codeCompletion: 'تکمیل هوشمند کد',
     codeCompletionHint: 'نمایش پیشنهادات کتابخانه با تایپ نقطه (.) یا فشردن Ctrl+Space',
+    autoCloseBrackets: 'بسته شدن خودکار براکت‌ها و نقل‌قول‌ها',
+    autoCloseBracketsHint: 'هنگام تایپ براکت یا نقل‌قول باز، نمونه بسته آن به‌طور خودکار درج می‌شود',
     environmentVariables: 'متغیرهای محیطی',
     envVarName: 'نام',
     envVarValue: 'مقدار',
@@ -159,6 +169,8 @@ export const SETTINGS_LABELS: Record<Locale, {
     setDefault: 'Өгөгдмөлөөр тохируулах',
     codeCompletion: 'Ухаалаг код дуусгах',
     codeCompletionHint: 'Цэг (.) бичих эсвэл Ctrl+Space дарахад номын сангийн саналыг харуулна',
+    autoCloseBrackets: 'Хаалт ба ишлэлийг автоматаар хаах',
+    autoCloseBracketsHint: 'Нээлтийн хаалт эсвэл ишлэл бичихэд харгалзах хаах тэмдэгтийг автоматаар оруулна',
     environmentVariables: 'Орчны хувьсагчид',
     envVarName: 'Нэр',
     envVarValue: 'Утга',

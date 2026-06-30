@@ -15,6 +15,7 @@ export const settingsStore = reactive({
   theme: (localStorage.getItem('theme') as Theme) || DEFAULT_THEME,
   locale: (localStorage.getItem('locale') as Locale) || DEFAULT_LOCALE,
   codeCompletion: localStorage.getItem('codeCompletion') !== 'false',
+  autoCloseBrackets: localStorage.getItem('autoCloseBrackets') !== 'false',
   envVars: loadEnvVars() as Record<string, string>,
 
   setTheme(theme: Theme) {
@@ -30,6 +31,11 @@ export const settingsStore = reactive({
   setCodeCompletion(enabled: boolean) {
     this.codeCompletion = enabled;
     localStorage.setItem('codeCompletion', String(enabled));
+  },
+
+  setAutoCloseBrackets(enabled: boolean) {
+    this.autoCloseBrackets = enabled;
+    localStorage.setItem('autoCloseBrackets', String(enabled));
   },
 
   setEnvVar(name: string, value: string) {

@@ -161,6 +161,14 @@ const updateCodeCompletion = (enabled: boolean | null) => {
     jediStore.initialize();
   }
 };
+
+const currentAutoCloseBrackets = ref(settingsStore.autoCloseBrackets);
+
+const updateAutoCloseBrackets = (enabled: boolean | null) => {
+  const on = enabled ?? false;
+  settingsStore.setAutoCloseBrackets(on);
+  currentAutoCloseBrackets.value = on;
+};
 </script>
 
 <template>
@@ -208,6 +216,15 @@ const updateCodeCompletion = (enabled: boolean | null) => {
                 persistent-hint
                 color="primary"
                 @update:model-value="updateCodeCompletion"
+              ></v-switch>
+              <v-switch
+                v-model="currentAutoCloseBrackets"
+                :label="settingsLabels.autoCloseBrackets"
+                :hint="settingsLabels.autoCloseBracketsHint"
+                persistent-hint
+                color="primary"
+                class="mt-2"
+                @update:model-value="updateAutoCloseBrackets"
               ></v-switch>
             </v-card-text>
           </v-card>
