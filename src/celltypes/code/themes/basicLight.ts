@@ -47,6 +47,7 @@ export const basicLightTheme = EditorView.theme(
     '.cm-content': {
       caretColor: cursor,
       fontFamily: "JetBrainsMono, monospace",
+      fontVariantLigatures: "none",
     },
 
     '.cm-cursor, .cm-dropCursor': { borderLeftColor: cursor },
